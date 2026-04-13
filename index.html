@@ -198,7 +198,12 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="sb-biz-tag" id="sb-biz" onclick="showPage('biz')">業務を選択してください</div>
   </div>
   <div class="sb-div"></div>
-  <div style="padding:0 8px 12px">
+  <div style="padding:0 8px 4px">
+    <button onclick="syncToSupabase()" style="width:100%;padding:7px 4px;background:#0f6e56;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;opacity:.9" title="現在のデータをSupabaseに一括同期">
+      ☁️ Supabaseへ同期
+    </button>
+  </div>
+  <div style="padding:4px 8px 12px">
     <button onclick="resetAllData()" style="width:100%;padding:7px 4px;background:#7a2020;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;opacity:.8" title="全データを削除してリセット">
       🗑️ データをリセット
     </button>
@@ -3997,6 +4002,21 @@ document.addEventListener('click', e=>{
 function refresh(){ updDash(); fillSelects(); const b=S.biz.find(b=>b.id===S.curBiz); document.getElementById('sb-biz').textContent=b?.nm||'業務を選択してください'; document.getElementById('hdr-biz-lbl').textContent=b?.nm||''; }
 
 // ==================== UTILS ====================
+async function syncToSupabase(){
+  const total = S.biz.length + S.fac.length + S.ins.length;
+  if(!total){ alert('同期するデータがありません。'); return; }
+  if(!confirm(`現在のデータ（業務${S.biz.length}件・施設${S.fac.length}件・点検${S.ins.length}件）をSupabaseに同期します。`)) return;
+  try{
+    const results = await Promise.all([
+      S.biz.length ? _sb.from('biz').upsert(S.biz.map(b=>({id:b.id,data:b,updated_at:new Date().toISOString()}))) : Promise.resolve({error:null}),
+      S.fac.length ? _sb.from('fac').upsert(S.fac.map(f=>({id:f.id,bid:f.bid,data:f,updated_at:new Date().toISOString()}))) : Promise.resolve({error:null}),
+      S.ins.length ? _sb.from('ins').upsert(S.ins.map(i=>({fid:i.fid,bid:i.bid,data:i,updated_at:new Date().toISOString()}))) : Promise.resolve({error:null}),
+    ]);
+    const errs = results.filter(r=>r.error).map(r=>r.error.message);
+    if(errs.length){ alert('⚠️ 同期エラー:\n'+errs.join('\n')); return; }
+    alert(`✅ 同期完了！\n業務${S.biz.length}件・施設${S.fac.length}件・点検${S.ins.length}件をSupabaseに保存しました。`);
+  }catch(e){ alert('⚠️ 同期に失敗しました:\n'+e.message); }
+}
 function resetAllData(){
   if(!confirm('⚠️ 全データを削除してリセットします。\nインポートした施設・点検記録が全て消えます。\n\n本当によろしいですか？')) return;
   _sbDelAll();
