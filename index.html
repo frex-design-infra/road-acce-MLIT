@@ -1,0 +1,3943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>附属物点検管理システム v2 | 株式会社フレックスデザイン</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--pr:#1a4a7a;--pr2:#2d6bb5;--prp:#e8f0fb;--ac:#0f6e56;--ac2:#1d9e75;--acp:#e1f5ee;--wn:#ba7517;--wnp:#faeeda;--dg:#a32d2d;--dgp:#fcebeb;--g1:#f7f6f3;--g2:#eceae4;--g3:#b4b2a9;--g4:#5f5e5a;--tx:#1c1c1a;--tx2:#5f5e5a;--bd:rgba(0,0,0,0.12);--r:8px;--rl:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--tx);background:var(--g1);min-height:100vh}
+.hdr{background:var(--pr);color:#fff;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:15px;font-weight:600}
+.hdr-r{display:flex;align-items:center;gap:12px;font-size:12px;opacity:.85}
+.body{display:flex;min-height:calc(100vh - 52px)}
+.sb{width:240px;background:#fff;border-right:1px solid var(--bd);padding:16px 0;flex-shrink:0;overflow-y:auto}
+.main{flex:1;padding:20px;overflow-y:auto}
+.sb-lbl{font-size:11px;color:var(--tx2);font-weight:600;letter-spacing:.06em;padding:6px 16px 4px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;color:var(--tx);font-size:13px;border-left:3px solid transparent;transition:all .15s}
+.sb-item:hover{background:var(--g1)}
+.sb-item.active{background:var(--prp);border-left-color:var(--pr);color:var(--pr);font-weight:600}
+.sb-div{height:1px;background:var(--bd);margin:8px 0}
+.sb-biz{padding:12px 16px;margin-top:8px}
+.sb-biz-tag{font-size:12px;color:var(--pr);font-weight:600;background:var(--prp);padding:6px 10px;border-radius:6px;cursor:pointer;word-break:break-all}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:16px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-ttl{font-size:15px;font-weight:600}
+.card-sub{font-size:12px;color:var(--tx2);margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--bd);background:#fff;color:var(--tx);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--g1)}
+.btn:active{transform:scale(.98)}
+.btn-pr{background:var(--pr);color:#fff;border-color:var(--pr)}.btn-pr:hover{background:var(--pr2)}
+.btn-ac{background:var(--ac);color:#fff;border-color:var(--ac)}.btn-ac:hover{background:var(--ac2)}
+.btn-wn{background:var(--wn);color:#fff;border-color:var(--wn)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-grp{display:flex;gap:8px;flex-wrap:wrap}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--g1);padding:8px 10px;text-align:left;font-weight:600;color:var(--tx2);border-bottom:1px solid var(--bd);font-size:12px;white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--g1)}
+.tw{overflow-x:auto}
+.bdg{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.b1{background:var(--acp);color:var(--ac)}.b2{background:var(--prp);color:var(--pr)}
+.b3{background:var(--wnp);color:var(--wn)}.b4{background:var(--dgp);color:var(--dg)}
+.bg{background:var(--g2);color:var(--g4)}.bn{background:var(--wnp);color:var(--wn)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.fg1{display:grid;grid-template-columns:1fr;gap:16px}
+.fgrp{display:flex;flex-direction:column;gap:4px}
+.flbl{font-size:12px;font-weight:600;color:var(--tx2)}
+.flbl.req::after{content:' *';color:var(--dg)}
+.finp,.fsel,.ftxt{border:1px solid var(--bd);border-radius:var(--r);padding:7px 10px;font-size:13px;font-family:inherit;color:var(--tx);background:#fff;width:100%;transition:border-color .15s}
+.finp:focus,.fsel:focus,.ftxt:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 2px var(--prp)}
+.ftxt{resize:vertical;min-height:80px}
+.fsec{margin-bottom:20px}
+.fsec-ttl{font-size:13px;font-weight:600;color:var(--pr);border-bottom:2px solid var(--prp);padding-bottom:6px;margin-bottom:12px}
+.tabs{display:flex;border-bottom:2px solid var(--bd);margin-bottom:20px;gap:0;overflow-x:auto}
+.tab{padding:8px 14px;font-size:12px;cursor:pointer;color:var(--tx2);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px;text-align:center}
+.tab:hover{color:var(--pr);background:var(--prp)}
+.tab.active{color:var(--pr);border-bottom-color:var(--pr);font-weight:600;background:var(--prp)}
+.tab-icon{font-size:18px;line-height:1}
+.tab-num{font-size:10px;color:var(--tx2);font-weight:400}
+.tab.active .tab-num{color:var(--pr)}
+.mets{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.met{background:var(--g1);border-radius:var(--r);padding:12px 16px}
+.met-l{font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:4px}
+.met-v{font-size:22px;font-weight:600;color:var(--tx)}
+.upz{border:2px dashed var(--bd);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:all .2s}
+.upz:hover,.upz.ov{border-color:var(--pr);background:var(--prp)}
+.alrt{padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:12px}
+.ai{background:var(--prp);color:var(--pr);border:1px solid rgba(26,74,122,.2)}
+.as{background:var(--acp);color:var(--ac);border:1px solid rgba(15,110,86,.2)}
+.aw{background:var(--wnp);color:var(--wn);border:1px solid rgba(186,117,23,.2)}
+.ae{background:var(--dgp);color:var(--dg);border:1px solid rgba(163,45,45,.2)}
+.pg-ttl{font-size:18px;font-weight:600;margin-bottom:4px}
+.pg-sub{font-size:13px;color:var(--tx2);margin-bottom:20px}
+.hid{display:none!important}
+.mt12{margin-top:12px}
+.mb16{margin-bottom:16px}
+.fx{display:flex}.fxc{display:flex;align-items:center}.g8{gap:8px}.g12{gap:12px}
+/* 損傷評価 */
+.dmg-a{color:var(--ac);font-weight:700}
+.dmg-c{color:var(--wn);font-weight:700}
+.dmg-e{color:var(--dg);font-weight:700}
+.dbtn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--bd);background:#fff;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;margin:0 2px}
+.dbtn:hover{transform:scale(1.1)}
+.dbtn.sa{background:var(--acp);border-color:var(--ac);color:var(--ac)}
+.dbtn.sc{background:var(--wnp);border-color:var(--wn);color:var(--wn)}
+.dbtn.se{background:var(--dgp);border-color:var(--dg);color:var(--dg)}
+/* 過年度比較 */
+.prev-val{font-size:11px;color:var(--tx2);background:var(--g2);padding:1px 5px;border-radius:3px;margin-left:4px}
+.diff-c{color:var(--wn);font-weight:600}
+.diff-e{color:var(--dg);font-weight:600}
+/* モーダル */
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center}
+.mod{background:#fff;border-radius:var(--rl);padding:24px;width:min(720px,95vw);max-height:90vh;overflow-y:auto}
+.mod-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mod-ttl{font-size:16px;font-weight:600}
+.mod-x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);padding:4px 8px;border-radius:4px}
+.mod-ft{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}
+/* 点検結果テーブル */
+.ins-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ins-tbl th{background:var(--pr);color:#fff;padding:6px 8px;text-align:center;font-size:11px;white-space:nowrap;border:1px solid rgba(255,255,255,.2)}
+.ins-tbl td{padding:4px 6px;border:1px solid var(--bd);vertical-align:middle;text-align:center}
+.ins-tbl tr.grp-hdr td{background:var(--prp);font-weight:600;text-align:left;color:var(--pr);font-size:12px}
+.ins-tbl tr.sub-grp td{background:var(--g1);font-weight:600;font-size:11px;text-align:left;padding-left:12px}
+.ins-tbl td.part-name{text-align:left;font-size:11px;padding-left:16px}
+.ins-tbl td.prev{background:var(--g1);color:var(--tx2);font-size:12px;font-weight:600}
+.ins-tbl td.cur{background:#fff}
+.ins-tbl td.na{background:var(--g2);color:var(--g4)}
+.dbtn-sm{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--bd);background:#fff;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;margin:0 1px}
+.dbtn-sm:hover{transform:scale(1.1)}
+.dbtn-sm.sa{background:var(--acp);border-color:var(--ac);color:var(--ac)}
+.dbtn-sm.sc{background:var(--wnp);border-color:var(--wn);color:var(--wn)}
+.dbtn-sm.se{background:var(--dgp);border-color:var(--dg);color:var(--dg)}
+.chk-na input{cursor:pointer}
+.sticky-col{position:sticky;left:0;background:#fff;z-index:1}
+.sticky-col2{position:sticky;left:80px;background:#fff;z-index:1}
+.sticky-col3{position:sticky;left:160px;background:#fff;z-index:1}
+/* メモポップアップセル */
+.memo-cell{width:100%;padding:3px 8px;border:1px solid var(--bd);border-radius:var(--r);background:#fff;cursor:pointer;transition:border-color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;box-sizing:border-box}
+.memo-cell:hover{border-color:var(--pr);background:var(--prp)}
+.memo-cell .memo-preview{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* 写真テーブル専用：行を詰める */
+#photo-tb tr td{padding:3px 6px;vertical-align:middle}
+#photo-tb .finp{padding:3px 6px;font-size:12px;height:28px}
+
+/* 写真スロット */
+.photo-slot{border:2px dashed var(--bd);border-radius:var(--rl);padding:10px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fff;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.photo-slot:hover,.photo-slot.drag-over{border-color:var(--pr);background:var(--prp)}
+.photo-slot.has-img{border-style:solid;border-color:var(--ac);background:var(--acp)}
+.photo-slot img{width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:4px}
+.photo-slot .slot-lbl{font-size:11px;font-weight:600;color:var(--tx2)}
+.photo-slot .slot-fname{font-size:10px;color:var(--ac);word-break:break-all}
+.photo-slot .slot-size{font-size:10px;color:var(--tx2)}
+.photo-slot .slot-warn{font-size:10px;color:var(--wn);font-weight:600}
+.photo-slot .slot-err{font-size:10px;color:var(--dg);font-weight:600}
+.photo-slot .del-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--dg);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;opacity:.8}
+.photo-slot .del-btn:hover{opacity:1}
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.dmg-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.prog-bar{height:4px;background:var(--g2);border-radius:2px;overflow:hidden;margin-top:6px}
+.prog-bar-inner{height:100%;background:var(--ac);border-radius:2px;transition:width .3s}
+
+@media(max-width:768px){.sb{display:none}.mets{grid-template-columns:repeat(2,1fr)}.fg,.fg3{grid-template-columns:1fr}}
+
+/* ===== カスタムカレンダー ===== */
+.cal-pop{position:fixed;z-index:9999;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.18);width:280px;overflow:hidden;display:none}
+.cal-pop.open{display:block}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--pr);color:#fff}
+.cal-hdr-lbl{font-size:13px;font-weight:600}
+.cal-nav{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 6px;line-height:1;opacity:.85}
+.cal-nav:hover{opacity:1}
+.cal-grid{padding:8px 10px 10px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.cal-dow span{text-align:center;font-size:10px;font-weight:600;padding:3px 0;color:var(--tx2)}
+.cal-dow .cal-sun{color:#e53935}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{text-align:center;font-size:12px;padding:5px 2px;border-radius:5px;cursor:pointer;border:none;background:none;color:var(--tx)}
+.cal-day:hover:not(:disabled){background:var(--prp);color:var(--pr)}
+.cal-day.cal-today{font-weight:700;color:var(--ac)}
+.cal-day.cal-selected{background:var(--pr);color:#fff!important}
+.cal-day.cal-other{color:var(--tx2);opacity:.35}
+.cal-day.cal-sun,.cal-day.cal-hol{color:#e53935}
+.cal-day.cal-sat{color:#1976d2}
+.cal-day.cal-selected.cal-sun,.cal-day.cal-selected.cal-sat,.cal-day.cal-selected.cal-hol{color:#fff!important}
+.cal-day:disabled{opacity:.25;cursor:default}
+.cal-today-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;padding:5px;background:var(--g1);border:1px solid var(--bd);border-radius:6px;font-size:11px;cursor:pointer;color:var(--tx2)}
+.cal-today-btn:hover{background:var(--prp);color:var(--pr);border-color:var(--pr)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <h1>📋 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v2</span></h1>
+  <div class="hdr-r">
+    <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
+  </div>
+</header>
+
+<div class="body">
+<nav class="sb">
+  <div class="sb-lbl">メニュー</div>
+  <div class="sb-item active" id="nav-dash" onclick="showPage('dash')"><span>🏠</span> ダッシュボード</div>
+  <div class="sb-item" id="nav-biz" onclick="showPage('biz')"><span>📁</span> 業務管理</div>
+  <div class="sb-item" id="nav-fac" onclick="showPage('fac')"><span>🏗️</span> 施設一覧</div>
+  <div class="sb-item" id="nav-insp" onclick="showPage('insp')"><span>📝</span> 点検記録入力</div>
+  <div class="sb-div"></div>
+  <div class="sb-lbl">データ</div>
+  <div class="sb-item" id="nav-imp" onclick="showPage('imp')"><span>📥</span> Excelインポート</div>
+  <div class="sb-item" id="nav-exp" onclick="showPage('exp')"><span>📤</span> CSV出力（xROAD）</div>
+  <div class="sb-div"></div>
+  <div class="sb-biz">
+    <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:6px">選択中の業務</div>
+    <div class="sb-biz-tag" id="sb-biz" onclick="showPage('biz')">業務を選択してください</div>
+  </div>
+  <div class="sb-div"></div>
+  <div style="padding:0 8px 12px">
+    <button onclick="resetAllData()" style="width:100%;padding:7px 4px;background:#7a2020;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;opacity:.8" title="全データを削除してリセット">
+      🗑️ データをリセット
+    </button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="page-dash">
+  <div class="pg-ttl">ダッシュボード</div>
+  <div class="pg-sub" id="dash-dt"></div>
+  <!-- 選択業務補足バッジ -->
+  <div id="dash-biz-note" style="display:none;margin-bottom:12px;padding:8px 14px;background:var(--prp);border-radius:8px;font-size:13px;color:var(--pr)"></div>
+  <div class="mets">
+    <div class="met"><div class="met-l">業務数</div><div class="met-v" id="m-biz">0</div></div>
+    <div class="met"><div class="met-l">施設数（選択業務）</div><div class="met-v" id="m-fac">0</div></div>
+    <div class="met"><div class="met-l">点検完了</div><div class="met-v" id="m-done">0</div></div>
+    <div class="met"><div class="met-l">要措置施設</div><div class="met-v" id="m-alrt" style="color:var(--dg)">0</div></div>
+  </div>
+  <!-- 未入力チェックカード群 -->
+  <div id="missing-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px"></div>
+  <!-- 未入力施設ドロップダウン -->
+  <div id="missing-popup" style="display:none;position:fixed;z-index:500;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.16);min-width:280px;max-width:360px;max-height:320px;overflow-y:auto;padding:6px 0">
+    <div id="missing-popup-inner"></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-ttl">健全性診断区分サマリー</div></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:100px;background:var(--acp);border-radius:8px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--ac);font-weight:600;margin-bottom:4px">区分Ⅰ（健全）</div><div style="font-size:26px;font-weight:600;color:var(--ac)" id="c1">0</div></div>
+      <div style="flex:1;min-width:100px;background:var(--prp);border-radius:8px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--pr);font-weight:600;margin-bottom:4px">区分Ⅱ（予防保全）</div><div style="font-size:26px;font-weight:600;color:var(--pr)" id="c2">0</div></div>
+      <div style="flex:1;min-width:100px;background:var(--wnp);border-radius:8px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--wn);font-weight:600;margin-bottom:4px">区分Ⅲ（早期措置）</div><div style="font-size:26px;font-weight:600;color:var(--wn)" id="c3">0</div></div>
+      <div style="flex:1;min-width:100px;background:var(--dgp);border-radius:8px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--dg);font-weight:600;margin-bottom:4px">区分Ⅳ（緊急措置）</div><div style="font-size:26px;font-weight:600;color:var(--dg)" id="c4">0</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-ttl">最近の更新</div><button class="btn btn-sm" onclick="showPage('insp')">点検入力 →</button></div>
+    <div id="rec-list"><div style="text-align:center;padding:32px;color:var(--tx2)">まだ記録がありません</div></div>
+  </div>
+</div>
+
+<!-- 業務管理 -->
+<div id="page-biz" class="hid">
+  <div class="fxc g12 mb16" style="justify-content:space-between;flex-wrap:wrap">
+    <div><div class="pg-ttl">業務管理</div><div class="pg-sub" style="margin-bottom:0">案件ごとに点検業務を管理します</div></div>
+    <button class="btn btn-pr" onclick="openBizMod()">＋ 新規業務登録</button>
+  </div>
+  <div class="card"><div class="tw"><table class="tbl"><thead><tr><th>業務名</th><th>点検年度</th><th>道路管理者</th><th>施設数</th><th>完了</th><th>操作</th></tr></thead><tbody id="biz-tb"></tbody></table></div></div>
+</div>
+
+<!-- 施設一覧 -->
+<div id="page-fac" class="hid">
+  <div class="fxc g12 mb16" style="justify-content:space-between;flex-wrap:wrap">
+    <div><div class="pg-ttl">施設一覧</div><div class="pg-sub" id="fac-lbl" style="margin-bottom:0">業務を選択してください</div></div>
+    <div class="btn-grp">
+      <button class="btn btn-sm" onclick="showPage('imp')">📥 Excelインポート</button>
+      <button class="btn btn-pr" onclick="openFacMod()">＋ 施設追加</button>
+    </div>
+  </div>
+  <div class="card"><div class="tw"><table class="tbl">
+    <thead><tr><th>管理番号</th><th>施設名</th><th>施設種別</th><th>支柱形式</th><th>所在地</th><th>設置年月</th><th>前回診断</th><th>今回診断</th><th>現地確認年月日</th><th>操作</th></tr></thead>
+    <tbody id="fac-tb"></tbody>
+  </table></div></div>
+</div>
+
+<!-- 点検記録入力 -->
+<div id="page-insp" class="hid">
+  <div class="fxc g12 mb16" style="justify-content:space-between;flex-wrap:wrap">
+    <div><div class="pg-ttl">点検記録入力・編集</div><div class="pg-sub" id="insp-lbl" style="margin-bottom:0">施設を選択してください</div></div>
+    <div class="btn-grp">
+      <button class="btn btn-sm" onclick="navFac(-1)">← 前</button>
+      <button class="btn btn-sm" onclick="navFac(1)">次 →</button>
+      <button class="btn btn-ac" onclick="saveInsp()">💾 保存</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="fxc g12" style="flex-wrap:wrap">
+      <div class="fgrp" style="flex:1;min-width:180px"><label class="flbl">業務</label><select class="fsel" id="sel-biz" onchange="onBizChg()"><option value="">-- 業務を選択 --</option></select></div>
+      <div class="fgrp" style="flex:2;min-width:200px"><label class="flbl">施設</label><select class="fsel" id="sel-fac" onchange="onFacChg()"><option value="">-- 施設を選択 --</option></select></div>
+    </div>
+  </div>
+
+  <div id="insp-body" class="hid">
+    <div class="tabs">
+      <div class="tab active" onclick="swTab('t1',this)">
+        <span class="tab-icon">🏗️</span>
+        <span>施設諸元</span>
+        <span class="tab-num">① 基本情報・構造</span>
+      </div>
+      <div class="tab" onclick="swTab('t2',this)">
+        <span class="tab-icon">🔍</span>
+        <span>損傷評価</span>
+        <span class="tab-num">② 各部材の点検</span>
+      </div>
+      <div class="tab" onclick="swTab('t3',this)">
+        <span class="tab-icon">📊</span>
+        <span>診断・所見</span>
+        <span class="tab-num">③ 健全性・意見</span>
+      </div>
+      <div class="tab" onclick="swTab('t4',this)">
+        <span class="tab-icon">🔧</span>
+        <span>措置の必要性</span>
+        <span class="tab-num">④ 対策・応急処置</span>
+      </div>
+      <div class="tab" onclick="swTab('t5',this)">
+        <span class="tab-icon">📷</span>
+        <span>写真管理</span>
+        <span class="tab-num">⑤ 撮影・アップロード</span>
+      </div>
+      <div class="tab" onclick="swTab('t6',this)">
+        <span class="tab-icon">📏</span>
+        <span>板厚調査</span>
+        <span class="tab-num">⑥ 超音波測定</span>
+      </div>
+    </div>
+
+    <!-- TAB1: 施設諸元 -->
+    <div id="t1">
+      <div class="card">
+        <div class="fsec-ttl">■ 点検情報</div>
+        <div class="fg">
+          <div class="fgrp"><label class="flbl req">現地確認年月日</label><input type="text" class="finp" id="f-date" readonly placeholder="yyyy-mm-dd" style="cursor:pointer;caret-color:transparent" onclick="calOpen(this)"></div>
+          <div class="fgrp"><label class="flbl req">管理番号</label><input type="text" class="finp" id="f-mgmt" placeholder="例：R7-156k229-下0"></div>
+          <div class="fgrp"><label class="flbl req">定期点検員（氏名）</label><input type="text" class="finp" id="f-ins1"></div>
+          <div class="fgrp"><label class="flbl">定期点検員（所属）</label><input type="text" class="finp" id="f-ins1o" value="株式会社フレックスデザイン"></div>
+          <div class="fgrp"><label class="flbl">点検種別</label>
+            <select class="fsel" id="f-instype">
+              <option>定期点検（初回）</option><option>定期点検（中間）</option><option>定期点検（最終）</option><option>初期点検</option><option>異常時点検</option>
+            </select>
+          </div>
+          <div class="fgrp"><label class="flbl">点検方法</label>
+            <select class="fsel" id="f-insmethod">
+              <option>近接目視</option><option>高所作業車</option><option>近接目視・高所作業車</option><option>その他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fsec-ttl">■ 施設基本情報</div>
+        <div class="alrt ai">⬆ 過年度データから引き継がれた情報です。変更がある場合は修正してください。</div>
+        <div class="fg">
+          <div class="fgrp"><label class="flbl req">施設名（種別）</label>
+            <select class="fsel" id="f-name"><option value="">選択</option><option value="1">案内標識</option><option value="2">警戒標識</option><option value="3">その他（道路標識）</option><option value="4">提供装置</option><option value="5">収集装置</option><option value="6">その他（情報装置）</option><option value="7">道路照明</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">路線名</label><input type="text" class="finp" id="f-route" placeholder="例：一般国道7号"></div>
+          <div class="fgrp"><label class="flbl req">施設種別</label>
+            <select class="fsel" id="f-type"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">道路種別</label>
+            <select class="fsel" id="f-rdtype"><option value="">選択</option><option value="1">高速自動車国道</option><option value="2">一般国道（指定区間内 高規格）</option><option value="3">一般国道（指定区間内 高規格以外）</option><option value="4">一般国道（指定区間外）</option><option value="5">都道府県道</option><option value="6">市町村道</option><option value="7">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">上・下別</label>
+            <select class="fsel" id="f-ud"><option value="">選択</option><option value="1">上り</option><option value="2">下り</option><option value="3">上・下</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">都道府県</label>
+            <select class="fsel" id="f-pref" onchange="onPrefChg()">
+              <option value="">選択</option>
+              <option value="02">青森県</option><option value="03">岩手県</option>
+              <option value="04">宮城県</option><option value="05">秋田県</option>
+              <option value="06">山形県</option><option value="07">福島県</option>
+              <option value="01">北海道</option><option value="08">茨城県</option><option value="09">栃木県</option><option value="10">群馬県</option><option value="11">埼玉県</option><option value="12">千葉県</option><option value="13">東京都</option><option value="14">神奈川県</option><option value="15">新潟県</option><option value="16">富山県</option><option value="17">石川県</option><option value="18">福井県</option><option value="19">山梨県</option><option value="20">長野県</option><option value="21">岐阜県</option><option value="22">静岡県</option><option value="23">愛知県</option><option value="24">三重県</option><option value="25">滋賀県</option><option value="26">京都府</option><option value="27">大阪府</option><option value="28">兵庫県</option><option value="29">奈良県</option><option value="30">和歌山県</option><option value="31">鳥取県</option><option value="32">島根県</option><option value="33">岡山県</option><option value="34">広島県</option><option value="35">山口県</option><option value="36">徳島県</option><option value="37">香川県</option><option value="38">愛媛県</option><option value="39">高知県</option><option value="40">福岡県</option><option value="41">佐賀県</option><option value="42">長崎県</option><option value="43">熊本県</option><option value="44">大分県</option><option value="45">宮崎県</option><option value="46">鹿児島県</option><option value="47">沖縄県</option>
+            </select>
+          </div>
+          <div class="fgrp"><label class="flbl">市区町村</label>
+            <select class="fsel" id="f-city"><option value="">（都道府県を先に選択）</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">所在地（字・番地等）</label>
+            <input type="text" class="finp" id="f-loc" placeholder="例：秋田県秋田市広野字三本柳 52番地先" oninput="autoDetectPref(this.value)"></div>
+          <div class="fgrp"><label class="flbl">距離標（km）</label><input type="text" class="finp" id="f-km" placeholder="例：156.229"></div>
+          <div class="fgrp"><label class="flbl">設置年月</label><input type="text" class="finp" id="f-inst" placeholder="例：2015年10月"></div>
+          <div class="fgrp"><label class="flbl">作業内容フラグ（区分）</label>
+            <select class="fsel" id="f-wkdiv"><option value="">選択</option><option value="1">○：追加</option><option value="2">×：削除</option><option value="3">△：変更</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">作業内容フラグ（内訳）</label>
+            <select class="fsel" id="f-wkdet"><option value="">選択</option><optgroup label="追加（○）"><option value="11">新設</option><option value="12">移管受け</option><option value="13">架替</option><option value="14">他施設からの移行</option><option value="15">計上漏れ</option></optgroup><optgroup label="削除（×）"><option value="21">撤去済</option><option value="22">移管出し</option><option value="23">廃止済</option><option value="24">他施設へ移行</option><option value="25">流出</option><option value="26">法定外</option></optgroup><optgroup label="変更（△）"><option value="30">変更</option></optgroup></select>
+          </div>
+        </div>
+        <div class="fg mt12">
+          <div class="fgrp"><label class="flbl req">緯度（世界測地系・10進法・小数5桁以上）</label><input type="text" class="finp" id="f-lat" placeholder="例：38.826700" oninput="updMichiKey()"></div>
+          <div class="fgrp"><label class="flbl req">経度（世界測地系・10進法・小数5桁以上）</label><input type="text" class="finp" id="f-lng" placeholder="例：139.841510" oninput="updMichiKey()"></div>
+        </div>
+        <div class="fg mt12">
+          <div class="fgrp" style="grid-column:1/-1">
+            <label class="flbl req">Michi施設キー <span style="font-weight:400;color:var(--tx2)">（必須・付録04 No.88）</span></label>
+            <input type="text" class="finp" id="f-michi" placeholder="例：38.826700,139.841510（緯度経度から自動入力）">
+            <div style="font-size:11px;color:var(--tx2);margin-top:3px">複数の場合はセミコロン(;)区切り。緯度・経度を入力すると自動設定されます。</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fsec-ttl">■ 構造情報</div>
+        <div class="fg">
+          <div class="fgrp"><label class="flbl req">支柱形式</label>
+            <select class="fsel" id="f-pil"><option value="">選択</option><optgroup label="標識・情報装置"><option value="01">路側式</option><option value="02">片持式（逆Ｌ型）</option><option value="03">片持式（Ｆ型）</option><option value="04">片持式（テーパーポール型）</option><option value="05">片持式（Ｔ型）</option><option value="06">門形式（オーバーヘッド型）</option><option value="07">添架式</option><option value="08">その他</option></optgroup><optgroup label="照明"><option value="09">ポール照明方式（テーパーポール型）</option><option value="10">ポール照明方式（直線型）</option><option value="11">ポール照明方式（Ｙ型）</option><option value="12">添架式</option><option value="13">トンネル照明</option><option value="14">その他</option></optgroup></select>
+          </div>
+          <div class="fgrp"><label class="flbl">表面処理形式</label>
+            <select class="fsel" id="f-surf"><option value="">選択</option><option value="1">塗装式</option><option value="2">亜鉛めっき式</option><option value="3">塗装式＋亜鉛めっき式</option><option value="4">その他</option><option value="5">塗装式(溶剤塗装)</option><option value="6">塗装式(静電粉体塗装)</option><option value="7">塗装式(浸漬塗装)</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">基礎形式</label>
+            <select class="fsel" id="f-base"><option value="">選択</option><option value="1">埋め込み型</option><option value="2">ベースプレート型</option><option value="3">添架型</option><option value="4">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">支柱基部リブ形状</label>
+            <select class="fsel" id="f-rib"><option value="">選択</option><option value="1">三角リブ</option><option value="2">Ｕ字リブ</option><option value="3">その他</option><option value="4">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">路面境界部の状況</label>
+            <select class="fsel" id="f-gl"><option value="">選択</option><option value="1">コンクリート</option><option value="2">アスファルト</option><option value="3">土砂</option><option value="4">ベースプレート露出</option><option value="5">インターロッキング</option><option value="6">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">標識設置枚数</label><input type="text" class="finp" id="f-signnum" placeholder="例：3"></div>
+          <div class="fgrp"><label class="flbl">標識番号</label><input type="text" class="finp" id="f-signno" placeholder="例：325の3"></div>
+          <div class="fgrp"><label class="flbl">標識板の取付形式</label>
+            <select class="fsel" id="f-signatt"><option value="">選択</option><option value="1">固定式</option><option value="2">吊下式</option><option value="3">その他</option></select>
+          </div>
+        </div>
+        <div class="fg mt12">
+          <div class="fgrp"><label class="flbl">標識板の落下防止対策</label>
+            <select class="fsel" id="f-fall"><option value="">選択</option><option value="1">有（全部）</option><option value="2">有（一部）</option><option value="3">今回実施（全部）</option><option value="4">今回実施（一部）</option><option value="5">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">ゆるみ止め対策</label>
+            <select class="fsel" id="f-losen"><option value="">選択</option><option value="1">有（全部）</option><option value="2">有（一部）</option><option value="3">今回実施（全部）</option><option value="4">今回実施（一部）</option><option value="5">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">ゆるみ止め対策（内容）</label><input type="text" class="finp" id="f-losen2" placeholder="例：ダブルナット"></div>
+          <div class="fgrp"><label class="flbl">灯具の種類</label>
+            <select class="fsel" id="f-lamp"><option value="">選択</option><option value="1">水銀灯</option><option value="2">高圧ナトリウムランプ</option><option value="3">低圧ナトリウムランプ</option><option value="4">蛍光灯</option><option value="5">ＬＥＤ</option><option value="6">メタルハライドランプ</option><option value="7">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">合いマーク</label>
+            <select class="fsel" id="f-mark"><option value="">選択</option><option value="1">有（全部）</option><option value="2">有（一部）</option><option value="3">今回実施（全部）</option><option value="4">今回実施（一部）</option><option value="5">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">合いマーク（実施箇所）</label><input type="text" class="finp" id="f-mark2" placeholder="例：基部アンカーボルト・ナット、横梁取付部ボルト"></div>
+          <div class="fgrp"><label class="flbl">制振装置の有無</label>
+            <select class="fsel" id="f-damp"><option value="">選択</option><option value="1">有</option><option value="2">今回実施</option><option value="3">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">柱基部排水性向上対策</label>
+            <select class="fsel" id="f-drain"><option value="">選択</option><option value="1">有</option><option value="2">今回実施</option><option value="3">無</option><option value="4">該当無し</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fsec-ttl">■ 設置環境情報</div>
+        <div class="fg">
+          <div class="fgrp"><label class="flbl">設置環境</label>
+            <select class="fsel" id="f-env"><option value="">選択</option><option value="1">一般部</option><option value="2">橋梁部</option><option value="3">トンネル</option><option value="4">横断歩道橋</option><option value="5">その他</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">海岸からの距離</label>
+            <select class="fsel" id="f-sea"><option value="">選択</option><option value="1">100m未満</option><option value="2">100m～1km未満</option><option value="3">1km～5km未満</option><option value="4">5km～20km未満</option><option value="5">20km以上</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">融雪剤散布区間</label>
+            <select class="fsel" id="f-snow"><option value="">選択</option><option value="1">該当する</option><option value="2">該当しない</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">風規制実施区間</label>
+            <select class="fsel" id="f-wind"><option value="">選択</option><option value="1">該当する</option><option value="2">該当しない</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">防雪対策実施区間</label>
+            <select class="fsel" id="f-snow2"><option value="">選択</option><option value="1">該当する</option><option value="2">該当しない</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">緊急輸送道路指定</label>
+            <select class="fsel" id="f-emg"><option value="">選択</option><option value="1">一次</option><option value="2">二次</option><option value="3">三次</option><option value="4">無</option><option value="6">市町村指定</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">通学路指定</label>
+            <select class="fsel" id="f-sch"><option value="">選択</option><option value="1">有</option><option value="2">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">代替路の有無</label>
+            <select class="fsel" id="f-alt"><option value="">選択</option><option value="1">有</option><option value="2">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">自専道 or 一般道</label>
+            <select class="fsel" id="f-rdknd"><option value="">選択</option><option value="1">自専道</option><option value="2">一般道</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">道路幅員（m）</label><input type="text" class="finp" id="f-rdw" placeholder="例：8.5"></div>
+          <div class="fgrp"><label class="flbl">歩道幅員（m）</label><input type="text" class="finp" id="f-sdw" placeholder="例：2.5 または 無"></div>
+          <div class="fgrp"><label class="flbl">センサス年度</label><input type="text" class="finp" id="f-cens" placeholder="例：H27"></div>
+          <div class="fgrp"><label class="flbl">センサス区間番号</label><input type="text" class="finp" id="f-censno" placeholder="例：6300070280"></div>
+          <div class="fgrp"><label class="flbl">交通量（台/24h）</label><input type="text" class="finp" id="f-trf" placeholder="例：18540"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB2: 点検結果（損傷評価）-->
+    <div id="t2" class="hid">
+      <div class="alrt ai">
+        <strong>過年度の評価値が今回点検の初期値として反映されています。</strong>変更がある箇所のみ <strong>a / c / e</strong> を押して上書きしてください。<br>
+        <span style="font-size:12px">
+          薄背景の列＝過年度実績　白背景の列＝今回入力（初期値は過年度と同じ）　　
+          <strong>a</strong>=損傷なし　<strong>c</strong>=損傷あり　<strong>e</strong>=損傷大きい　「対象無」=当該なし
+        </span>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="tw" style="max-height:600px;overflow:auto">
+          <table class="ins-tbl" id="dmg-tbl">
+            <thead>
+              <tr>
+                <th rowspan="3" style="min-width:110px;position:sticky;left:0;z-index:3;background:var(--pr)">点検箇所<br><span style="font-size:9px;font-weight:400;opacity:.8">対象有無（過年度引用）</span></th>
+                <th rowspan="3" style="min-width:36px;position:sticky;left:110px;z-index:3;background:var(--pr)">記号</th>
+                <th colspan="14" style="background:#4a4a48">鋼部材</th>
+                <th colspan="4" style="background:#1a4a7a">コンクリート部材</th>
+                <th colspan="4" style="background:#0f5a4a">共通</th>
+                <th rowspan="3" style="min-width:40px">対策<br>要否</th>
+              </tr>
+              <tr>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">き裂<br><span style="font-size:9px;opacity:.8">a/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">防食機能<br>の劣化<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">腐食<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">異種金属<br>接触腐食<br><span style="font-size:9px;opacity:.8">a/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">変形・<br>欠損<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">ゆるみ<br>・脱落<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#5a5a58;font-size:10px">破断<br><span style="font-size:9px;opacity:.8">a/e</span></th>
+                <th colspan="2" style="background:#2a5a8a;font-size:10px">ひびわれ<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#2a5a8a;font-size:10px">うき・<br>剥離<br><span style="font-size:9px;opacity:.8">a/e</span></th>
+                <th colspan="2" style="background:#1a6a5a;font-size:10px">滞水<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+                <th colspan="2" style="background:#1a6a5a;font-size:10px">その他<br><span style="font-size:9px;opacity:.8">a/c/e</span></th>
+              </tr>
+              <tr>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#484844;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#284a72;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#284a72;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#185040;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+                <th style="background:#185040;color:#ccc;font-size:10px">過年度</th><th style="font-size:10px;background:#e8f4ec;color:#0f6e56">今回</th>
+              </tr>
+            </thead>
+            <tbody id="dmg-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB3: 健全性診断・所見 -->
+    <div id="t3" class="hid">
+      <div class="card">
+        <div class="fsec-ttl">■ 施設の健全性の診断</div>
+        <div id="prev-diag-box" class="alrt ai" style="display:none"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+          <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-I">
+            <input type="radio" name="diag" value="Ⅰ" onchange="onDiagChg()"> <span class="bdg b1">区分Ⅰ</span><span style="font-size:12px">健全</span>
+          </label>
+          <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-II">
+            <input type="radio" name="diag" value="Ⅱ" onchange="onDiagChg()"> <span class="bdg b2">区分Ⅱ</span><span style="font-size:12px">予防保全段階</span>
+          </label>
+          <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-III">
+            <input type="radio" name="diag" value="Ⅲ" onchange="onDiagChg()"> <span class="bdg b3">区分Ⅲ</span><span style="font-size:12px">早期措置段階</span>
+          </label>
+          <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-IV">
+            <input type="radio" name="diag" value="Ⅳ" onchange="onDiagChg()"> <span class="bdg b4">区分Ⅳ</span><span style="font-size:12px">緊急措置段階</span>
+          </label>
+        </div>
+        <div class="fgrp"><label class="flbl">健全性の診断の結果に関する補足</label><textarea class="ftxt" id="f-diagnote" rows="3" placeholder="次回点検時期、措置の優先性、申し送り事項等"></textarea></div>
+        <div class="fg mt12">
+          <div class="fgrp"><label class="flbl">機能及び構造安全性の評価</label>
+            <select class="fsel" id="f-safety"><option value="">選択</option><option value="1">Ａ：変状が生じる可能性は低い</option><option value="2">Ｂ：致命的な状態となる可能性は低いが変状が生じる可能性がある</option><option value="3">Ｃ：致命的な状態となる可能性がある</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">特定事象の有無</label>
+            <select class="fsel" id="f-spcevt"><option value="">選択</option><option value="1">有</option><option value="2">無</option></select>
+          </div>
+          <div class="fgrp"><label class="flbl">措置の有無</label>
+            <select class="fsel" id="f-measyn"><option value="">選択</option><option value="1">有</option><option value="2">無</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fsec-ttl">■ 所見（その他特記事項）</div>
+        <div id="prev-opinion-box" class="alrt ai" style="display:none"></div>
+        <div class="fgrp"><label class="flbl req">定期点検員所見</label>
+          <textarea class="ftxt" id="f-opinion" rows="8" placeholder="施設全体の技術的見解を記述&#10;・把握した損傷の種類・位置・性状&#10;・損傷の原因・進行の可能性の推定&#10;・構造安全性・耐久性の評価&#10;・措置の緊急性の有無"></textarea>
+        </div>
+        <div class="fgrp mt12"><label class="flbl">点検ができなかった部位</label><input type="text" class="finp" id="f-nocant" placeholder="例：無"></div>
+      </div>
+    </div>
+
+    <!-- TAB4: 措置の必要性 -->
+    <div id="t4" class="hid">
+      <div class="card">
+        <div class="fsec-ttl">■ 部材別 措置の必要性</div>
+        <div class="tw"><table class="tbl" id="meas-tbl">
+          <thead><tr><th>部材</th><th>措置の必要性</th><th>措置が必要な理由</th><th>写真番号</th></tr></thead>
+          <tbody id="meas-tb"></tbody>
+        </table></div>
+        <div class="fgrp mt12"><label class="flbl">特記事項（近接目視不可部位等）</label><textarea class="ftxt" id="f-meas-pre" rows="2"></textarea></div>
+      </div>
+    </div>
+
+    <!-- TAB5: 写真管理 -->
+    <div id="t5" class="hid">
+      <div class="alrt ai" style="margin-bottom:12px">
+        <strong>📸 写真をドロップまたはクリックして選択</strong> → 自動でリネーム・2MB超は自動圧縮 → ZIP出力時にImageフォルダへ自動梱包<br>
+        <span style="font-size:11px">対応形式：jpg / jpeg / png　上限：1ファイル2MB以下（超過時は自動圧縮）</span>
+      </div>
+
+      <!-- 処理進捗 -->
+      <div id="photo-progress" style="display:none;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--pr);margin-bottom:4px" id="photo-prog-lbl">処理中...</div>
+        <div class="prog-bar"><div class="prog-bar-inner" id="photo-prog-bar" style="width:0%"></div></div>
+      </div>
+
+      <!-- 位置図・全景・基部・点検ステッカー -->
+      <div class="card">
+        <div class="card-hdr">
+          <div>
+            <div class="card-ttl">フォルダ直下の写真</div>
+            <div class="card-sub">位置図・全景・点検ステッカー・基部　（損傷写真フォルダには入れない）</div>
+          </div>
+        </div>
+        <div class="slot-grid" id="fixed-slots">
+          <!-- JS で生成 -->
+        </div>
+      </div>
+
+      <!-- 損傷写真 -->
+      <div class="card">
+        <div class="card-hdr">
+          <div>
+            <div class="card-ttl">損傷写真</div>
+            <div class="card-sub">損傷写真/ フォルダ内　1.jpg, 2.jpg… と連番で自動命名</div>
+          </div>
+          <div class="btn-grp">
+            <button class="btn btn-sm" onclick="autoFillPhotos()">🔄 損傷評価から行生成</button>
+            <button class="btn btn-sm btn-pr" onclick="addPhoto()">＋ 行を追加</button>
+          </div>
+        </div>
+
+        <!-- 損傷写真スロットグリッド -->
+        <div class="dmg-slot-grid" id="dmg-img-slots" style="margin-bottom:12px"></div>
+
+        <div class="tw"><table class="tbl" style="table-layout:fixed;width:100%">
+          <thead><tr>
+            <th style="width:46px">No.</th>
+            <th style="width:80px">ファイル名<br><span style="font-weight:400;font-size:10px">損傷写真/</span></th>
+            <th style="width:110px">部材名</th>
+            <th style="width:100px">損傷の種類</th>
+            <th style="width:120px">撮影日</th>
+            <th>メモ</th>
+            <th style="width:32px"></th>
+          </tr></thead>
+          <tbody id="photo-tb"></tbody>
+        </table></div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:8px;padding:6px 8px;background:var(--g1);border-radius:4px">
+          💡 写真スロットに画像をドロップ → テーブル行のファイル名と自動リンク。行を先に作ってからスロットに画像を入れてください。
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB6: 板厚調査 -->
+    <div id="t6" class="hid">
+      <div class="alrt ai">板厚調査を実施した場合のみ記入。測定は各箇所90°ごと4点×2回が標準。</div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl">板厚調査記録</div><button class="btn btn-sm btn-pr" onclick="addThick()">＋ 追加</button></div>
+        <div class="fg mb16">
+          <div class="fgrp"><label class="flbl">計測年月日</label><input type="date" class="finp" id="f-thkdt"></div>
+          <div class="fgrp"><label class="flbl">計測機器名</label><input type="text" class="finp" id="f-thkdev" placeholder="例：超音波厚さ計 ○○型"></div>
+        </div>
+        <div class="tw"><table class="tbl" style="font-size:12px"><thead><tr><th>調査部位</th><th>記号</th><th>測定位置</th><th>番号</th><th>1回目mm</th><th>2回目mm</th><th>最小値mm</th><th>管理板厚mm</th><th>限界板厚mm</th><th>評価区分</th></tr></thead><tbody id="thk-tb"></tbody></table></div>
+      </div>
+    </div>
+
+  </div><!-- /insp-body -->
+</div>
+
+<!-- Excelインポート -->
+<div id="page-imp" class="hid">
+  <div class="pg-ttl">Excelインポート</div>
+  <div class="pg-sub">過年度の点検調書（Excel）を読み込み、今年度の点検記録の土台を自動作成します</div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-ttl">インポート先の業務</div></div>
+    <div class="fg" style="align-items:end;max-width:600px">
+      <div class="fgrp"><label class="flbl req">業務を選択</label><select class="fsel" id="imp-biz"><option value="">-- 選択してください --</option></select></div>
+      <div class="fgrp"><label class="flbl">今年度（引継年度）</label><input type="text" class="finp" id="imp-yr" placeholder="例：2025"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-ttl">過年度Excelの読み込み</div></div>
+    <div class="alrt ai">
+      <strong>対応フォーマット：</strong>点検表（施設諸元）シート＋点検表（点検結果票）シートを含む.xlsxファイル<br>
+      過年度の評価値（a/c/e）・健全性診断・所見・施設諸元が自動で引き継がれます。
+    </div>
+    <div class="upz" id="upz" onclick="document.getElementById('fi').click()" ondragover="dov(event)" ondrop="ddr(event)">
+      <div style="font-size:32px;margin-bottom:8px">📊</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Excelファイルをドロップ、またはクリックして選択</div>
+      <div style="font-size:12px;color:var(--tx2)">.xlsx / .xls 対応　─　複数ファイル一括インポート可</div>
+      <input type="file" id="fi" style="display:none" accept=".xlsx,.xls" multiple onchange="handleFiles(event)">
+    </div>
+    <div id="imp-status" class="hid" style="margin-top:12px"></div>
+  </div>
+
+  <div id="imp-preview" class="hid">
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-ttl">インポートプレビュー</div><div class="card-sub" id="prev-info"></div></div>
+        <button class="btn btn-pr" onclick="doImport()">✓ インポート実行</button>
+      </div>
+      <div class="tw"><table class="tbl" id="prev-tbl"><thead id="prev-th"></thead><tbody id="prev-tb"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- CSV出力 -->
+<div id="page-exp" class="hid">
+  <div class="pg-ttl">CSV出力（xROAD納品）</div>
+  <div class="pg-sub">xROAD一括登録用の5種類CSV＋ZIP（付録03仕様）をダウンロードします</div>
+
+  <div class="alrt ai" style="margin-bottom:16px">
+    <strong>📋 xROAD一括登録の手順</strong><br>
+    ①「ZIP一括出力」で登録用ZIPを作成 → ②ZIP内の各施設フォルダに実際の写真を配置 → ③完成ZIPを全国道路施設点検DBにアップロード<br>
+    <span style="font-size:11px">ZIP制限: 全体1GB以下・画像100枚以下・1枚2MB以下（付録03準拠）</span>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><div class="card-ttl">出力対象の選択</div></div>
+    <div class="fg" style="max-width:700px">
+      <div class="fgrp"><label class="flbl">業務</label><select class="fsel" id="exp-biz" onchange="updExpList()"><option value="">-- 全業務 --</option></select></div>
+      <div class="fgrp"><label class="flbl">絞り込み</label><select class="fsel" id="exp-flt"><option value="all">全施設</option><option value="34">区分Ⅲ・Ⅳのみ</option></select></div>
+      <div class="fgrp"><label class="flbl">処理区分（CSV01 列1）</label>
+        <select class="fsel" id="exp-shori">
+          <option value="S">S：追加（新規登録）</option>
+          <option value="C">C：更新（既登録の更新）</option>
+          <option value="D">D：削除</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="exp-warn-box" class="hid" style="margin-bottom:12px"></div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-ttl">出力施設一覧</div><div class="card-sub" id="exp-cnt">0件</div></div>
+      <div class="btn-grp">
+        <button class="btn btn-ac" id="btn-zip" onclick="expZip()">📦 ZIP一括出力（xROAD登録用）</button>
+        <button class="btn btn-sm" onclick="expAll()">📄 CSV個別ダウンロード（5種）</button>
+      </div>
+    </div>
+    <div class="tw"><table class="tbl"><thead><tr>
+      <th><input type="checkbox" id="exp-all" onchange="tglAll(this)" checked></th>
+      <th>業務名</th><th>管理番号</th><th>施設名</th>
+      <th>施設ID確認</th><th>前回診断</th><th>今回診断</th><th>点検日</th><th>必須項目</th>
+    </tr></thead><tbody id="exp-tb"></tbody></table></div>
+    <div class="btn-grp mt12">
+      <button class="btn btn-sm" onclick="expOne(1)">📄 01_附属物の諸元と定期点検結果.CSV</button>
+      <button class="btn btn-sm" onclick="expOne(2)">📄 02_措置の必要性の検討結果.CSV</button>
+      <button class="btn btn-sm" onclick="expOne(3)">📄 03_損傷写真.CSV</button>
+      <button class="btn btn-sm" onclick="expOne(4)">📄 04_損傷程度の評価記録.CSV</button>
+      <button class="btn btn-sm" onclick="expOne(5)">📄 05_板厚調査記録.CSV</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- モーダル: 業務 -->
+<div class="mov hid" id="mod-biz">
+  <div class="mod" style="width:min(860px,96vw)">
+    <div class="mod-hdr"><div class="mod-ttl" id="mod-biz-ttl">新規業務登録</div><button class="mod-x" onclick="closeMod('mod-biz')">×</button></div>
+
+    <!-- 基本情報 -->
+    <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">📋 業務基本情報</div>
+    <div class="fg">
+      <div class="fgrp"><label class="flbl req">業務名</label><input type="text" class="finp" id="biz-nm" placeholder="例：R7 秋田河川国道事務所 附属物定期点検業務"></div>
+      <div class="fgrp"><label class="flbl req">点検年度</label><input type="text" class="finp" id="biz-yr" placeholder="例：2025"></div>
+      <div class="fgrp"><label class="flbl">契約番号</label><input type="text" class="finp" id="biz-ct"></div>
+      <div class="fgrp"><label class="flbl">業務期間（開始）</label><input type="date" class="finp" id="biz-s"></div>
+      <div class="fgrp"><label class="flbl">業務期間（終了）</label><input type="date" class="finp" id="biz-e"></div>
+    </div>
+
+    <!-- 道路管理者情報 -->
+    <div style="border-top:1px solid var(--bd);margin:14px 0 10px;padding-top:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">🏢 道路管理者情報（CSV出力用・必須）</div>
+      <div class="fg">
+
+        <!-- ① 管理者区分 -->
+        <div class="fgrp">
+          <label class="flbl req">管理者区分</label>
+          <select class="fsel" id="biz-rdmgr" onchange="onBizRdmgrChg()">
+            <option value="">選択してください</option>
+            <option value="1">国（国土交通省・地整）</option>
+            <option value="2">都道府県</option>
+            <option value="3">道路公社</option>
+            <option value="4">政令市</option>
+            <option value="5">市区町村</option>
+            <option value="6">高速道路会社</option>
+          </select>
+        </div>
+
+        <!-- ② 地方整備局（管理者区分=国 の場合に表示） -->
+        <div class="fgrp" id="biz-kyoku-grp">
+          <label class="flbl req">地方整備局</label>
+          <select class="fsel" id="biz-kyoku" onchange="onBizKyokuChg()">
+            <option value="">選択してください</option>
+            <option value="81">北海道開発局</option>
+            <option value="82">東北地方整備局</option>
+            <option value="83">関東地方整備局</option>
+            <option value="84">北陸地方整備局</option>
+            <option value="85">中部地方整備局</option>
+            <option value="86">近畿地方整備局</option>
+            <option value="87">中国地方整備局</option>
+            <option value="88">四国地方整備局</option>
+            <option value="89">九州地方整備局</option>
+            <option value="90">沖縄総合事務局</option>
+          </select>
+        </div>
+
+        <!-- ③ 事務所（局選択後に連動） -->
+        <div class="fgrp" id="biz-jimusho-grp">
+          <label class="flbl req">事務所</label>
+          <select class="fsel" id="biz-jimusho" onchange="onBizJimushoChg()">
+            <option value="">（局を先に選択）</option>
+          </select>
+        </div>
+
+        <!-- ④ 出張所（事務所選択後に連動） -->
+        <div class="fgrp" id="biz-shuccho-grp">
+          <label class="flbl">出張所</label>
+          <select class="fsel" id="biz-shuccho">
+            <option value="">（事務所を先に選択）</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- 都道府県（管理者区分=都道府県/市区町村 の場合に表示） -->
+      <div id="biz-pref-grp" class="fg mt12" style="display:none">
+        <div class="fgrp">
+          <label class="flbl req">都道府県</label>
+          <select class="fsel" id="biz-pref" onchange="onBizPrefChg()">
+            <option value="">選択してください</option>
+            <option value="01">北海道</option>
+            <option value="02">青森県</option><option value="03">岩手県</option><option value="04">宮城県</option><option value="05">秋田県</option><option value="06">山形県</option><option value="07">福島県</option>
+            <option value="08">茨城県</option><option value="09">栃木県</option><option value="10">群馬県</option><option value="11">埼玉県</option><option value="12">千葉県</option><option value="13">東京都</option><option value="14">神奈川県</option>
+            <option value="15">新潟県</option><option value="16">富山県</option><option value="17">石川県</option><option value="18">福井県</option><option value="19">山梨県</option><option value="20">長野県</option>
+            <option value="21">岐阜県</option><option value="22">静岡県</option><option value="23">愛知県</option><option value="24">三重県</option>
+            <option value="25">滋賀県</option><option value="26">京都府</option><option value="27">大阪府</option><option value="28">兵庫県</option><option value="29">奈良県</option><option value="30">和歌山県</option>
+            <option value="31">鳥取県</option><option value="32">島根県</option><option value="33">岡山県</option><option value="34">広島県</option><option value="35">山口県</option>
+            <option value="36">徳島県</option><option value="37">香川県</option><option value="38">愛媛県</option><option value="39">高知県</option>
+            <option value="40">福岡県</option><option value="41">佐賀県</option><option value="42">長崎県</option><option value="43">熊本県</option><option value="44">大分県</option><option value="45">宮崎県</option><option value="46">鹿児島県</option><option value="47">沖縄県</option>
+          </select>
+        </div>
+        <div class="fgrp" id="biz-city-grp">
+          <label class="flbl">市区町村</label>
+          <select class="fsel" id="biz-city">
+            <option value="">（都道府県を先に選択）</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label class="flbl">発注者名（任意）</label>
+          <input type="text" class="finp" id="biz-cl" placeholder="例：秋田県建設部道路課">
+        </div>
+      </div>
+
+      <!-- 発注者（国の場合） -->
+      <div id="biz-cl-kuni-grp" class="fg mt12" style="display:none">
+        <div class="fgrp" style="grid-column:1/-1">
+          <label class="flbl">発注者名（任意・表示用）</label>
+          <input type="text" class="finp" id="biz-cl-kuni" placeholder="例：秋田河川国道事務所">
+        </div>
+      </div>
+
+      <!-- 設定値プレビュー -->
+      <div id="biz-mgmt-preview" style="margin-top:10px;padding:8px 12px;background:var(--prp);border-radius:6px;font-size:12px;color:var(--pr);display:none">
+        <strong>CSV出力値：</strong>
+        管理者区分 = <span id="prev-rdmgr">-</span>　
+        局コード = <span id="prev-kyoku">-</span>　
+        事務所コード = <span id="prev-jimusho">-</span>　
+        出張所コード = <span id="prev-shuccho">-</span>
+      </div>
+    </div>
+
+    <!-- 定期点検員 -->
+    <div style="border-top:1px solid var(--bd);margin:12px 0;padding-top:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">🧑‍💼 定期点検員（業務共通・CSV出力用）</div>
+      <div class="fg">
+        <div class="fgrp"><label class="flbl">氏名</label><input type="text" class="finp" id="biz-ins1" placeholder="例：山田 太郎"></div>
+        <div class="fgrp"><label class="flbl">所属</label><input type="text" class="finp" id="biz-ins1o" placeholder="例：株式会社フレックスデザイン" value="株式会社フレックスデザイン"></div>
+      </div>
+    </div>
+    <div class="fgrp mt12"><label class="flbl">備考</label><textarea class="ftxt" id="biz-nt" rows="2"></textarea></div>
+    <div class="mod-ft"><button class="btn" onclick="closeMod('mod-biz')">キャンセル</button><button class="btn btn-pr" onclick="saveBiz()">保存</button></div>
+  </div>
+</div>
+
+<!-- モーダル: メモ入力 -->
+<div class="mov hid" id="mod-memo" onclick="if(event.target===this)closeMemoPopup()">
+  <div class="mod" style="width:min(520px,95vw)">
+    <div class="mod-hdr">
+      <div class="mod-ttl">📝 メモ編集</div>
+      <button class="mod-x" onclick="closeMemoPopup()">×</button>
+    </div>
+    <textarea id="memo-textarea" class="ftxt" rows="6"
+      style="width:100%;font-size:14px;line-height:1.7"
+      placeholder="例：柱脚GL-40mm付近に点錆あり。板厚減少は認められない。"></textarea>
+    <div style="font-size:11px;color:var(--tx2);margin-top:6px">
+      Shift+Enterで改行　／　記入例：「〇〇に目立った変状は認められない。」
+    </div>
+    <div class="mod-ft">
+      <button class="btn" onclick="closeMemoPopup()">キャンセル</button>
+      <button class="btn btn-pr" onclick="saveMemoPopup()">✓ 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル: 施設 -->
+<div class="mov hid" id="mod-fac">
+  <div class="mod">
+    <div class="mod-hdr"><div class="mod-ttl" id="mod-fac-ttl">施設追加</div><button class="mod-x" onclick="closeMod('mod-fac')">×</button></div>
+    <div class="fg">
+      <div class="fgrp"><label class="flbl req">管理番号</label><input type="text" class="finp" id="fac-mn" placeholder="例：AK-2024-001"></div>
+      <div class="fgrp"><label class="flbl req">施設名</label><select class="fsel" id="fac-nm"><option value="">選択</option><option value="1">案内標識</option><option value="2">警戒標識</option><option value="3">その他（道路標識）</option><option value="4">提供装置</option><option value="5">収集装置</option><option value="6">その他（情報装置）</option><option value="7">道路照明</option></select></div>
+      <div class="fgrp"><label class="flbl">施設種別</label><select class="fsel" id="fac-tp"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select></div>
+      <div class="fgrp"><label class="flbl">所在地</label><input type="text" class="finp" id="fac-lc"></div>
+      <div class="fgrp"><label class="flbl">緯度</label><input type="text" class="finp" id="fac-lt" placeholder="38.82670"></div>
+      <div class="fgrp"><label class="flbl">経度</label><input type="text" class="finp" id="fac-lg" placeholder="139.84151"></div>
+    </div>
+    <div class="mod-ft"><button class="btn" onclick="closeMod('mod-fac')">キャンセル</button><button class="btn btn-pr" onclick="saveFac()">追加</button></div>
+  </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+let S = { biz:[], fac:[], ins:[], curBiz:null, curFac:null, editBiz:null, _imp:null };
+
+// 点検結果テーブル定義（過年度調書の行構成に完全対応）
+// ============================================================
+// R6.9附属物点検要領 表－２．１．１ 完全準拠
+// 点検箇所・部材定義
+// ============================================================
+// 各行に適用される損傷の種類を明示（ハッチング＝適用外は false）
+// T = ['き裂','防食機能の劣化','腐食','異種金属接触腐食','変形・欠損','ゆるみ・脱落','破断','ひびわれ','うき・剥離','滞水','その他']
+//       [0]        [1]            [2]         [3]           [4]        [5]       [6]    [7]      [8]       [9]    [10]
+// true=適用あり(白) false=適用外(ハッチ)
+const DMG_ROWS = [
+  // 支柱部
+  {grp:'支柱',sub:'支柱本体',        name:'支柱本体',              code:'Pph',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱本体',        name:'支柱継手部',            code:'Ppj',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'支柱本体',        name:'支柱分岐部',            code:'Ppd',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱本体',        name:'支柱内部',              code:'Ppi',   app:[0,1,1,1,0,0,0,0,0,1,1]},
+  {grp:'',    sub:'支柱基部',        name:'リブ・取付溶接部',      code:'Pbr',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱基部',        name:'柱・ベースプレート溶接部',code:'Pbp', app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱基部',        name:'ベースプレート取付部',  code:'Pbb',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'支柱基部',        name:'路面境界部（GL-0mm）',  code:'Pgl-0', app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱基部',        name:'路面境界部（GL-40mm）', code:'Pgl-40',app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'支柱基部',        name:'柱・基礎境界部',        code:'Ppb',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'その他',          name:'電気設備用開口部',      code:'Phh',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'その他',          name:'開口部ボルト',          code:'Phb',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // 横梁
+  {grp:'横梁',sub:'横梁本体',        name:'横梁本体',              code:'Cbh',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'横梁本体',        name:'横梁取付部',            code:'Cbi',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'横梁本体',        name:'横梁トラス本体',        code:'Cth',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'溶接部・継手部',  name:'横梁仕口溶接部',        code:'Cbw',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'溶接部・継手部',  name:'横梁トラス溶接部',      code:'Ctw',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  {grp:'',    sub:'溶接部・継手部',  name:'横梁継手部',            code:'Cbj',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'基礎',sub:'基礎コンクリート部',name:'基礎コンクリート部', code:'Bbc',   app:[0,0,0,0,1,0,0,1,1,1,1]},
+  {grp:'',    sub:'アンカーボルト・ナット',name:'アンカーボルト・ナット',code:'Bab',app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // ブラケット
+  {grp:'ブラケット',sub:'ブラケット本体',name:'ブラケット本体',   code:'Brh',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'ブラケット取付部',name:'ブラケット取付部',      code:'Bri',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // 基板部（参考資料1 表-1.1.1・様式その6 完全準拠）
+  // 基板（sub）: 標識板・道路情報板の2つ
+  {grp:'基板部',sub:'基板',          name:'標識板（添架含む）',        code:'Srp',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'基板',            name:'道路情報板',               code:'Xdi',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // 基板・支柱接続部（sub）
+  {grp:'',    sub:'基板・支柱接続部',  name:'基板取付部',               code:'Srb',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // 基礎
+  // その他（灯具・ビスリベット・バンド・配線・足場を含む）
+  // 灯具・灯具取付部：道路照明施設のみ該当（typeForceNAで自動制御）
+  {grp:'その他',sub:'その他',        name:'灯具',                     code:'Sli',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'その他',          name:'灯具取付部',               code:'Slb',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  // ビス・リベット：腐食・ゆるみ脱落・その他のみ（FIXED_NA：初期値「無」）
+  {grp:'',    sub:'その他',          name:'ビス・リベット（重ね貼り用）', code:'Srq',   app:[0,0,1,0,0,1,0,0,0,0,1]},
+  {grp:'',    sub:'その他',          name:'バンド部（共架型）',          code:'Xbn',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+  {grp:'',    sub:'その他',          name:'配線部分',                 code:'Xwi',   app:[1,1,1,1,1,0,0,0,0,0,1]},
+  // 管理用足場：FIXED_NA（初期値「無」）
+  {grp:'',    sub:'その他',          name:'管理用の足場・作業台',        code:'Xsc',   app:[1,1,1,1,1,1,1,0,0,0,1]},
+];
+
+// ============================================================
+// 損傷の種類定義（R6.9付録-2 完全準拠）
+// 評価区分でc区分が存在しない損傷種類（a/eのみ）
+// ① き裂: a/e のみ（cなし）
+// ③ 破断: a/e のみ（cなし）
+// ⑥ 異種金属接触腐食: a/e のみ（cなし）
+// ⑨ うき・剥離: a/e のみ（cなし）
+// ============================================================
+const DMG_TYPES = [
+  'き裂',           // [0] 鋼部材 a/e
+  '防食機能の劣化', // [1] 鋼部材 a/c/e
+  '腐食',           // [2] 鋼部材 a/c/e
+  '異種金属接触腐食',// [3] 鋼部材 a/e
+  '変形・欠損',     // [4] 共通   a/c/e
+  'ゆるみ・脱落',   // [5] ボルト系 a/c/e
+  '破断',           // [6] 鋼部材 a/e
+  'ひびわれ',       // [7] コンクリート a/c/e
+  'うき・剥離',     // [8] コンクリート a/e
+  '滞水',           // [9] 共通（内部） a/c/e
+  'その他',         // [10] 共通 a/c/e
+];
+// c区分が存在しない損傷種類（a/eのみ）→ cボタンをグレーアウト
+const NO_C_TYPES = new Set(['き裂','破断','異種金属接触腐食','うき・剥離']);
+const MEAS_PARTS = ['基板部','基板・支柱接続部','支柱部（支柱・横梁・基礎・ブラケット）','その他'];
+const MEAS_RSNS = ['附属物としての構造安全性確保のため','耐久性改善のため','第三者被害防止のため','その他'];
+
+
+// ===== カスタムカレンダー =====
+const HDAYS = (()=>{
+  const h={};
+  const a=(y,m,d)=>{ h[`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`]=1; };
+  const nw=(y,m,dow,n)=>{ let d=1,dt=new Date(y,m-1,1); while(dt.getDay()!==dow){d++;dt.setDate(d);} return d+(n-1)*7; };
+  for(let y=2020;y<=2030;y++){
+    [[1,1],[2,11],[2,23],[4,29],[5,3],[5,4],[5,5],[8,11],[11,3],[11,23]].forEach(([m,d])=>a(y,m,d));
+    a(y,1,nw(y,1,1,2)); a(y,7,nw(y,7,1,3)); a(y,9,nw(y,9,1,3)); a(y,10,nw(y,10,1,2));
+    a(y,3,Math.floor(20.8431+0.242194*(y-1980)-Math.floor((y-1980)/4)));
+    a(y,9,Math.floor(23.2488+0.242194*(y-1980)-Math.floor((y-1980)/4)));
+  }
+  ['2024-01-08','2024-02-12','2024-09-22','2025-02-24','2025-05-06','2025-09-22','2025-11-24'].forEach(d=>h[d]=1);
+  return h;
+})();
+const isHol=d=>!!HDAYS[d];
+let _cTgt=null,_cCb=null,_cY=0,_cM=0;
+function calCreate(){
+  if(document.getElementById('_cal')) return;
+  const el=document.createElement('div');
+  el.id='_cal'; el.className='cal-pop';
+  el.innerHTML=`<div class="cal-hdr"><button class="cal-nav" id="_cp">&#8249;</button><span class="cal-hdr-lbl" id="_cl"></span><button class="cal-nav" id="_cn">&#8250;</button></div><div class="cal-grid"><div class="cal-dow"><span class="cal-sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span style="color:#1976d2">土</span></div><div class="cal-days" id="_cd"></div></div><button class="cal-today-btn" id="_ct">今日</button>`;
+  document.body.appendChild(el);
+  document.getElementById('_cp').onclick=e=>{e.stopPropagation();_cM--;if(_cM<0){_cM=11;_cY--;}calRender();};
+  document.getElementById('_cn').onclick=e=>{e.stopPropagation();_cM++;if(_cM>11){_cM=0;_cY++;}calRender();};
+  document.getElementById('_ct').onclick=e=>{e.stopPropagation();const t=new Date();_cY=t.getFullYear();_cM=t.getMonth();calRender();};
+  document.addEventListener('click',e=>{const c=document.getElementById('_cal');if(c&&!c.contains(e.target)&&e.target!==_cTgt)calClose();});
+}
+function calOpen(inp,cb){
+  calCreate(); _cTgt=inp; _cCb=cb||null;
+  const v=inp.value,dt=v?new Date(v+'T00:00:00'):new Date();
+  _cY=dt.getFullYear(); _cM=dt.getMonth(); calRender();
+  const c=document.getElementById('_cal'); c.classList.add('open');
+  const r=inp.getBoundingClientRect();
+  let top=r.bottom+4,left=r.left;
+  if(left+282>window.innerWidth)left=window.innerWidth-292;
+  if(top+300>window.innerHeight)top=r.top-300;
+  c.style.top=(top+window.scrollY)+'px'; c.style.left=left+'px';
+}
+function calClose(){const c=document.getElementById('_cal');if(c)c.classList.remove('open');_cTgt=null;}
+function calRender(){
+  const MN=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('_cl').textContent=`${_cY}年 ${MN[_cM]}`;
+  const today=new Date().toISOString().slice(0,10),sel=_cTgt?.value||'';
+  const fd=new Date(_cY,_cM,1).getDay(),dim=new Date(_cY,_cM+1,0).getDate(),dip=new Date(_cY,_cM,0).getDate();
+  let html='';
+  for(let i=fd-1;i>=0;i--){const d=dip-i,dow=new Date(_cY,_cM-1,d).getDay();html+=`<button class="cal-day cal-other${dow===0?' cal-sun':dow===6?' cal-sat':''}" disabled>${d}</button>`;}
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(_cY,_cM,d),dow=dt.getDay();
+    const iso=`${_cY}-${String(_cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hol=isHol(iso),sun=dow===0||hol,sat=dow===6&&!hol;
+    const cls=['cal-day',iso===sel?'cal-selected':'',iso===today&&iso!==sel?'cal-today':'',sun?'cal-sun':'',sat?'cal-sat':'',hol?'cal-hol':''].filter(Boolean).join(' ');
+    html+=`<button class="${cls}" onclick="calSel('${iso}')">${d}</button>`;
+  }
+  const rem=42-(fd+dim);
+  for(let d=1;d<=Math.min(rem,7);d++){const dow=new Date(_cY,_cM+1,d).getDay();html+=`<button class="cal-day cal-other${dow===0?' cal-sun':dow===6?' cal-sat':''}" disabled>${d}</button>`;}
+  document.getElementById('_cd').innerHTML=html;
+}
+function calSel(iso){
+  if(_cTgt){_cTgt.value=iso;_cTgt.dispatchEvent(new Event('change',{bubbles:true}));}
+  if(_cCb)_cCb(iso);
+  calClose();
+}
+
+// 緯度経度変更時にMichi施設キーを自動更新
+function updMichiKey(){
+  const lat = parseFloat(v('f-lat')), lng = parseFloat(v('f-lng'));
+  const mk = document.getElementById('f-michi');
+  if(!mk) return;
+  if(!isNaN(lat) && !isNaN(lng) && lat && lng){
+    // 手動で値を変えていない場合のみ自動更新
+    const cur = mk.value;
+    const isAutoVal = !cur || /^\d+\.\d+,\d+\.\d+$/.test(cur);
+    if(isAutoVal) mk.value = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  }
+}
+
+// ==================== INIT ====================
+window.addEventListener('DOMContentLoaded', ()=>{
+  load();
+  document.getElementById('dash-dt').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  buildDmgTable();
+  buildMeasTable();
+  buildZenei();
+  refresh();
+  // メモテキストエリア：Ctrl+Enter or Cmd+Enter で保存
+  document.getElementById('memo-textarea').addEventListener('keydown', e=>{
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+      e.preventDefault();
+      saveMemoPopup();
+    }
+  });
+});
+
+// ==================== STORAGE ====================
+// ストレージ（localStorage非対応環境でもメモリで動作）
+let _memStore = null;
+function _lsAvail(){
+  try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; }catch(e){ return false; }
+}
+function save(){
+  const json = JSON.stringify(S);
+  _memStore = json; // メモリに常に保存
+  try{ if(_lsAvail()) localStorage.setItem('fd2_data', json); }catch(e){}
+}
+function load(){
+  try{
+    // まずlocalStorageから試みる
+    if(_lsAvail()){
+      const d = localStorage.getItem('fd2_data');
+      if(d){ const p=JSON.parse(d); S={...S,...p}; return; }
+    }
+    // メモリフォールバック
+    if(_memStore){ const p=JSON.parse(_memStore); S={...S,...p}; }
+  }catch(e){}
+}
+
+// ==================== NAV ====================
+function showPage(p){
+  document.querySelectorAll('[id^="page-"]').forEach(el=>el.classList.add('hid'));
+  document.getElementById('page-'+p).classList.remove('hid');
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
+  const n=document.getElementById('nav-'+p); if(n) n.classList.add('active');
+  if(p==='biz') renderBiz();
+  if(p==='fac') renderFac();
+  if(p==='exp'){ fillSelects(); updExpList(); }
+  if(p==='imp') fillSelects();
+  if(p==='insp') fillSelects();
+  if(p==='dash') updDash();
+}
+function swTab(id,el){
+  document.querySelectorAll('#page-insp .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['t1','t2','t3','t4','t5','t6'].forEach(t=>document.getElementById(t).classList.add('hid'));
+  document.getElementById(id).classList.remove('hid');
+}
+function fillSelects(){
+  ['sel-biz','imp-biz','exp-biz'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const cur=el.value;
+    el.innerHTML='<option value="">-- 選択 --</option>'+S.biz.map(b=>`<option value="${b.id}" ${b.id===S.curBiz?'selected':''}>${b.nm}（${b.yr}）</option>`).join('');
+    if(cur) el.value=cur;
+  });
+  if(S.curBiz) onBizChg();
+}
+
+// ============================================================
+// 道路管理者マスタ（全国地方整備局・事務所・出張所）
+// コード = xROAD付録04 コード表「管理者（事務所）」準拠
+// ============================================================
+const JIMUSHO_MASTER = {
+  '81': [ // 北海道開発局
+    {code:'10', name:'北海道開発局 道路計画課', shuccho:[]},
+    {code:'11', name:'札幌開発建設部', shuccho:[
+      {code:'11',name:'札幌道路事務所'},{code:'12',name:'苫小牧道路事務所'},{code:'13',name:'室蘭道路事務所'}
+    ]},
+    {code:'21', name:'函館開発建設部', shuccho:[
+      {code:'21',name:'函館道路事務所'},{code:'22',name:'江差道路事務所'}
+    ]},
+    {code:'31', name:'旭川開発建設部', shuccho:[
+      {code:'31',name:'旭川道路事務所'},{code:'32',name:'留萌道路事務所'},{code:'33',name:'名寄道路事務所'}
+    ]},
+    {code:'41', name:'網走開発建設部', shuccho:[
+      {code:'41',name:'網走道路事務所'},{code:'42',name:'北見道路事務所'}
+    ]},
+    {code:'51', name:'釧路開発建設部', shuccho:[
+      {code:'51',name:'釧路道路事務所'},{code:'52',name:'帯広道路事務所'}
+    ]},
+    {code:'61', name:'帯広開発建設部', shuccho:[]},
+    {code:'71', name:'稚内開発建設部', shuccho:[
+      {code:'71',name:'稚内道路事務所'}
+    ]},
+  ],
+  '82': [ // 東北地方整備局
+    {code:'30', name:'青森河川国道事務所', shuccho:[
+      {code:'81',name:'青森国道維持出張所'},{code:'82',name:'弘前国道維持出張所'},{code:'83',name:'三戸国道維持出張所'}
+    ]},
+    {code:'35', name:'岩手河川国道事務所', shuccho:[
+      {code:'81',name:'盛岡国道維持出張所'},{code:'82',name:'一関国道維持出張所'},{code:'83',name:'宮古国道維持出張所'}
+    ]},
+    {code:'37', name:'三陸国道事務所', shuccho:[
+      {code:'81',name:'釜石国道維持出張所'},{code:'82',name:'大船渡国道維持出張所'}
+    ]},
+    {code:'39', name:'南三陸沿岸国道事務所', shuccho:[
+      {code:'81',name:'気仙沼国道維持出張所'}
+    ]},
+    {code:'40', name:'仙台河川国道事務所', shuccho:[
+      {code:'81',name:'仙台国道維持出張所'},{code:'82',name:'名取国道維持出張所'},{code:'83',name:'塩釜国道維持出張所'}
+    ]},
+    {code:'45', name:'秋田河川国道事務所', shuccho:[
+      {code:'81',name:'秋田国道維持出張所'},{code:'82',name:'能代国道維持出張所'},{code:'83',name:'大仙国道維持出張所'}
+    ]},
+    {code:'46', name:'湯沢河川国道事務所', shuccho:[
+      {code:'81',name:'湯沢国道維持出張所'}
+    ]},
+    {code:'47', name:'能代河川国道事務所', shuccho:[
+      {code:'81',name:'大館国道維持出張所'}
+    ]},
+    {code:'55', name:'山形河川国道事務所', shuccho:[
+      {code:'81',name:'山形国道維持出張所'},{code:'82',name:'米沢国道維持出張所'}
+    ]},
+    {code:'56', name:'酒田河川国道事務所', shuccho:[
+      {code:'81',name:'酒田国道維持出張所'},{code:'82',name:'鶴岡国道維持出張所'}
+    ]},
+    {code:'65', name:'福島河川国道事務所', shuccho:[
+      {code:'81',name:'福島国道維持出張所'},{code:'82',name:'白河国道維持出張所'},{code:'83',name:'相馬国道維持出張所'}
+    ]},
+    {code:'67', name:'郡山国道事務所', shuccho:[
+      {code:'81',name:'郡山国道維持出張所'},{code:'82',name:'二本松国道維持出張所'}
+    ]},
+    {code:'68', name:'磐城国道事務所', shuccho:[
+      {code:'81',name:'いわき国道維持出張所'}
+    ]},
+  ],
+  '83': [ // 関東地方整備局
+    {code:'10', name:'大宮国道事務所', shuccho:[{code:'81',name:'大宮国道維持出張所'},{code:'82',name:'熊谷国道維持出張所'}]},
+    {code:'11', name:'東京国道事務所', shuccho:[{code:'81',name:'東京国道維持出張所'},{code:'82',name:'多摩国道維持出張所'}]},
+    {code:'12', name:'首都国道事務所', shuccho:[]},
+    {code:'13', name:'横浜国道事務所', shuccho:[{code:'81',name:'横浜国道維持出張所'}]},
+    {code:'14', name:'相武国道事務所', shuccho:[{code:'81',name:'相武国道維持出張所'}]},
+    {code:'15', name:'川崎国道事務所', shuccho:[]},
+    {code:'20', name:'宇都宮国道事務所', shuccho:[{code:'81',name:'宇都宮国道維持出張所'},{code:'82',name:'小山国道維持出張所'}]},
+    {code:'25', name:'高崎河川国道事務所', shuccho:[{code:'81',name:'高崎国道維持出張所'},{code:'82',name:'前橋国道維持出張所'}]},
+    {code:'30', name:'千葉国道事務所', shuccho:[{code:'81',name:'千葉国道維持出張所'}]},
+    {code:'35', name:'常総国道事務所', shuccho:[{code:'81',name:'土浦国道維持出張所'}]},
+    {code:'40', name:'甲府河川国道事務所', shuccho:[{code:'81',name:'甲府国道維持出張所'}]},
+    {code:'45', name:'長野国道事務所', shuccho:[{code:'81',name:'長野国道維持出張所'},{code:'82',name:'松本国道維持出張所'}]},
+    {code:'50', name:'新潟国道事務所', shuccho:[{code:'81',name:'新潟国道維持出張所'}]},
+  ],
+  '84': [ // 北陸地方整備局
+    {code:'10', name:'新潟国道事務所', shuccho:[{code:'81',name:'新潟国道維持出張所'},{code:'82',name:'長岡国道維持出張所'}]},
+    {code:'15', name:'湯沢砂防事務所', shuccho:[]},
+    {code:'20', name:'富山河川国道事務所', shuccho:[{code:'81',name:'富山国道維持出張所'},{code:'82',name:'高岡国道維持出張所'}]},
+    {code:'30', name:'金沢河川国道事務所', shuccho:[{code:'81',name:'金沢国道維持出張所'},{code:'82',name:'小松国道維持出張所'}]},
+    {code:'35', name:'福井河川国道事務所', shuccho:[{code:'81',name:'福井国道維持出張所'},{code:'82',name:'敦賀国道維持出張所'}]},
+  ],
+  '85': [ // 中部地方整備局
+    {code:'10', name:'名古屋国道事務所', shuccho:[{code:'81',name:'名古屋国道維持出張所'}]},
+    {code:'15', name:'愛知国道事務所', shuccho:[{code:'81',name:'豊橋国道維持出張所'}]},
+    {code:'20', name:'岐阜国道事務所', shuccho:[{code:'81',name:'岐阜国道維持出張所'},{code:'82',name:'高山国道維持出張所'}]},
+    {code:'25', name:'静岡国道事務所', shuccho:[{code:'81',name:'静岡国道維持出張所'},{code:'82',name:'浜松国道維持出張所'}]},
+    {code:'30', name:'三重河川国道事務所', shuccho:[{code:'81',name:'三重国道維持出張所'}]},
+    {code:'35', name:'長野国道事務所', shuccho:[{code:'81',name:'長野国道維持出張所'}]},
+  ],
+  '86': [ // 近畿地方整備局
+    {code:'10', name:'大阪国道事務所', shuccho:[{code:'81',name:'大阪国道維持出張所'}]},
+    {code:'15', name:'近畿技術事務所', shuccho:[]},
+    {code:'20', name:'京都国道事務所', shuccho:[{code:'81',name:'京都国道維持出張所'}]},
+    {code:'25', name:'兵庫国道事務所', shuccho:[{code:'81',name:'神戸国道維持出張所'},{code:'82',name:'姫路国道維持出張所'}]},
+    {code:'30', name:'奈良国道事務所', shuccho:[{code:'81',name:'奈良国道維持出張所'}]},
+    {code:'35', name:'和歌山河川国道事務所', shuccho:[{code:'81',name:'和歌山国道維持出張所'}]},
+    {code:'40', name:'滋賀国道事務所', shuccho:[{code:'81',name:'滋賀国道維持出張所'}]},
+    {code:'45', name:'福井河川国道事務所', shuccho:[]},
+  ],
+  '87': [ // 中国地方整備局
+    {code:'10', name:'広島国道事務所', shuccho:[{code:'81',name:'広島国道維持出張所'},{code:'82',name:'東広島国道維持出張所'}]},
+    {code:'15', name:'岡山国道事務所', shuccho:[{code:'81',name:'岡山国道維持出張所'},{code:'82',name:'津山国道維持出張所'}]},
+    {code:'20', name:'山口河川国道事務所', shuccho:[{code:'81',name:'山口国道維持出張所'},{code:'82',name:'宇部国道維持出張所'}]},
+    {code:'25', name:'島根河川国道事務所', shuccho:[{code:'81',name:'島根国道維持出張所'},{code:'82',name:'浜田国道維持出張所'}]},
+    {code:'30', name:'鳥取河川国道事務所', shuccho:[{code:'81',name:'鳥取国道維持出張所'},{code:'82',name:'米子国道維持出張所'}]},
+  ],
+  '88': [ // 四国地方整備局
+    {code:'10', name:'高知河川国道事務所', shuccho:[{code:'81',name:'高知国道維持出張所'}]},
+    {code:'15', name:'徳島河川国道事務所', shuccho:[{code:'81',name:'徳島国道維持出張所'}]},
+    {code:'20', name:'香川河川国道事務所', shuccho:[{code:'81',name:'香川国道維持出張所'}]},
+    {code:'25', name:'愛媛河川国道事務所', shuccho:[{code:'81',name:'愛媛国道維持出張所'},{code:'82',name:'宇和島国道維持出張所'}]},
+  ],
+  '89': [ // 九州地方整備局
+    {code:'10', name:'福岡国道事務所', shuccho:[{code:'81',name:'福岡国道維持出張所'},{code:'82',name:'北九州国道維持出張所'}]},
+    {code:'15', name:'佐賀国道事務所', shuccho:[{code:'81',name:'佐賀国道維持出張所'}]},
+    {code:'20', name:'長崎河川国道事務所', shuccho:[{code:'81',name:'長崎国道維持出張所'},{code:'82',name:'佐世保国道維持出張所'}]},
+    {code:'25', name:'熊本河川国道事務所', shuccho:[{code:'81',name:'熊本国道維持出張所'},{code:'82',name:'八代国道維持出張所'}]},
+    {code:'30', name:'大分河川国道事務所', shuccho:[{code:'81',name:'大分国道維持出張所'},{code:'82',name:'佐伯国道維持出張所'}]},
+    {code:'35', name:'宮崎河川国道事務所', shuccho:[{code:'81',name:'宮崎国道維持出張所'},{code:'82',name:'延岡国道維持出張所'}]},
+    {code:'40', name:'鹿児島河川国道事務所', shuccho:[{code:'81',name:'鹿児島国道維持出張所'},{code:'82',name:'川薩国道維持出張所'}]},
+  ],
+  '90': [ // 沖縄総合事務局
+    {code:'10', name:'沖縄総合事務局 北部国道事務所', shuccho:[{code:'81',name:'名護国道維持出張所'}]},
+    {code:'15', name:'沖縄総合事務局 南部国道事務所', shuccho:[{code:'81',name:'那覇国道維持出張所'},{code:'82',name:'糸満国道維持出張所'}]},
+  ],
+};
+
+// 業務モーダル：管理者区分変更時
+function onBizRdmgrChg(){
+  const v = document.getElementById('biz-rdmgr').value;
+  const isKuni = v === '1';
+  const isPrefOrCity = ['2','4','5'].includes(v);
+  document.getElementById('biz-kyoku-grp').style.display     = isKuni ? '' : 'none';
+  document.getElementById('biz-jimusho-grp').style.display   = isKuni ? '' : 'none';
+  document.getElementById('biz-shuccho-grp').style.display   = isKuni ? '' : 'none';
+  document.getElementById('biz-pref-grp').style.display      = isPrefOrCity ? 'grid' : 'none';
+  document.getElementById('biz-cl-kuni-grp').style.display   = isKuni ? 'grid' : 'none';
+  if(!isKuni){
+    document.getElementById('biz-kyoku').value   = '';
+    document.getElementById('biz-jimusho').innerHTML = '<option value="">-</option>';
+    document.getElementById('biz-shuccho').innerHTML = '<option value="">-</option>';
+  }
+  updBizPreview();
+}
+
+// 業務モーダル：局変更時 → 事務所リスト更新
+function onBizKyokuChg(){
+  const kyoku = document.getElementById('biz-kyoku').value;
+  const jimushoSel = document.getElementById('biz-jimusho');
+  const shucchoSel = document.getElementById('biz-shuccho');
+  jimushoSel.innerHTML = '<option value="">事務所を選択</option>';
+  shucchoSel.innerHTML = '<option value="">（事務所を先に選択）</option>';
+  if(kyoku && JIMUSHO_MASTER[kyoku]){
+    JIMUSHO_MASTER[kyoku].forEach(j=>{
+      jimushoSel.innerHTML += `<option value="${j.code}">${j.name}</option>`;
+    });
+  }
+  updBizPreview();
+}
+
+// 業務モーダル：事務所変更時 → 出張所リスト更新
+function onBizJimushoChg(){
+  const kyoku   = document.getElementById('biz-kyoku').value;
+  const jimusho = document.getElementById('biz-jimusho').value;
+  const shucchoSel = document.getElementById('biz-shuccho');
+  shucchoSel.innerHTML = '<option value="">（なし）</option>';
+  if(kyoku && jimusho && JIMUSHO_MASTER[kyoku]){
+    const j = JIMUSHO_MASTER[kyoku].find(j=>j.code===jimusho);
+    if(j && j.shuccho.length){
+      j.shuccho.forEach(s=>{
+        shucchoSel.innerHTML += `<option value="${s.code}">${s.name}</option>`;
+      });
+    }
+  }
+  // 発注者名を自動セット
+  if(kyoku && jimusho && JIMUSHO_MASTER[kyoku]){
+    const j = JIMUSHO_MASTER[kyoku].find(j=>j.code===jimusho);
+    const clKuni = document.getElementById('biz-cl-kuni');
+    if(j && clKuni && !clKuni.value) clKuni.value = j.name;
+  }
+  updBizPreview();
+}
+
+// 業務モーダル：都道府県変更時 → 市区町村リスト更新
+function onBizPrefChg(){
+  const pref = document.getElementById('biz-pref').value;
+  const citySel = document.getElementById('biz-city');
+  citySel.innerHTML = '<option value="">選択（任意）</option>';
+  if(pref && CITY_MASTER[pref]){
+    CITY_MASTER[pref].forEach(([code,name])=>{
+      citySel.innerHTML += `<option value="${code}">${name}</option>`;
+    });
+  }
+  updBizPreview();
+}
+
+// 設定値プレビュー更新
+function updBizPreview(){
+  const rdmgr   = document.getElementById('biz-rdmgr').value;
+  const kyoku   = document.getElementById('biz-kyoku')?.value||'';
+  const jimusho = document.getElementById('biz-jimusho')?.value||'';
+  const shuccho = document.getElementById('biz-shuccho')?.value||'';
+  const pref    = document.getElementById('biz-pref')?.value||'';
+  const prev    = document.getElementById('biz-mgmt-preview');
+  if(!prev) return;
+  if(rdmgr){
+    prev.style.display = '';
+    document.getElementById('prev-rdmgr').textContent   = rdmgr   || '-';
+    document.getElementById('prev-kyoku').textContent   = kyoku   || '-';
+    document.getElementById('prev-jimusho').textContent = jimusho || '-';
+    document.getElementById('prev-shuccho').textContent = shuccho || '-';
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+// ==================== BIZ ====================
+function openBizMod(id){
+  S.editBiz=id||null;
+  const b=id?S.biz.find(b=>b.id===id):{};
+  document.getElementById('mod-biz-ttl').textContent=id?'業務編集':'新規業務登録';
+
+  // 基本項目をセット
+  ['biz-nm','biz-yr','biz-ct','biz-s','biz-e','biz-nt','biz-ins1','biz-ins1o'].forEach(fid=>{
+    const k={['biz-nm']:'nm',['biz-yr']:'yr',['biz-ct']:'ct',['biz-s']:'s',['biz-e']:'e',['biz-nt']:'nt',['biz-ins1']:'ins1',['biz-ins1o']:'ins1o'}[fid];
+    const el = document.getElementById(fid); if(el) el.value = b[k]||'';
+  });
+
+  // 管理者区分
+  const rdmgr = b.rdmgr||'';
+  document.getElementById('biz-rdmgr').value = rdmgr;
+  onBizRdmgrChg(); // 表示切替
+
+  if(rdmgr === '1'){
+    // 国 → 局・事務所・出張所を順番にセット
+    const kyoku = b.kyoku||'';
+    document.getElementById('biz-kyoku').value = kyoku;
+    onBizKyokuChg();
+    // 事務所
+    setTimeout(()=>{
+      const jimushoSel = document.getElementById('biz-jimusho');
+      jimushoSel.value = b.jimusho||'';
+      onBizJimushoChg();
+      setTimeout(()=>{
+        document.getElementById('biz-shuccho').value = b.shuccho||'';
+        updBizPreview();
+      },0);
+    },0);
+    // 発注者名（国用）
+    const clKuni = document.getElementById('biz-cl-kuni');
+    if(clKuni) clKuni.value = b.cl||'';
+  } else if(['2','4','5'].includes(rdmgr)){
+    // 都道府県/市区町村
+    const pref = b.pref||'';
+    document.getElementById('biz-pref').value = pref;
+    onBizPrefChg();
+    setTimeout(()=>{
+      document.getElementById('biz-city').value = b.city||'';
+    },0);
+    const cl = document.getElementById('biz-cl');
+    if(cl) cl.value = b.cl||'';
+  }
+
+  document.getElementById('mod-biz').classList.remove('hid');
+}
+
+function saveBiz(){
+  const nm=v('biz-nm'), yr=v('biz-yr');
+  if(!nm||!yr){ alert('業務名と年度は必須です'); return; }
+  const rdmgr = v('biz-rdmgr');
+  if(!rdmgr){ alert('管理者区分を選択してください'); return; }
+
+  // 発注者名を取得（国の場合は biz-cl-kuni、他は biz-cl）
+  const cl = rdmgr==='1'
+    ? (document.getElementById('biz-cl-kuni')?.value||'')
+    : v('biz-cl');
+
+  const bizData={
+    nm, yr, cl,
+    ct:v('biz-ct'), s:v('biz-s'), e:v('biz-e'), nt:v('biz-nt'),
+    ins1:v('biz-ins1'), ins1o:v('biz-ins1o'),
+    rdmgr,
+    kyoku:   rdmgr==='1' ? v('biz-kyoku')   : '',
+    jimusho: rdmgr==='1' ? v('biz-jimusho') : '',
+    shuccho: rdmgr==='1' ? v('biz-shuccho') : '',
+    pref:    ['2','4','5'].includes(rdmgr) ? v('biz-pref') : '',
+    city:    ['2','4','5'].includes(rdmgr) ? v('biz-city') : '',
+  };
+
+  if(S.editBiz){ const b=S.biz.find(b=>b.id===S.editBiz); Object.assign(b,bizData); }
+  else S.biz.push({id:'b'+Date.now(),...bizData,at:new Date().toISOString()});
+  save(); closeMod('mod-biz'); renderBiz(); refresh();
+}
+function delBiz(id){
+  if(!confirm('この業務を削除しますか？関連する施設・点検記録も削除されます。')) return;
+  S.biz=S.biz.filter(b=>b.id!==id);
+  S.fac=S.fac.filter(f=>f.bid!==id);
+  S.ins=S.ins.filter(i=>i.bid!==id);
+  if(S.curBiz===id) S.curBiz=null;
+  save(); renderBiz(); refresh();
+}
+function selBiz(id){ S.curBiz=id; save(); showPage('fac'); }
+function renderBiz(){
+  const tb=document.getElementById('biz-tb');
+  if(!S.biz.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--tx2)">業務がありません</td></tr>'; return; }
+  tb.innerHTML=S.biz.map(b=>{
+    const fs=S.fac.filter(f=>f.bid===b.id);
+    const dn=fs.filter(f=>S.ins.find(i=>i.fid===f.id)).length;
+    // 管理者情報の表示
+    let mgmtLabel = '-';
+    if(b.rdmgr==='1' && b.kyoku){
+      const kyokuName = {'81':'北海道','82':'東北','83':'関東','84':'北陸','85':'中部','86':'近畿','87':'中国','88':'四国','89':'九州','90':'沖縄'}[b.kyoku]||b.kyoku;
+      const jimushoList = JIMUSHO_MASTER[b.kyoku]||[];
+      const jName = jimushoList.find(j=>j.code===b.jimusho)?.name || (b.jimusho ? `事務所${b.jimusho}` : '');
+      mgmtLabel = `<span style="font-size:11px">${kyokuName}整備局<br>${jName}</span>`;
+    } else if(['2','4','5'].includes(b.rdmgr) && b.pref){
+      const prefNames={'01':'北海道','02':'青森','03':'岩手','04':'宮城','05':'秋田','06':'山形','07':'福島','08':'茨城','09':'栃木','10':'群馬','11':'埼玉','12':'千葉','13':'東京','14':'神奈川','15':'新潟','16':'富山','17':'石川','18':'福井','19':'山梨','20':'長野','21':'岐阜','22':'静岡','23':'愛知','24':'三重','25':'滋賀','26':'京都','27':'大阪','28':'兵庫','29':'奈良','30':'和歌山','31':'鳥取','32':'島根','33':'岡山','34':'広島','35':'山口','36':'徳島','37':'香川','38':'愛媛','39':'高知','40':'福岡','41':'佐賀','42':'長崎','43':'熊本','44':'大分','45':'宮崎','46':'鹿児島','47':'沖縄'};
+      mgmtLabel = `<span style="font-size:11px">${prefNames[b.pref]||b.pref}</span>`;
+    }
+    return `<tr>
+      <td><strong>${b.nm}</strong><br><span style="font-size:11px;color:var(--tx2)">${b.cl||''}</span></td>
+      <td>${b.yr}</td>
+      <td>${mgmtLabel}</td>
+      <td>${fs.length}</td>
+      <td>${dn}/${fs.length}</td>
+      <td><div class="btn-grp">
+        <button class="btn btn-sm btn-pr" onclick="selBiz('${b.id}')">施設を開く</button>
+        <button class="btn btn-sm" onclick="openBizMod('${b.id}')">編集</button>
+        <button class="btn btn-sm" onclick="delBiz('${b.id}')" style="color:var(--dg)">削除</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ==================== FAC ====================
+function openFacMod(id){
+  if(!S.curBiz){ alert('先に業務を選択してください'); return; }
+  const f=id?S.fac.find(f=>f.id===id):{};
+  document.getElementById('mod-fac-ttl').textContent=id?'施設編集':'施設追加';
+  document.getElementById('mod-fac').setAttribute('data-eid',id||'');
+  document.getElementById('fac-mn').value=f.mn||'';
+  document.getElementById('fac-nm').value=f.nm||'';
+  document.getElementById('fac-tp').value=f.tp||'';
+  document.getElementById('fac-lc').value=f.lc||'';
+  document.getElementById('fac-lt').value=f.lt||'';
+  document.getElementById('fac-lg').value=f.lg||'';
+  document.getElementById('mod-fac').classList.remove('hid');
+}
+function saveFac(){
+  const mn=v('fac-mn'), nm=v('fac-nm');
+  if(!mn||!nm){ alert('管理番号と施設名は必須です'); return; }
+  const eid=document.getElementById('mod-fac').getAttribute('data-eid');
+  if(eid){ const f=S.fac.find(f=>f.id===eid); Object.assign(f,{mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg')}); }
+  else S.fac.push({id:'f'+Date.now(),bid:S.curBiz,mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg'),at:new Date().toISOString()});
+  save(); closeMod('mod-fac'); renderFac();
+}
+// ============================================================
+// 東北6県 市区町村マスター（PDFマスタ一覧Ver2.0準拠）
+// value = 6桁市区町村コード
+// ============================================================
+const CITY_MASTER = {
+  '02': [ // 青森県
+    ['022012','青森市'],['022021','弘前市'],['022039','八戸市'],['022047','黒石市'],
+    ['022055','五所川原市'],['022063','十和田市'],['022071','三沢市'],['022080','むつ市'],
+    ['022098','つがる市'],['022101','平川市'],
+    ['023019','平内町'],['023035','今別町'],['023043','蓬田村'],['023078','外ヶ浜町'],
+    ['023213','鰺ヶ沢町'],['023230','深浦町'],['023434','西目屋村'],
+    ['023612','藤崎町'],['023621','大鰐町'],['023671','田舎館村'],
+    ['023817','板柳町'],['023841','鶴田町'],['023876','中泊町'],
+    ['024015','野辺地町'],['024023','七戸町'],['024058','六戸町'],['024066','横浜町'],
+    ['024082','東北町'],['024112','六ヶ所村'],['024121','おいらせ町'],
+    ['024236','大間町'],['024244','東通村'],['024252','風間浦村'],['024261','佐井村'],
+    ['024414','三戸町'],['024422','五戸町'],['024431','田子町'],
+    ['024457','南部町'],['024465','階上町'],['024503','新郷村']
+  ],
+  '03': [ // 岩手県
+    ['032018','盛岡市'],['032026','宮古市'],['032034','大船渡市'],['032051','花巻市'],
+    ['032069','北上市'],['032077','久慈市'],['032085','遠野市'],['032093','一関市'],
+    ['032107','陸前高田市'],['032115','釜石市'],['032131','二戸市'],
+    ['032140','八幡平市'],['032158','奥州市'],['032166','滝沢市'],
+    ['033014','雫石町'],['033022','葛巻町'],['033031','岩手町'],
+    ['033219','紫波町'],['033227','矢巾町'],['033669','西和賀町'],
+    ['033812','金ケ崎町'],['034029','平泉町'],['034410','住田町'],
+    ['034614','大槌町'],['034827','山田町'],['034835','岩泉町'],
+    ['034843','田野畑村'],['034851','普代村'],
+    ['035017','軽米町'],['035033','野田村'],['035068','九戸村'],
+    ['035076','洋野町'],['035246','一戸町']
+  ],
+  '04': [ // 宮城県
+    ['041009','仙台市'],['041017','仙台市青葉区'],['041025','仙台市宮城野区'],
+    ['041033','仙台市若林区'],['041041','仙台市太白区'],['041050','仙台市泉区'],
+    ['042021','石巻市'],['042030','塩竈市'],['042056','気仙沼市'],['042064','白石市'],
+    ['042072','名取市'],['042081','角田市'],['042099','多賀城市'],['042111','岩沼市'],
+    ['042129','登米市'],['042137','栗原市'],['042145','東松島市'],
+    ['042153','大崎市'],['042161','富谷市'],
+    ['043010','蔵王町'],['043028','七ヶ宿町'],['043214','大河原町'],
+    ['043222','村田町'],['043231','柴田町'],['043249','川崎町'],
+    ['043419','丸森町'],['043613','亘理町'],['043621','山元町'],
+    ['044016','松島町'],['044041','七ヶ浜町'],['044067','利府町'],
+    ['044211','大和町'],['044229','大郷町'],['044245','大衡村'],
+    ['044440','色麻町'],['044458','加美町'],
+    ['045012','涌谷町'],['045055','美里町'],['045811','女川町'],['046060','南三陸町']
+  ],
+  '05': [ // 秋田県
+    ['052019','秋田市'],['052027','能代市'],['052035','横手市'],['052043','大館市'],
+    ['052060','男鹿市'],['052078','湯沢市'],['052094','鹿角市'],
+    ['052108','由利本荘市'],['052116','潟上市'],['052124','大仙市'],
+    ['052132','北秋田市'],['052141','にかほ市'],['052159','仙北市'],
+    ['053031','小坂町'],['053279','上小阿仁村'],['053465','藤里町'],
+    ['053481','三種町'],['053490','八峰町'],
+    ['053619','五城目町'],['053635','八郎潟町'],['053660','井川町'],
+    ['053686','大潟村'],['054348','美郷町'],['054631','羽後町'],['054640','東成瀬村']
+  ],
+  '06': [ // 山形県
+    ['062014','山形市'],['062022','米沢市'],['062031','鶴岡市'],['062049','酒田市'],
+    ['062057','新庄市'],['062065','寒河江市'],['062073','上山市'],['062081','村山市'],
+    ['062090','長井市'],['062103','天童市'],['062111','東根市'],
+    ['062120','尾花沢市'],['062138','南陽市'],
+    ['063011','山辺町'],['063029','中山町'],['063215','河北町'],
+    ['063223','西川町'],['063231','朝日町'],['063240','大江町'],
+    ['063410','大石田町'],['063614','金山町'],['063622','最上町'],
+    ['063631','舟形町'],['063649','真室川町'],['063657','大蔵村'],
+    ['063665','鮭川村'],['063673','戸沢村'],
+    ['063819','高畠町'],['063827','川西町'],['064017','小国町'],
+    ['064025','白鷹町'],['064033','飯豊町'],['064262','三川町'],
+    ['064289','庄内町'],['064611','遊佐町']
+  ],
+  '07': [ // 福島県
+    ['072010','福島市'],['072028','会津若松市'],['072036','郡山市'],
+    ['072044','いわき市'],['072052','白河市'],['072079','須賀川市'],
+    ['072087','喜多方市'],['072095','相馬市'],['072109','二本松市'],
+    ['072117','田村市'],['072125','南相馬市'],['072133','伊達市'],['072141','本宮市'],
+    ['073016','桑折町'],['073032','国見町'],['073083','川俣町'],['073229','大玉村'],
+    ['073423','鏡石町'],['073440','天栄村'],['073628','下郷町'],['073644','檜枝岐村'],
+    ['073679','只見町'],['073687','南会津町'],
+    ['074021','北塩原村'],['074055','西会津町'],['074071','磐梯町'],['074080','猪苗代町'],
+    ['074217','会津坂下町'],['074225','湯川村'],['074233','柳津町'],
+    ['074446','三島町'],['074454','金山町'],['074462','昭和村'],['074471','会津美里町'],
+    ['074616','西郷村'],['074641','泉崎村'],['074659','中島村'],['074667','矢吹町'],
+    ['074811','棚倉町'],['074829','矢祭町'],['074837','塙町'],['074845','鮫川村'],
+    ['075019','石川町'],['075027','玉川村'],['075035','平田村'],
+    ['075043','浅川町'],['075051','古殿町'],['075213','三春町'],['075221','小野町'],
+    ['075418','広野町'],['075426','楢葉町'],['075434','富岡町'],['075442','川内村'],
+    ['075451','大熊町'],['075469','双葉町'],['075477','浪江町'],['075485','葛尾村'],
+    ['075612','新地町'],['075647','飯舘村']
+  ]
+};
+
+// 都道府県変更時に市区町村selectを更新
+function onPrefChg(){
+  const pref = document.getElementById('f-pref').value;
+  const cityEl = document.getElementById('f-city');
+  const cities = CITY_MASTER[pref];
+  if(cities){
+    cityEl.innerHTML = '<option value="">選択</option>' +
+      cities.map(([code,name])=>`<option value="${code}">${name}</option>`).join('');
+  } else {
+    cityEl.innerHTML = '<option value="">（東北6県以外はコード不要）</option>';
+  }
+}
+
+// ============================================================
+// 所在地テキストから都道府県・市区町村を自動判別
+// ============================================================
+const PREF_MAP = [
+  ['北海道','01'],['青森県','02'],['岩手県','03'],['宮城県','04'],['秋田県','05'],
+  ['山形県','06'],['福島県','07'],['茨城県','08'],['栃木県','09'],['群馬県','10'],
+  ['埼玉県','11'],['千葉県','12'],['東京都','13'],['神奈川県','14'],['新潟県','15'],
+  ['富山県','16'],['石川県','17'],['福井県','18'],['山梨県','19'],['長野県','20'],
+  ['岐阜県','21'],['静岡県','22'],['愛知県','23'],['三重県','24'],['滋賀県','25'],
+  ['京都府','26'],['大阪府','27'],['兵庫県','28'],['奈良県','29'],['和歌山県','30'],
+  ['鳥取県','31'],['島根県','32'],['岡山県','33'],['広島県','34'],['山口県','35'],
+  ['徳島県','36'],['香川県','37'],['愛媛県','38'],['高知県','39'],['福岡県','40'],
+  ['佐賀県','41'],['長崎県','42'],['熊本県','43'],['大分県','44'],['宮崎県','45'],
+  ['鹿児島県','46'],['沖縄県','47'],
+];
+
+function autoDetectPref(locText){
+  if(!locText) return;
+
+  // 都道府県名を前方一致で探す
+  const found = PREF_MAP.find(([name])=> locText.includes(name));
+  if(!found) return;
+
+  const [prefName, prefCode] = found;
+  const prefSel = document.getElementById('f-pref');
+  const citySel = document.getElementById('f-city');
+  if(!prefSel) return;
+
+  // 都道府県が変わる場合のみ更新
+  if(prefSel.value !== prefCode){
+    prefSel.value = prefCode;
+    onPrefChg(); // 市区町村リストを更新
+  }
+
+  // 市区町村も判別（都道府県名の後の文字列で探す）
+  const cities = CITY_MASTER[prefCode];
+  if(!cities) return;
+  const afterPref = locText.slice(locText.indexOf(prefName) + prefName.length);
+  const foundCity = cities.find(([code, name])=> afterPref.startsWith(name));
+  if(foundCity && citySel.value !== foundCity[0]){
+    citySel.value = foundCity[0];
+  }
+}
+
+// 所在地CSV出力用：都道府県コード＋市区町村コード＋詳細テキストを結合
+function getLocForCsv(i){
+  // 保存済みデータから都道府県・市区町村コードを取得
+  const pref = i.pref || '';
+  const city = i.city || '';
+  const loc  = i.loc  || '';
+  return loc; // 所在地列はテキスト（詳細住所）
+}
+
+const BDGM={'Ⅰ':'b1','Ⅱ':'b2','Ⅲ':'b3','Ⅳ':'b4'};
+// 表示用ラベルマップ（コード→日本語ラベル）
+const LBL_FTP  = {'1':'道路標識','2':'道路情報提供装置','3':'道路情報提供装置（添架物有）','4':'道路照明施設','5':'その他'};
+const LBL_FNM  = {'1':'案内標識','2':'警戒標識','3':'その他（道路標識）','4':'提供装置','5':'収集装置','6':'その他（情報装置）','7':'道路照明'};
+const LBL_PIL  = {'01':'路側式','02':'片持式（逆Ｌ型）','03':'片持式（Ｆ型）','04':'片持式（テーパーポール型）','05':'片持式（Ｔ型）','06':'門形式（オーバーヘッド型）','07':'添架式','08':'その他','09':'ポール照明方式（テーパーポール型）','10':'ポール照明方式（直線型）','11':'ポール照明方式（Ｙ型）','12':'添架式（照明）','13':'トンネル照明','14':'その他（照明）'};
+function renderFac(){
+  const lb=document.getElementById('fac-lbl');
+  const b=S.biz.find(b=>b.id===S.curBiz);
+  lb.textContent=b?`業務：${b.nm}（${b.yr}年度）`:'業務を選択してください';
+  const fs=S.fac.filter(f=>f.bid===S.curBiz);
+  const tb=document.getElementById('fac-tb');
+  if(!fs.length){ tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--tx2)">施設がありません。施設追加またはExcelインポートから追加してください。</td></tr>'; return; }
+  tb.innerHTML=fs.map(f=>{
+    const i=S.ins.find(i=>i.fid===f.id)||{};
+    const bd=d=>d?`<span class="bdg ${BDGM[d]||'bg'}">${d}</span>`:'<span class="bdg bg">未</span>';
+    return `<tr>
+      <td><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
+      <td>${f.lc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
+      <td><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
+      <td><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// 施設一覧から現地確認年月日を直接設定
+function setInspDate(fid, dt){
+  const f = S.fac.find(f=>f.id===fid); if(!f) return;
+  let i = S.ins.find(i=>i.fid===fid);
+  if(!i){
+    // 点検記録がまだない場合は新規作成
+    const biz = S.biz.find(b=>b.id===f.bid)||{};
+    i = {fid, bid:f.bid, ins1:biz.ins1||'', ins1o:biz.ins1o||''};
+    S.ins.push(i);
+  }
+  i.dt = dt;
+  i.upd = new Date().toISOString();
+  save();
+}
+
+// ==================== INSPECTION ====================
+function onBizChg(){
+  const bid=v('sel-biz'); S.curBiz=bid||null;
+  const fs=S.fac.filter(f=>f.bid===bid);
+  const sel=document.getElementById('sel-fac');
+  sel.innerHTML='<option value="">-- 施設を選択 --</option>'+fs.map(f=>`<option value="${f.id}">${f.mn} ${f.nm} ${f.lc||''}</option>`).join('');
+  document.getElementById('insp-body').classList.add('hid');
+}
+function onFacChg(){
+  const fid=v('sel-fac'); if(!fid){ document.getElementById('insp-body').classList.add('hid'); return; }
+  S.curFac=fid; loadInsp(fid);
+}
+function openInsp(fid){
+  S.curFac=fid;
+  showPage('insp');
+  fillSelects();
+  document.getElementById('sel-fac').value=fid;
+  loadInsp(fid);
+}
+function loadInsp(fid){
+  const f=S.fac.find(f=>f.id===fid)||{};
+  const i=S.ins.find(i=>i.fid===fid)||{};
+  document.getElementById('insp-lbl').textContent=`${f.mn||''} ${f.nm||''} ${f.lc||''}`;
+  // 基本情報
+  const biz=S.biz.find(b=>b.id===f.bid)||{};
+  sv('f-date',i.dt||''); sv('f-mgmt',i.mn||f.mn||'');
+  sv('f-ins1',i.ins1||biz.ins1||'');       // 業務の定期点検員氏名をデフォルト
+  sv('f-ins1o',i.ins1o||biz.ins1o||'');    // 業務の所属をデフォルト
+  sv('f-instype',i.instype||'定期点検（中間）'); sv('f-insmethod',i.insmethod||'近接目視');
+  // -------------------------------------------------------
+  // テキスト値→コード変換マップ（旧データ互換）
+  // UIのselect value属性がコード番号になったため、
+  // 旧テキスト値で保存されたデータも正しくセットできるよう変換する
+  // -------------------------------------------------------
+  const _c = (map, val) => map[val] !== undefined ? map[val] : val;
+  const _FNM  = {'案内標識':'1','警戒標識':'2','その他（道路標識）':'3','提供装置':'4','収集装置':'5','その他（情報装置）':'6','道路照明':'7'};
+  const _FTP  = {'道路標識':'1','道路情報提供装置':'2','道路情報提供装置（添架物有）':'3','道路照明施設':'4','その他':'5'};
+  const _RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','一般国道（指定区域外）':'4','都道府県道':'5','市町村道':'6','その他':'7'};
+  const _UD   = {'上り':'1','下り':'2','上・下':'3'};
+  const _PIL  = {'路側式':'01','片持式（逆Ｌ型）':'02','片持式（Ｆ型）':'03','片持式（F型）':'03','片持式（テーパーポール型）':'04','片持式（Ｔ型）':'05','門形式（オーバーヘッド型）':'06','添架式':'07','その他':'08','ポール照明方式（テーパーポール型）':'09','ポール照明方式（直線型）':'10','ポール照明方式（Ｙ型）':'11','添架式（照明）':'12','トンネル照明':'13'};
+  const _SURF = {'塗装式':'1','亜鉛めっき式':'2','塗装式＋亜鉛めっき式':'3','その他':'4','塗装式(溶剤塗装)':'5','塗装式(静電粉体塗装)':'6','塗装式(浸漬塗装)':'7'};
+  const _BASE = {'埋め込み型':'1','ベースプレート型':'2','添架型':'3','その他':'4'};
+  const _RIB  = {'三角リブ':'1','Ｕ字リブ':'2','U字リブ':'2','その他':'3','無':'4'};
+  const _GL2  = {'コンクリート':'1','アスファルト':'2','土砂':'3','ベースプレート露出':'4','インターロッキング':'5','その他':'6'};
+  const _SATT = {'固定式':'1','吊下式':'2','その他':'3'};
+  const _15   = {'有（全部）':'1','有（一部）':'2','今回実施（全部）':'3','今回実施（一部）':'4','無':'5'};
+  const _DAMP = {'有':'1','今回実施':'2','無':'3'};
+  const _DRAIN= {'有':'1','今回実施':'2','無':'3','該当無し':'4','該当なし':'4'};
+  const _ENV  = {'一般部':'1','橋梁部':'2','トンネル':'3','横断歩道橋':'4','その他':'5'};
+  const _SEA  = {'100m未満':'1','100m〜1km未満':'2','100m～1km未満':'2','1km〜5km未満':'3','1km～5km未満':'3','5km〜20km未満':'4','5km～20km未満':'4','20km以上':'5'};
+  const _12   = {'該当する':'1','該当しない':'2'};
+  const _EMG  = {'一次':'1','二次':'2','三次':'3','無':'4','市町村指定':'6'};
+  const _SCH  = {'有':'1','無':'2'};
+  const _MEAS = {'有':'1','無':'2'};
+
+  // 施設諸元
+  sv('f-name',  _c(_FNM, i.fnm||f.nm||''));
+  sv('f-route', i.route||f.route||'');
+  sv('f-type',  _c(_FTP, i.ftp||f.tp||''));
+  sv('f-rdtype',_c(_RDT, i.rdtype||f.rdtype||''));
+  sv('f-ud',    _c(_UD,  i.ud||f.ud||''));
+  // 都道府県・市区町村（2段階select）
+  sv('f-pref', i.pref||f.pref||'');
+  onPrefChg();  // 市区町村selectを都道府県に合わせて更新
+  sv('f-city', i.city||f.city||'');
+  sv('f-loc',  i.loc||f.lc||'');
+  sv('f-km',    i.km||f.km||'');
+  sv('f-inst',  i.inst||f.inst||'');
+  sv('f-lat',   i.lat||f.lt||'');
+  sv('f-lng',   i.lng||f.lg||'');
+  sv('f-michi', i.michiKey||f.michiKey||'');
+  // Michi施設キーが未設定の場合は緯度経度から自動生成
+  if(!v('f-michi') && v('f-lat') && v('f-lng')){
+    const lat = parseFloat(v('f-lat')), lng = parseFloat(v('f-lng'));
+    if(!isNaN(lat) && !isNaN(lng)) sv('f-michi', `${lat.toFixed(6)},${lng.toFixed(6)}`);
+  }
+  // 構造情報
+  sv('f-pil',    _c(_PIL,  i.pil||f.pil||''));
+  sv('f-surf',   _c(_SURF, i.surf||f.surf||''));
+  sv('f-base',   _c(_BASE, i.base||f.base||''));
+  sv('f-rib',    _c(_RIB,  i.rib||f.rib||''));
+  sv('f-gl',     _c(_GL2,  i.gl||f.gl||''));
+  sv('f-signnum',i.signnum||f.signnum||'');
+  sv('f-signno', i.signno||f.signno||'');
+  sv('f-signatt',_c(_SATT, i.signatt||f.signatt||''));
+  sv('f-fall',   _c(_15,   i.fall||f.fall||''));
+  sv('f-losen',  _c(_15,   i.losen||f.losen||''));
+  sv('f-losen2', i.losen2||f.losen2||'');
+  sv('f-mark',   _c(_15,   i.mark||f.mark||''));
+  sv('f-mark2',  i.mark2||f.mark2||'');
+  sv('f-damp',   _c(_DAMP, i.damp||f.damp||''));
+  sv('f-drain',  _c(_DRAIN,i.drain||f.drain||''));
+  // 設置環境
+  sv('f-env',    _c(_ENV,  i.env||f.env||''));
+  sv('f-sea',    _c(_SEA,  i.sea||f.sea||''));
+  sv('f-snow',   _c(_12,   i.snow||f.snow||''));
+  sv('f-wind',   _c(_12,   i.wind||f.wind||''));
+  sv('f-snow2',  _c(_12,   i.snow2||f.snow2||''));
+  sv('f-emg',    _c(_EMG,  i.emg||f.emg||''));
+  sv('f-sch',    _c(_SCH,  i.sch||f.sch||''));
+  sv('f-rdw',    i.rdw||f.rdw||'');
+  sv('f-sdw',    i.sdw||f.sdw||'');
+  // 代替路・自専道・灯具・作業内容フラグ（旧テキスト互換変換含む）
+  const _ALT   = {'有':'1','無':'2'};
+  const _RDKND = {'自専道':'1','一般道':'2'};
+  const _LAMP  = {'水銀灯':'1','高圧ナトリウムランプ':'2','低圧ナトリウムランプ':'3','蛍光灯':'4','ＬＥＤ':'5','LED':'5','メタルハライドランプ':'6','その他':'7'};
+  const _WKDIV = {'○：追加':'1','追加':'1','×：削除':'2','削除':'2','△：変更':'3','変更':'3'};
+  sv('f-alt',    _c(_ALT,  i.alt||f.alt||''));
+  sv('f-rdknd',  _c(_RDKND,i.rdknd||f.rdknd||''));
+  sv('f-lamp',   _c(_LAMP, i.lamp||f.lamp||''));
+  sv('f-wkdiv',  _c(_WKDIV,i.wkdiv||f.wkdiv||''));
+  sv('f-wkdet',  i.wkdet||f.wkdet||'');
+  // 機能安全性・特定事象・措置の有無
+  const _SAFETY = {'Ａ':'1','A':'1','Ｂ':'2','B':'2','Ｃ':'3','C':'3'};
+  const _12b    = {'有':'1','無':'2'};
+  sv('f-safety', _c(_SAFETY,i.safety||''));
+  sv('f-spcevt', _c(_12b,  i.spcevt||''));
+  sv('f-measyn', _c(_12b,  i.measyn||''));
+  sv('f-cens',i.cens||f.cens||''); sv('f-censno',i.censno||f.censno||''); sv('f-trf',i.trf||f.trf||'');
+  // 診断
+  document.querySelectorAll('input[name="diag"]').forEach(r=>{ r.checked=r.value===(i.diag||''); });
+  onDiagChg();
+  sv('f-diagnote',i.diagnote||''); sv('f-opinion',i.opinion||''); sv('f-nocant',i.nocant||'');
+  // 過年度データ表示
+  if(f.prevDiag){
+    const pb=document.getElementById('prev-diag-box');
+    pb.textContent=`過年度診断区分：${f.prevDiag}`;pb.style.display='';
+  }
+  if(f.prevOpinion){
+    const po=document.getElementById('prev-opinion-box');
+    po.innerHTML=`<strong>過年度所見（参考）：</strong><br><pre style="white-space:pre-wrap;font-size:11px;margin-top:4px;color:var(--tx2)">${f.prevOpinion}</pre>`;
+    po.style.display='';
+  }
+  // 損傷評価テーブル（先にロードしてdmgDataを確定させる）
+  loadDmgTable(i.dmg||{}, f.prevDmg||{});
+  // 措置
+  loadMeasTable(i.meas||{});
+  sv('f-meas-pre',i.measPre||'');
+  // 写真（v2：スロット＋テキスト両対応）
+  sv('f-locimg', i.locimg || '位置図.jpg');
+  const zeneiDefaults = ['全景.jpg','点検ステッカー.jpg','','','','','','',''];
+  const savedZenei = i.zenei||[];
+  Array.from({length:9},(_,k)=>{
+    const el = document.getElementById(`zenei-${k}`);
+    if(!el) return;
+    el.value = savedZenei[k] !== undefined ? savedZenei[k] : (zeneiDefaults[k]||'');
+  });
+  // 損傷写真テーブルをロード
+  if(i.photos && i.photos.length>0){
+    loadPhotos(i.photos);
+  } else {
+    const generatedPhotos = autoGenPhotos(collectDmg());
+    loadPhotos(generatedPhotos);
+  }
+  // スロットUI更新（画像が既にimgStoreにあれば反映）
+  refreshSlots();
+  // 板厚
+  sv('f-thkdt',i.thkdt||''); sv('f-thkdev',i.thkdev||''); loadThick(i.thick||[]);
+  // f-date（現地確認年月日）変更時→全写真行の撮影日を自動更新
+  const dateEl = document.getElementById('f-date');
+  dateEl.onchange = function(){
+    const dt = this.value;
+    document.querySelectorAll('#photo-tb tr').forEach(tr=>{
+      const dtInp = tr.querySelectorAll('input')[3]; // 4列目=撮影日
+      if(dtInp && dtInp.type==='date' && !dtInp.getAttribute('data-manual')){
+        dtInp.value = dt;
+      }
+    });
+  };
+  // 写真撮影日の手動変更を記録するイベント
+  document.getElementById('photo-tb').addEventListener('change', e=>{
+    if(e.target.type==='date') e.target.setAttribute('data-manual','1');
+  });
+  document.getElementById('insp-body').classList.remove('hid');
+}
+function onDiagChg(){
+  const d=document.querySelector('input[name="diag"]:checked')?.value;
+  ['I','II','III','IV'].forEach(k=>{
+    const el=document.getElementById(`lbl-${k}`);
+    if(!el) return;
+    const sel={'I':'Ⅰ','II':'Ⅱ','III':'Ⅲ','IV':'Ⅳ'}[k]===d;
+    el.style.borderColor=sel?({'I':'var(--ac)','II':'var(--pr)','III':'var(--wn)','IV':'var(--dg)'}[k]):'var(--bd)';
+    el.style.background=sel?({'I':'var(--acp)','II':'var(--prp)','III':'var(--wnp)','IV':'var(--dgp)'}[k]):'';
+  });
+}
+function saveInsp(silent=false){
+  const fid=S.curFac; if(!fid){ if(!silent) alert('施設を選択してください'); return; }
+  const f=S.fac.find(f=>f.id===fid);
+  if(!f) return;
+  const diag=document.querySelector('input[name="diag"]:checked')?.value||'';
+  const data={
+    fid,bid:f.bid,
+    dt:v('f-date'), mn:v('f-mgmt'), ins1:v('f-ins1'), ins1o:v('f-ins1o'),
+    instype:v('f-instype'), insmethod:v('f-insmethod'),
+    fnm:v('f-name'), route:v('f-route'), ftp:v('f-type'),
+    rdtype:v('f-rdtype'), ud:v('f-ud'), pref:v('f-pref'), city:v('f-city'), loc:v('f-loc'),
+    alt:v('f-alt'), rdknd:v('f-rdknd'), lamp:v('f-lamp'),
+    wkdiv:v('f-wkdiv'), wkdet:v('f-wkdet'),
+    km:v('f-km'), inst:v('f-inst'), lat:v('f-lat'), lng:v('f-lng'),
+    michiKey: v('f-michi') || (v('f-lat')&&v('f-lng') ? `${parseFloat(v('f-lat')).toFixed(6)},${parseFloat(v('f-lng')).toFixed(6)}` : ''),
+    pil:v('f-pil'), surf:v('f-surf'), base:v('f-base'),
+    rib:v('f-rib'), gl:v('f-gl'), signnum:v('f-signnum'),
+    signno:v('f-signno'), signatt:v('f-signatt'),
+    fall:v('f-fall'), losen:v('f-losen'), losen2:v('f-losen2'),
+    mark:v('f-mark'), mark2:v('f-mark2'), damp:v('f-damp'), drain:v('f-drain'),
+    env:v('f-env'), sea:v('f-sea'), snow:v('f-snow'),
+    wind:v('f-wind'), snow2:v('f-snow2'), emg:v('f-emg'),
+    sch:v('f-sch'), rdw:v('f-rdw'), sdw:v('f-sdw'),
+    cens:v('f-cens'), censno:v('f-censno'), trf:v('f-trf'),
+    diag, diagnote:v('f-diagnote'), opinion:v('f-opinion'), nocant:v('f-nocant'),
+    safety:v('f-safety'), spcevt:v('f-spcevt'), measyn:v('f-measyn'),
+    dmg:collectDmg(), meas:collectMeas(), measPre:v('f-meas-pre'),
+    locimg:v('f-locimg'), zenei:collectZenei(), photos:collectPhotos(),
+    thkdt:v('f-thkdt'), thkdev:v('f-thkdev'), thick:collectThick(),
+    upd:new Date().toISOString()
+  };
+  // 施設マスタも更新
+  Object.assign(f,{nm:data.fnm,tp:data.ftp,pil:data.pil,pref:data.pref,city:data.city,lc:data.loc,alt:data.alt,rdknd:data.rdknd,lamp:data.lamp,wkdiv:data.wkdiv,wkdet:data.wkdet,lt:data.lat,lg:data.lng,inst:data.inst,route:data.route,rdtype:data.rdtype,ud:data.ud,surf:data.surf,base:data.base,rib:data.rib,gl:data.gl,signnum:data.signnum,signno:data.signno,signatt:data.signatt,fall:data.fall,losen:data.losen,losen2:data.losen2,mark:data.mark,mark2:data.mark2,damp:data.damp,drain:data.drain,env:data.env,sea:data.sea,snow:data.snow,wind:data.wind,snow2:data.snow2,emg:data.emg,sch:data.sch,rdw:data.rdw,sdw:data.sdw,cens:data.cens,censno:data.censno,trf:data.trf});
+  const idx=S.ins.findIndex(i=>i.fid===fid);
+  if(idx>=0) S.ins[idx]=data; else S.ins.push(data);
+  save();
+  updDash();
+  if(silent){
+    // 前へ・次へ移動時：ボタンの横に一時的に「保存済み」を表示
+    showSaveToast(`💾 ${f.mn||'施設'} を自動保存しました`);
+  } else {
+    alert('✅ 保存しました');
+  }
+}
+
+// 自動保存のトースト通知
+function showSaveToast(msg){
+  let toast = document.getElementById('save-toast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'save-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1a4a7a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;transition:opacity .4s;opacity:0;pointer-events:none';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ toast.style.opacity='0'; }, 1800);
+}
+function navFac(d){
+  const fs=S.fac.filter(f=>f.bid===S.curBiz);
+  const idx=fs.findIndex(f=>f.id===S.curFac);
+  if(idx<0) return;
+  const nx=fs[idx+d];
+  if(!nx){ alert(d<0?'最初の施設です':'最後の施設です'); return; }
+  // 現在の施設を自動保存してから移動
+  if(S.curFac) saveInsp(true); // silent=true でアラートなし
+  document.getElementById('sel-fac').value=nx.id;
+  onFacChg();
+}
+
+// ==================== DAMAGE TABLE ====================
+function buildDmgTable(){
+  const tb=document.getElementById('dmg-tb');
+  let prevGrp='', prevSub='';
+
+  tb.innerHTML=DMG_ROWS.map((r,i)=>{
+    // 部材グループ区切り行
+    let grpRow='';
+    if(r.grp && r.grp!==prevGrp){
+      prevGrp=r.grp;
+      grpRow=`<tr style="background:var(--prp)">
+        <td colspan="26" style="font-weight:600;color:var(--pr);padding:5px 10px;font-size:12px;position:sticky;left:0;letter-spacing:.05em">
+          ● ${r.grp}
+        </td>
+      </tr>`;
+    }
+
+    // 部材セル生成
+    const cells=DMG_TYPES.map((t,ti)=>{
+      const applicable=r.app[ti]===1;
+      if(!applicable){
+        // ハッチング（適用外）：要領上存在しない組み合わせ
+        return `<td style="background:#ccc;font-size:9px;text-align:center;color:#888" title="適用外（要領ハッチ）">─</td>
+                <td style="background:#ccc;font-size:9px;text-align:center;color:#888">─</td>`;
+      }
+      const noC=NO_C_TYPES.has(t);
+      const cStyle=noC?'opacity:.2;cursor:not-allowed;pointer-events:none':'';
+      return `<td class="prev" id="pv_${r.code}_${ti}">-</td>
+              <td class="cur" id="cu_${r.code}_${ti}">
+                <div class="dbtn-sm" onclick="setDmg('${r.code}',${ti},'a',this)" id="da_${r.code}_${ti}">a</div>
+                <div class="dbtn-sm" onclick="setDmg('${r.code}',${ti},'c',this)" id="dc_${r.code}_${ti}" style="${cStyle}">c</div>
+                <div class="dbtn-sm" onclick="setDmg('${r.code}',${ti},'e',this)" id="de_${r.code}_${ti}">e</div>
+              </td>`;
+    }).join('');
+
+    const showSub = r.sub && r.sub!==prevSub;
+    if(r.sub) prevSub=r.sub;
+    return grpRow+`<tr id="row_${r.code}">
+      <td style="font-size:11px;white-space:nowrap;padding:3px 8px;position:sticky;left:0;background:#fff;z-index:1;border-right:1px solid var(--bd)">
+        ${showSub?`<div style="font-size:9px;color:var(--pr);font-weight:600;margin-bottom:2px;border-bottom:1px solid var(--prp);padding-bottom:1px">${r.sub}</div>`:''}
+        <div style="font-size:11px;font-weight:500;margin-bottom:3px">${r.name}</div>
+        <label id="na_lbl_outer_${r.code}" style="display:inline-flex;align-items:center;gap:3px;cursor:pointer;font-size:10px;padding:1px 5px;border-radius:3px;border:1px solid var(--bd);background:var(--g1)" title="チェック=対象無し（過年度から引用）">
+          <input type="checkbox" id="na_${r.code}" onchange="tglNA('${r.code}',this.checked)" style="cursor:pointer">
+          <span id="na_lbl_${r.code}" style="font-weight:600">有</span>
+        </label>
+      </td>
+      <td style="font-size:10px;color:var(--tx2);text-align:center;position:sticky;left:110px;background:#fff;z-index:1;border-right:1px solid var(--bd)">${r.code}</td>
+      ${cells}
+      <td id="req_${r.code}" style="text-align:center;font-weight:700;font-size:13px;min-width:28px">-</td>
+    </tr>`;
+  }).join('');
+}
+function setDmg(code,ti,val,el){
+  if(!el) return;
+  if(val==='c' && NO_C_TYPES.has(DMG_TYPES[ti])) return; // c区分なし損傷は無効
+  ['a','c','e'].forEach(v=>{
+    const b=document.getElementById(`d${v}_${code}_${ti}`);
+    if(b){
+      b.className='dbtn-sm'+(v===val?` s${v}`:'');
+      if(v==='c' && NO_C_TYPES.has(DMG_TYPES[ti])) b.style.cssText='opacity:.2;cursor:not-allowed';
+    }
+  });
+  updateReq(code);
+}
+function updateReq(code){
+  const r=DMG_ROWS.find(r=>r.code===code);
+  if(!r) return;
+  const hasAlert=DMG_TYPES.some((t,ti)=>{
+    if(!r.app[ti]) return false;
+    return ['c','e'].includes(getDmgVal(code,ti));
+  });
+  const el=document.getElementById(`req_${code}`);
+  if(el){ el.textContent=hasAlert?'要':'否'; el.style.color=hasAlert?'var(--dg)':'var(--ac)'; }
+}
+function getDmgVal(code,ti){
+  return ['a','c','e'].find(v=>document.getElementById(`d${v}_${code}_${ti}`)?.classList.contains(`s${v}`))||'';
+}
+function tglNA(code,isNA){
+  // テキスト表示
+  const lbl=document.getElementById(`na_lbl_${code}`);
+  if(lbl){
+    lbl.textContent=isNA?'対象無':'対象有';
+    lbl.style.color=isNA?'var(--tx2)':'var(--ac)';
+  }
+  // 外枠ラベルのスタイル
+  const outer=document.getElementById(`na_lbl_outer_${code}`);
+  if(outer){
+    outer.style.background=isNA?'var(--g2)':'var(--acp)';
+    outer.style.borderColor=isNA?'var(--g3)':'var(--ac2)';
+    outer.title=isNA?'チェックを外すと「対象有」に戻ります（過年度から引用）':'チェックすると「対象無」に変更（過年度から引用）';
+  }
+  // 行全体の透明度
+  const row=document.getElementById(`row_${code}`);
+  if(row) row.style.opacity=isNA?'0.35':'1';
+}
+function loadDmgTable(cur, prev){
+  // 施設種別を取得（種別連動チェック用）
+  const facType = document.getElementById('f-type')?.value || '';
+  const isLighting   = facType === '道路照明施設';
+  const isInfoDevice = facType.includes('道路情報提供装置');
+
+  // 施設種別連動で強制的に「対象無」にする部材コードセット
+  // 灯具(Sli)・灯具取付部(Slb)：道路照明施設のみ該当
+  // 道路情報板(Xdi)：道路情報提供装置のみ該当
+  const typeForceNA = new Set();
+  if(!isLighting)   { typeForceNA.add('Sli'); typeForceNA.add('Slb'); }
+  if(!isInfoDevice) { typeForceNA.add('Xdi'); }
+
+  // 初期値「無」固定の部材コードセット（施設種別によらず常に無）
+  // Srq（ビス・リベット重ね貼り用）・Xsc（管理用足場・作業台）
+  const FIXED_NA = new Set(['Srq','Xsc']);
+
+  DMG_ROWS.forEach(r=>{
+    const cd = cur[r.code] || {};
+    const pd = prev[r.code] || {};
+
+    // ============================================================
+    // 対象有無の決定（優先順位順）
+    // 1. 固定「無」部材（Srq・Xsc）→ 常に無
+    // 2. 施設種別連動で対象外の部材 → 強制無
+    // 3. 今回保存済みデータがある → 保存値を使用（編集継続）
+    // 4. 今回データなし（初回ロード）→ 過年度の対象有無を引用
+    // ============================================================
+    let isNA;
+    if(FIXED_NA.has(r.code)){
+      isNA = true; // 初期値「無」固定
+    } else if(typeForceNA.has(r.code)){
+      isNA = true; // 施設種別上の対象外
+    } else {
+      const hasCurData = Object.keys(cd).some(k => k !== 'na');
+      if(hasCurData){
+        isNA = !!cd.na;      // 保存済みを使用
+      } else {
+        isNA = !!pd.na;      // 過年度から引用
+      }
+    }
+
+    const naChk = document.getElementById(`na_${r.code}`);
+    if(naChk) naChk.checked = isNA;
+    tglNA(r.code, isNA);
+
+    // 過年度に評価データがあったか（対象有扱いだったか）
+    const prevHadData = Object.values(pd).some(v => ['a','c','e'].includes(v));
+
+    DMG_TYPES.forEach((t, ti) => {
+      if(!r.app[ti]) return; // 適用外セル（ハッチ）はスキップ
+
+      // 前回値を常に表示
+      const pEl = document.getElementById(`pv_${r.code}_${ti}`);
+      if(pEl){
+        const pv = pd[t] || '';
+        pEl.textContent = pv || '-';
+        pEl.style.fontWeight = (pv && pv !== 'a') ? '700' : '';
+        pEl.style.color = pv==='e' ? 'var(--dg)' : pv==='c' ? 'var(--wn)' : pv==='a' ? 'var(--ac)' : '';
+      }
+
+      // 今回値を決定
+      // ルール：
+      //   ① 今回保存済み値がある → そのまま使用（編集継続）
+      //   ② 今回未入力 & 対象有 → 過年度値を今回の初期値として反映
+      //      （過年度値なし の場合は「a」を初期値とする）
+      //      ※ 防食機能の劣化・異種金属接触腐食は旧調書に列がないため
+      //        過年度対象有の部材のみ「a」を初期値とする
+      let cv = cd[t] || '';
+      if(!cv && !isNA){
+        const prevVal = pd[t] || '';
+        if(t === '防食機能の劣化' || t === '異種金属接触腐食'){
+          // 旧調書に列なし → 過年度で対象有だった部材のみ「a」
+          if(prevHadData) cv = 'a';
+        } else {
+          // それ以外：過年度値があればそのまま、なければ「a」を初期値
+          cv = prevVal || (prevHadData ? 'a' : '');
+        }
+      }
+
+      // ボタンに値を反映
+      ['a','c','e'].forEach(v => {
+        const btn = document.getElementById(`d${v}_${r.code}_${ti}`);
+        if(!btn) return;
+        btn.className = 'dbtn-sm' + (v === cv ? ` s${v}` : '');
+        if(v === 'c' && NO_C_TYPES.has(t)){
+          btn.style.cssText = 'opacity:.2;cursor:not-allowed;pointer-events:none';
+        }
+      });
+    });
+    updateReq(r.code);
+  });
+}
+function collectDmg(){
+  const res={};
+  DMG_ROWS.forEach(r=>{
+    res[r.code]={na:document.getElementById(`na_${r.code}`)?.checked||false};
+    DMG_TYPES.forEach((t,ti)=>{
+      res[r.code][t]=r.app[ti]?getDmgVal(r.code,ti):'';
+    });
+  });
+  return res;
+}
+
+// ==================== MEASURE TABLE ====================
+function buildMeasTable(){
+  document.getElementById('meas-tb').innerHTML=MEAS_PARTS.map((_,i)=>`
+    <tr>
+      <td style="font-size:12px;white-space:nowrap">${MEAS_PARTS[i]}</td>
+      <td><select class="fsel" id="ms_n_${i}"><option value="">-</option><option value="1">有</option><option value="2">無</option></select></td>
+      <td><select class="fsel" id="ms_r_${i}"><option value="">-</option>${MEAS_RSNS.map(r=>`<option>${r}</option>`).join('')}</select></td>
+      <td><input type="text" class="finp" id="ms_p_${i}" style="width:80px" placeholder="1,2..."></td>
+    </tr>`).join('');
+}
+function collectMeas(){ return MEAS_PARTS.reduce((a,_,i)=>({...a,[i]:{n:v(`ms_n_${i}`),r:v(`ms_r_${i}`),p:v(`ms_p_${i}`)}}),{}); }
+function loadMeasTable(m){
+  // 初回ロード（保存データなし）は全項目を「無」(コード2)で初期化
+  // 旧テキスト値（有/無）→コード変換も行う
+  const hasSaved = Object.keys(m).length > 0;
+  const _mn = {'有':'1','無':'2'};
+  MEAS_PARTS.forEach((_,i)=>{
+    const raw = hasSaved ? (m[i]?.n||'') : '2';
+    sv(`ms_n_${i}`, _mn[raw] !== undefined ? _mn[raw] : raw);
+    sv(`ms_r_${i}`, m[i]?.r||'');
+    sv(`ms_p_${i}`, m[i]?.p||'');
+  });
+}
+
+// ==================== 画像管理（v2） ====================
+// 固定スロット定義（フォルダ直下）
+const FIXED_SLOTS = [
+  { id:'loc',   label:'① 位置図',          fname:'位置図.jpg',         csvField:'locimg', required:false },
+  { id:'zen0',  label:'② 全景写真',         fname:'全景.jpg',           csvField:'zenei0', required:true  },
+  { id:'zen1',  label:'③ 点検ステッカー',   fname:'点検ステッカー.jpg', csvField:'zenei1', required:true  },
+  { id:'zen2',  label:'④ 基部写真',         fname:'基部.jpg',           csvField:'zenei2', required:false },
+  { id:'zen3',  label:'⑤ その他1',          fname:'その他1.jpg',        csvField:'zenei3', required:false },
+  { id:'zen4',  label:'⑥ その他2',          fname:'その他2.jpg',        csvField:'zenei4', required:false },
+];
+
+// 画像データ保存（メモリ）
+// imgStore[fid] = { loc: {blob, dataUrl, size}, zen0: {...}, dmg: [{blob,dataUrl,size,no}, ...] }
+const imgStore = {};
+
+function getImgStore(fid){
+  if(!imgStore[fid]) imgStore[fid] = { fixed:{}, dmg:{} };
+  return imgStore[fid];
+}
+
+// ============================================================
+// 画像リサイズ（Canvas, 2MB以下に圧縮）
+// ============================================================
+const MAX_BYTES = 2 * 1024 * 1024; // 2MB
+
+async function resizeToBlob(file, targetFname){
+  return new Promise((resolve)=>{
+    const url = URL.createObjectURL(file);
+    const img  = new Image();
+    img.onload = ()=>{
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      let w = img.naturalWidth, h = img.naturalHeight;
+      // 初期品質
+      let q = 0.90;
+      // 最大辺を3000pxに制限（過大な解像度を防ぐ）
+      const MAX_PX = 3000;
+      if(w > MAX_PX || h > MAX_PX){
+        const r = Math.min(MAX_PX/w, MAX_PX/h);
+        w = Math.round(w*r); h = Math.round(h*r);
+      }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // サイズが収まるまで品質を下げる
+      const tryEncode = (quality)=>{
+        canvas.toBlob(blob=>{
+          if(!blob){ resolve(null); return; }
+          if(blob.size <= MAX_BYTES || quality <= 0.40){
+            // 最終的なDataURLも取得
+            const reader = new FileReader();
+            reader.onload = e => resolve({
+              blob,
+              dataUrl: e.target.result,
+              size: blob.size,
+              origName: file.name,
+              fname: targetFname
+            });
+            reader.readAsDataURL(blob);
+          } else {
+            tryEncode(Math.round((quality - 0.10)*100)/100);
+          }
+        }, 'image/jpeg', quality);
+      };
+      tryEncode(q);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+function fmtSize(bytes){
+  if(bytes < 1024) return bytes+'B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0)+'KB';
+  return (bytes/1024/1024).toFixed(1)+'MB';
+}
+
+// ============================================================
+// 固定スロット（位置図・全景等）の構築・更新
+// ============================================================
+function buildFixedSlots(){
+  const fid = S.curFac;
+  const store = fid ? getImgStore(fid) : {};
+  const container = document.getElementById('fixed-slots');
+  if(!container) return;
+  container.innerHTML = FIXED_SLOTS.map(sl=>{
+    const img = store.fixed?.[sl.id];
+    const hasImg = !!img;
+    return `
+    <div class="photo-slot${hasImg?' has-img':''}" id="fslot-${sl.id}"
+      onclick="slotClick('fixed','${sl.id}')"
+      ondragover="slotDragOver(event,'fslot-${sl.id}')"
+      ondragleave="slotDragLeave('fslot-${sl.id}')"
+      ondrop="slotDrop(event,'fixed','${sl.id}')">
+      ${hasImg
+        ? `<img src="${img.dataUrl}" alt="${sl.fname}">
+           ${img.size>MAX_BYTES ? `<span class="slot-warn">⚠ ${fmtSize(img.size)}</span>`
+                                : `<span class="slot-size">✓ ${fmtSize(img.size)}</span>`}
+           <button class="del-btn" onclick="event.stopPropagation();clearSlot('fixed','${sl.id}')" title="削除">×</button>`
+        : `<span style="font-size:22px">${sl.required?'📷':'🖼️'}</span>`
+      }
+      <span class="slot-lbl">${sl.label}${sl.required?' <span style="color:var(--dg)">必須</span>':''}</span>
+      <span class="slot-fname">${hasImg ? img.fname : sl.fname}</span>
+    </div>`;
+  }).join('');
+
+  // hidden input（f-locimg, zenei-0〜5 との連携）
+  FIXED_SLOTS.forEach(sl=>{
+    const img = store.fixed?.[sl.id];
+    if(sl.csvField === 'locimg'){
+      const el = document.getElementById('f-locimg');
+      if(el && !el._manual) el.value = img ? img.fname : '位置図.jpg';
+    } else {
+      const idx = parseInt(sl.csvField.replace('zenei',''));
+      const el = document.getElementById(`zenei-${idx}`);
+      if(el && !el._manual) el.value = img ? img.fname : (idx===0?'全景.jpg':idx===1?'点検ステッカー.jpg':'');
+    }
+  });
+}
+
+// ============================================================
+// 損傷写真スロットの構築・更新
+// ============================================================
+function buildDmgSlots(){
+  const fid = S.curFac;
+  const store = fid ? getImgStore(fid) : {};
+  const rows  = Array.from(document.getElementById('photo-tb')?.rows||[]);
+  const container = document.getElementById('dmg-img-slots');
+  if(!container) return;
+
+  if(!rows.length){
+    container.innerHTML = '<div style="color:var(--tx2);font-size:12px;padding:8px">損傷写真テーブルに行を追加するとスロットが表示されます</div>';
+    return;
+  }
+
+  container.innerHTML = rows.map((tr,idx)=>{
+    const no   = tr.querySelectorAll('input')[0]?.value || String(idx+1);
+    const fname= tr.querySelectorAll('input')[1]?.value || `${no}.jpg`;
+    const part = tr.querySelectorAll('input')[2]?.value || '';
+    const img  = store.dmg?.[no];
+    const hasImg = !!img;
+    return `
+    <div class="photo-slot${hasImg?' has-img':''}" id="dslot-${no}"
+      onclick="slotClick('dmg','${no}')"
+      ondragover="slotDragOver(event,'dslot-${no}')"
+      ondragleave="slotDragLeave('dslot-${no}')"
+      ondrop="slotDrop(event,'dmg','${no}')">
+      ${hasImg
+        ? `<img src="${img.dataUrl}" alt="${fname}">
+           ${img.size>MAX_BYTES ? `<span class="slot-warn">⚠ ${fmtSize(img.size)}</span>`
+                                : `<span class="slot-size">✓ ${fmtSize(img.size)}</span>`}
+           <button class="del-btn" onclick="event.stopPropagation();clearSlot('dmg','${no}')" title="削除">×</button>`
+        : `<span style="font-size:20px">📷</span>`
+      }
+      <span class="slot-lbl">No.${no}</span>
+      <span class="slot-fname">${hasImg ? img.fname : fname}</span>
+      ${part ? `<span style="font-size:10px;color:var(--tx2)">${part}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// スロットをまとめて更新
+function refreshSlots(){
+  buildFixedSlots();
+  buildDmgSlots();
+}
+
+// ============================================================
+// スロット操作
+// ============================================================
+function slotClick(type, key){
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/jpeg,image/png,image/jpg';
+  input.onchange = async e=>{ if(e.target.files[0]) await processSlotFile(type, key, e.target.files[0]); };
+  input.click();
+}
+
+function slotDragOver(e, elId){
+  e.preventDefault();
+  document.getElementById(elId)?.classList.add('drag-over');
+}
+function slotDragLeave(elId){
+  document.getElementById(elId)?.classList.remove('drag-over');
+}
+async function slotDrop(e, type, key){
+  e.preventDefault();
+  const elId = type==='fixed' ? `fslot-${key}` : `dslot-${key}`;
+  document.getElementById(elId)?.classList.remove('drag-over');
+  const file = e.dataTransfer?.files?.[0];
+  if(file && file.type.startsWith('image/')) await processSlotFile(type, key, file);
+}
+
+function clearSlot(type, key){
+  const fid = S.curFac; if(!fid) return;
+  const store = getImgStore(fid);
+  if(type==='fixed') delete store.fixed[key];
+  else               delete store.dmg[key];
+  refreshSlots();
+}
+
+async function processSlotFile(type, key, file){
+  const fid = S.curFac; if(!fid){ alert('施設を先に選択してください'); return; }
+  const store = getImgStore(fid);
+
+  // 対象ファイル名の決定
+  let targetFname;
+  if(type==='fixed'){
+    const sl = FIXED_SLOTS.find(s=>s.id===key);
+    targetFname = sl?.fname || file.name;
+  } else {
+    // 損傷写真：テーブルのファイル名列から取得
+    const row = Array.from(document.getElementById('photo-tb')?.rows||[])
+      .find(tr=>tr.querySelectorAll('input')[0]?.value===key);
+    targetFname = row ? (row.querySelectorAll('input')[1]?.value || `${key}.jpg`) : `${key}.jpg`;
+  }
+
+  // 処理表示
+  showProg(true, `処理中: ${file.name}…`);
+
+  const result = await resizeToBlob(file, targetFname);
+  if(!result){ showProg(false); alert('画像の読み込みに失敗しました'); return; }
+
+  if(type==='fixed') store.fixed[key] = result;
+  else               store.dmg[key]   = result;
+
+  showProg(false);
+  refreshSlots();
+}
+
+function showProg(show, label=''){
+  const el  = document.getElementById('photo-progress');
+  const lbl = document.getElementById('photo-prog-lbl');
+  const bar = document.getElementById('photo-prog-bar');
+  if(el)  el.style.display  = show ? '' : 'none';
+  if(lbl) lbl.textContent   = label;
+  if(bar) bar.style.width   = show ? '60%' : '0%';
+}
+
+// ============================================================
+// ZIP出力時に画像をblob→arrayBufferとして追加
+// ============================================================
+async function addImagesToZip(zip, ins){
+  const imgFolder = zip.folder('Image');
+  let processed = 0;
+  const total = ins.length;
+
+  for(const i of ins){
+    processed++;
+    const pct = Math.round(processed/total*80)+10;
+    const bar = document.getElementById('photo-prog-bar');
+    const lbl = document.getElementById('photo-prog-lbl');
+    if(bar) bar.style.width = pct+'%';
+    if(lbl) lbl.textContent = `ZIP作成中… (${processed}/${total}) ${i.mn||''}`;
+
+    const dt = (i.dt||'').replace(/-/g,'');
+    const folderName = `${facId(i)}_${dt}`;
+    const facFolder  = imgFolder.folder(folderName);
+    const dmgFolder  = facFolder.folder('損傷写真');
+    const store = imgStore[i.fid];
+
+    if(store){
+      // 固定写真（フォルダ直下）
+      for(const [key, imgData] of Object.entries(store.fixed||{})){
+        if(imgData?.blob){
+          const ab = await imgData.blob.arrayBuffer();
+          facFolder.file(imgData.fname, ab);
+        }
+      }
+      // 損傷写真（損傷写真/フォルダ内）
+      for(const [no, imgData] of Object.entries(store.dmg||{})){
+        if(imgData?.blob){
+          const ab = await imgData.blob.arrayBuffer();
+          dmgFolder.file(imgData.fname, ab);
+        }
+      }
+    }
+  }
+}
+
+// ==================== ZENEI ====================
+function buildZenei(){
+  // v2ではzenei-0〜2はHTML固定、4枚目以降のextraコンテナがある場合のみ動的生成
+  const extra = document.getElementById('zenei-box-extra');
+  if(!extra) return;
+  extra.innerHTML =
+    Array.from({length:5},(_,i)=>
+      `<input type="text" class="finp" id="zenei-${i+4}" placeholder="その他${i+5}.jpg" style="font-size:12px">`
+    ).join('');
+}
+function collectZenei(){
+  return Array.from({length:9},(_,i)=> v(`zenei-${i}`)).filter(x=>x);
+}
+
+// ==================== PHOTOS ====================
+function addPhoto(){
+  const tb = document.getElementById('photo-tb');
+  const n  = tb.rows.length + 1;
+  const today = v('f-date') || '';
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="finp" value="${n}" style="width:38px;text-align:center" oninput="reseqPhotos()"></td>
+    <td><input type="text" class="finp" value="${n}.jpg" style="width:72px"></td>
+    <td><input type="text" class="finp" placeholder="支柱本体" style="width:100px"></td>
+    <td><input type="text" class="finp" placeholder="腐食" style="width:90px"></td>
+    <td><input type="date" class="finp" value="${today}" style="width:112px"></td>
+    <td>
+      <div class="memo-cell" onclick="openMemoPopup(this)" title="クリックしてメモを編集">
+        <span class="memo-preview" style="color:var(--tx2);font-size:12px">メモを入力…</span>
+        <input type="hidden" class="memo-val" value="">
+      </div>
+    </td>
+    <td><button class="btn btn-sm" onclick="this.closest('tr').remove();reseqPhotos();buildDmgSlots()" style="color:var(--dg);padding:2px 6px">✕</button></td>`;
+  tb.appendChild(tr);
+  buildDmgSlots(); // スロットを追加行と同期
+}
+
+// 写真番号振り直し（削除後に連番を再整列）
+function reseqPhotos(){
+  Array.from(document.getElementById('photo-tb').rows).forEach((tr,i)=>{
+    const inputs = tr.querySelectorAll('input');
+    const noInp  = inputs[0];
+    const fileInp= inputs[1];
+    const newNo  = String(i+1);
+    if(noInp) noInp.value = newNo;
+    if(fileInp && /^\d+\.(jpg|jpeg|png)$/i.test(fileInp.value)){
+      fileInp.value = `${newNo}.${fileInp.value.split('.').pop()}`;
+    }
+  });
+}
+
+function collectPhotos(){
+  return Array.from(document.getElementById('photo-tb').rows).map(tr=>{
+    const is = tr.querySelectorAll('input');
+    const memoVal = tr.querySelector('.memo-val');
+    return { no:is[0]?.value, file:is[1]?.value, part:is[2]?.value,
+             type:is[3]?.value, dt:is[4]?.value,
+             memo: memoVal ? memoVal.value : '' };
+  });
+}
+
+function loadPhotos(ps){
+  const tb = document.getElementById('photo-tb');
+  tb.innerHTML = '';
+  const inspDate = v('f-date') || '';
+  ps.forEach((p,i)=>{
+    const dt   = p.dt || inspDate;
+    const no   = p.no || String(i+1);
+    const file = p.file || `${no}.jpg`;
+    const memo = p.memo || '';
+    const memoDisp = memo
+      ? `<span class="memo-preview" style="font-size:12px;color:var(--tx)">${escHtml(memo)}</span>`
+      : `<span class="memo-preview" style="font-size:12px;color:var(--tx2)">メモを入力…</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="finp" value="${escHtml(no)}" style="width:38px;text-align:center" oninput="reseqPhotos()"></td>
+      <td><input type="text" class="finp" value="${escHtml(file)}" style="width:72px"></td>
+      <td><input type="text" class="finp" value="${escHtml(p.part||'')}" style="width:100px"></td>
+      <td><input type="text" class="finp" value="${escHtml(p.type||'')}" style="width:90px"></td>
+      <td><input type="date" class="finp" value="${dt}" style="width:112px"></td>
+      <td>
+        <div class="memo-cell" onclick="openMemoPopup(this)" title="クリックしてメモを編集">
+          ${memoDisp}
+          <input type="hidden" class="memo-val" value="${escHtml(memo)}">
+        </div>
+      </td>
+      <td><button class="btn btn-sm" onclick="this.closest('tr').remove();reseqPhotos()" style="color:var(--dg);padding:2px 6px">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ============================================================
+// メモポップアップ
+// ============================================================
+let _memoTarget = null;
+
+function openMemoPopup(cell){
+  _memoTarget = cell;
+  const val = cell.querySelector('.memo-val')?.value || '';
+  document.getElementById('memo-textarea').value = val;
+  document.getElementById('mod-memo').classList.remove('hid');
+  setTimeout(()=> document.getElementById('memo-textarea').focus(), 50);
+}
+
+function saveMemoPopup(){
+  if(!_memoTarget) return;
+  const val = document.getElementById('memo-textarea').value;
+  const hidden  = _memoTarget.querySelector('.memo-val');
+  const preview = _memoTarget.querySelector('.memo-preview');
+  if(hidden)  hidden.value = val;
+  if(preview){
+    if(val){
+      preview.textContent = val;
+      preview.style.color = 'var(--tx)';
+    } else {
+      preview.textContent = 'メモを入力…';
+      preview.style.color = 'var(--tx2)';
+    }
+  }
+  closeMemoPopup();
+}
+
+function closeMemoPopup(){
+  document.getElementById('mod-memo').classList.add('hid');
+  _memoTarget = null;
+}
+
+// 損傷評価から写真行を自動生成（ボタン用）
+function autoFillPhotos(){
+  const dmg = collectDmg();
+  const photos = autoGenPhotos(dmg);
+  if(!photos.length){ alert('対象有の部材がありません。先に損傷評価を入力してください。'); return; }
+  if(document.getElementById('photo-tb').rows.length > 0){
+    if(!confirm(`既存の損傷写真 ${document.getElementById('photo-tb').rows.length} 件を削除して再生成しますか？`)) return;
+  }
+  loadPhotos(photos);
+}
+
+// ============================================================
+// ⑤写真管理 自動生成（R6.9要領準拠）
+// ファイル名 = 連番 1.jpg, 2.jpg, 3.jpg …（テンプレートに合わせた命名）
+// ============================================================
+function autoGenPhotos(dmgData){
+  const W = {e:3, c:2, a:1, '':0};
+  const ALL_A_SPECIAL = new Set(['Bbc','Srp']);
+  const PHOTO_EXCLUDE = new Set(['Pbr','Pbp']);
+  const photos = [];
+  let seq = 1;
+  const inspDate = v('f-date') || '';
+
+  DMG_ROWS.forEach(r=>{
+    const d = dmgData[r.code] || {};
+    if(d.na) return;
+    if(PHOTO_EXCLUDE.has(r.code)) return;
+
+    let worstW = 0, worstType = '';
+    DMG_TYPES.forEach((t,ti)=>{
+      if(!r.app[ti]) return;
+      const val = d[t] || '';
+      if(W[val] > worstW){ worstW = W[val]; worstType = t; }
+    });
+
+    const dmgType = worstW <= 1
+      ? (ALL_A_SPECIAL.has(r.code) ? '変形・欠損' : '腐食')
+      : worstType;
+
+    const memo = worstW <= 1
+      ? `${r.name}に目立った変状は認められない。`
+      : '';
+
+    // ファイル名は連番.jpg（テンプレート準拠）
+    photos.push({ no:String(seq), file:`${seq}.jpg`, part:r.name,
+                  type:dmgType, dt:inspDate, memo });
+    seq++;
+  });
+  return photos;
+}
+
+// ==================== THICKNESS ====================
+function addThick(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" class="finp" placeholder="支柱本体" style="width:100px"></td><td><input type="text" class="finp" placeholder="Pp1" style="width:50px"></td><td><input type="text" class="finp" placeholder="0°" style="width:50px"></td><td><input type="text" class="finp" placeholder="1" style="width:40px"></td><td><input type="number" class="finp" step="0.1" style="width:65px" oninput="calcMin(this)"></td><td><input type="number" class="finp" step="0.1" style="width:65px" oninput="calcMin(this)"></td><td><input type="number" class="finp" step="0.1" style="width:65px" readonly></td><td><input type="number" class="finp" step="0.1" style="width:65px"></td><td><input type="number" class="finp" step="0.1" style="width:65px"></td><td><input type="text" class="finp" placeholder="a/b/c" style="width:50px"></td>`;
+  document.getElementById('thk-tb').appendChild(tr);
+}
+function calcMin(inp){
+  const tr=inp.closest('tr'), cells=tr.querySelectorAll('td');
+  const v1=parseFloat(cells[4].querySelector('input').value)||0;
+  const v2=parseFloat(cells[5].querySelector('input').value)||0;
+  if(v1||v2) cells[6].querySelector('input').value=Math.min(v1||999,v2||999).toFixed(1);
+}
+function collectThick(){ return Array.from(document.getElementById('thk-tb').rows).map(tr=>{ const is=tr.querySelectorAll('input'); return {part:is[0]?.value,code:is[1]?.value,pos:is[2]?.value,no:is[3]?.value,v1:is[4]?.value,v2:is[5]?.value,min:is[6]?.value,mgmt:is[7]?.value,lim:is[8]?.value,ev:is[9]?.value}; }); }
+function loadThick(ts){ document.getElementById('thk-tb').innerHTML=''; ts.forEach(t=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td><input type="text" class="finp" value="${t.part||''}" style="width:100px"></td><td><input type="text" class="finp" value="${t.code||''}" style="width:50px"></td><td><input type="text" class="finp" value="${t.pos||''}" style="width:50px"></td><td><input type="text" class="finp" value="${t.no||''}" style="width:40px"></td><td><input type="number" class="finp" value="${t.v1||''}" step="0.1" style="width:65px"></td><td><input type="number" class="finp" value="${t.v2||''}" step="0.1" style="width:65px"></td><td><input type="number" class="finp" value="${t.min||''}" step="0.1" style="width:65px" readonly></td><td><input type="number" class="finp" value="${t.mgmt||''}" step="0.1" style="width:65px"></td><td><input type="number" class="finp" value="${t.lim||''}" step="0.1" style="width:65px"></td><td><input type="text" class="finp" value="${t.ev||''}" style="width:50px"></td>`; document.getElementById('thk-tb').appendChild(tr); }); }
+
+// ==================== EXCEL IMPORT ====================
+function dov(e){ e.preventDefault(); document.getElementById('upz').classList.add('ov'); }
+function ddr(e){ e.preventDefault(); document.getElementById('upz').classList.remove('ov'); handleFilesArr(Array.from(e.dataTransfer.files)); }
+function handleFiles(e){ handleFilesArr(Array.from(e.target.files)); }
+function handleFilesArr(files){
+  const xlsFiles=files.filter(f=>f.name.match(/\.xlsx?$/i));
+  if(!xlsFiles.length){ showStatus('ae','Excelファイルが選択されていません'); return; }
+  showStatus('ai',`📊 ${xlsFiles.length}件のExcelファイルを読み込んでいます...`);
+  S._imp=[];
+  let done=0;
+  xlsFiles.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const parsed=parseExcel(wb,file.name);
+        if(parsed) S._imp.push(parsed);
+      }catch(err){ console.error(err); }
+      done++;
+      if(done===xlsFiles.length){
+        showStatus('as',`✅ ${S._imp.length}件のデータを読み込みました`);
+        showPreview();
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// 過年度Excelの解析（施設諸元＋点検結果票）
+function parseExcel(wb, fname){
+  const sn=wb.SheetNames;
+  const ws1=wb.Sheets[sn.find(n=>n.includes('施設諸元'))||sn[0]];
+  const ws2=wb.Sheets[sn.find(n=>n.includes('点検結果')||n.includes('点検結果票'))||sn[1]];
+  if(!ws1) return null;
+
+  const r1=XLSX.utils.sheet_to_json(ws1,{header:1,defval:null});
+  const r2=ws2?XLSX.utils.sheet_to_json(ws2,{header:1,defval:null}):[];
+
+  const g=(rows,rowIdx,colIdx)=>{ try{ return rows[rowIdx]?.[colIdx]??null; }catch(e){ return null; } };
+  const gs=(...args)=>{ const v=g(...args); return v!=null?String(v).trim():''; };
+
+  // 施設諸元シートから情報取得
+  const fac={
+    srcFile: fname,
+    mn: gs(r1,1,11),    // 管理番号
+    nm: gs(r1,1,1),     // 種別
+    tp: gs(r1,1,1),     // 施設種別
+    rdtype: gs(r1,3,1), // 道路種別
+    route: gs(r1,3,5),  // 路線名
+    ud: gs(r1,3,11),    // 上下別
+    loc: [gs(r1,4,1),gs(r1,4,2),gs(r1,4,3)].filter(x=>x).join(''),
+    km: gs(r1,4,11),    // 距離標
+    lat: gs(r1,5,1),    // 緯度
+    lng: gs(r1,5,4),    // 経度
+    pil: gs(r1,7,1),    // 支柱形式
+    surf: gs(r1,7,5),   // 表面処理形式
+    base: gs(r1,7,10),  // 基礎形式
+    rib: gs(r1,8,1),    // リブ形状
+    gl: gs(r1,8,5),     // 路面境界部
+    signnum: gs(r1,9,1),// 標識設置枚数
+    signno: gs(r1,9,2), // 標識番号
+    signatt: gs(r1,9,5),// 取付形式
+    fall: gs(r1,9,10),  // 落下防止
+    losen: gs(r1,10,1), // ゆるみ止め
+    losen2: gs(r1,10,2),// ゆるみ止め内容
+    mark: gs(r1,10,5),  // 合いマーク
+    mark2: gs(r1,10,6), // 合いマーク箇所
+    damp: gs(r1,10,10), // 制振装置
+    drain: gs(r1,11,1), // 排水性向上
+    inst: (()=>{ const y=gs(r1,11,5),m=gs(r1,11,6); return (y&&m)?`${y}年${m}月`:y||''; })(),
+    env: gs(r1,13,1),   // 設置環境
+    sea: gs(r1,13,4),   // 海岸距離
+    snow: gs(r1,13,7),  // 融雪剤
+    wind: gs(r1,13,11), // 風規制
+    snow2: gs(r1,14,1), // 防雪対策
+    cens: gs(r1,14,4),  // センサス年度
+    censno: gs(r1,14,7),// センサス区間番号
+    trf: gs(r1,14,11),  // 交通量
+    rdw: gs(r1,15,1),   // 道路幅員
+    sdw: gs(r1,15,4),   // 歩道幅員
+    emg: gs(r1,15,7),   // 緊急輸送
+    sch: gs(r1,15,11),  // 通学路
+    prevInsType: gs(r1,17,1), // 前回点検種別
+    prevInsDate: [gs(r1,17,7),gs(r1,17,8),gs(r1,17,9)].filter(x=>x&&x!=='0').join('.'),
+    prevInspector: [gs(r1,18,1),gs(r1,18,4)].filter(x=>x&&x!=='0').join(' '),
+  };
+
+  // ============================================================
+  // Excelから読み込んだテキスト値をxROADコードに変換
+  // ============================================================
+  const TXT2CD_FTP  = {'道路標識':'1','道路情報提供装置':'2','道路情報提供装置（添架物有）':'3','道路照明施設':'4','その他':'5'};
+  const TXT2CD_FNM  = {'案内標識':'1','警戒標識':'2','その他（道路標識）':'3','提供装置':'4','収集装置':'5','その他（情報装置）':'6','道路照明':'7'};
+  const TXT2CD_PIL  = {'路側式':'01','片持式（逆Ｌ型）':'02','片持式（F型）':'03','片持式（Ｆ型）':'03','片持式（テーパーポール型）':'04','片持式（Ｔ型）':'05','門形式（オーバーヘッド型）':'06','添架式':'07','その他':'08','ポール照明方式（テーパーポール型）':'09','ポール照明方式（直線型）':'10','ポール照明方式（Ｙ型）':'11','ポール照明方式（Ｙ型）':'11','添架式（照明）':'12','トンネル照明':'13'};
+  const TXT2CD_SURF = {'塗装式':'1','亜鉛めっき式':'2','塗装式＋亜鉛めっき式':'3','その他':'4','塗装式(溶剤塗装)':'5','塗装式(静電粉体塗装)':'6','塗装式(浸漬塗装)':'7'};
+  const TXT2CD_BASE = {'埋め込み型':'1','ベースプレート型':'2','添架型':'3','その他':'4'};
+  const TXT2CD_RIB  = {'三角リブ':'1','Ｕ字リブ':'2','U字リブ':'2','その他':'3','無':'4'};
+  const TXT2CD_GL   = {'コンクリート':'1','アスファルト':'2','土砂':'3','ベースプレート露出':'4','インターロッキング':'5','その他':'6'};
+  const TXT2CD_SATT = {'固定式':'1','吊下式':'2','その他':'3'};
+  const TXT2CD_15   = {'有（全部）':'1','有（一部）':'2','今回実施（全部）':'3','今回実施（一部）':'4','無':'5'};
+  const TXT2CD_DAMP = {'有':'1','今回実施':'2','無':'3'};
+  const TXT2CD_DRAIN= {'有':'1','今回実施':'2','無':'3','該当無し':'4','該当なし':'4'};
+  const TXT2CD_ENV  = {'一般部':'1','橋梁部':'2','トンネル':'3','横断歩道橋':'4','その他':'5'};
+  const TXT2CD_SEA  = {'100m未満':'1','100m〜1km未満':'2','100m～1km未満':'2','1km〜5km未満':'3','1km～5km未満':'3','5km〜20km未満':'4','5km～20km未満':'4','20km以上':'5'};
+  const TXT2CD_12   = {'該当する':'1','該当しない':'2'};
+  const TXT2CD_EMG  = {'一次':'1','二次':'2','三次':'3','無':'4','市町村指定':'6'};
+  const TXT2CD_SCH  = {'有':'1','無':'2'};
+  const TXT2CD_RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','都道府県道':'5','市町村道':'6','その他':'7'};
+  const TXT2CD_UD   = {'上り':'1','下り':'2','上・下':'3'};
+  const c2 = (map, val) => map[val]||val||'';  // テキスト→コード変換ヘルパー
+
+  // 取得した値をコードに変換
+  fac.nm      = c2(TXT2CD_FNM, fac.nm);
+  fac.tp      = c2(TXT2CD_FTP, fac.tp);
+  fac.rdtype  = c2(TXT2CD_RDT, fac.rdtype);
+  fac.ud      = c2(TXT2CD_UD,  fac.ud);
+  fac.pil     = c2(TXT2CD_PIL, fac.pil);
+  fac.surf    = c2(TXT2CD_SURF,fac.surf);
+  fac.base    = c2(TXT2CD_BASE,fac.base);
+  fac.rib     = c2(TXT2CD_RIB, fac.rib);
+  fac.gl      = c2(TXT2CD_GL,  fac.gl);
+  fac.signatt = c2(TXT2CD_SATT,fac.signatt);
+  fac.fall    = c2(TXT2CD_15,  fac.fall);
+  fac.losen   = c2(TXT2CD_15,  fac.losen);
+  fac.mark    = c2(TXT2CD_15,  fac.mark);
+  fac.damp    = c2(TXT2CD_DAMP,fac.damp);
+  fac.drain   = c2(TXT2CD_DRAIN,fac.drain);
+  fac.env     = c2(TXT2CD_ENV, fac.env);
+  fac.sea     = c2(TXT2CD_SEA, fac.sea);
+  fac.snow    = c2(TXT2CD_12,  fac.snow);
+  fac.wind    = c2(TXT2CD_12,  fac.wind);
+  fac.snow2   = c2(TXT2CD_12,  fac.snow2);
+  fac.emg     = c2(TXT2CD_EMG, fac.emg);
+  fac.sch     = c2(TXT2CD_SCH, fac.sch);
+
+  // 点検結果票から損傷評価を取得
+  // 列マッピング（点検時の列インデックス）
+  // 行9がヘッダ（0-index=8）、行10以降がデータ（0-index=9〜）
+  // 旧調書の列マッピング（過年度Excelは旧要領様式のため防食機能の劣化・異種金属接触腐食は存在しない）
+  // 列: E=4(対象有無), G=6(き裂), I=8(ゆるみ脱落), K=10(破断), M=12(腐食), O=14(変形欠損),
+  //     Q=16(ひびわれ), S=18(うき剥離), U=20(滞水), W=22(その他), Y=24(対策要否)
+  const typeColMap={
+    'き裂':6,
+    '防食機能の劣化':null,   // 旧調書に列なし→空欄で引き継ぎ
+    '腐食':12,
+    '異種金属接触腐食':null, // 旧調書に列なし→空欄で引き継ぎ
+    '変形・欠損':14,
+    'ゆるみ・脱落':8,
+    '破断':10,
+    'ひびわれ':16,
+    'うき・剥離':18,
+    '滞水':20,
+    'その他':22
+  };
+
+  // コード→行のマッピングを構築
+  // ============================================================
+  // 過年度Excel行 → 現行コードのマッピング
+  // 記号（col3）が一致すれば記号優先。記号がない・旧記号の場合は
+  // 点検箇所名（col2）テキストでマッチング（要領改訂対応）
+  // ============================================================
+
+  // ============================================================
+  // 過年度Excel行 → 現行コード マッピング
+  //
+  // 旧調書では複数の現行部材が1行にまとめられているケースがある:
+  //   Srs行（標識板（添架含む））→ 現行 Srp（標識板）と Srb（基板取付部）に配布
+  //   標識板取付部行（記号なし）→ 現行 Srb（基板取付部）に対応
+  //   道路情報板行（記号なし）  → 現行 Xdi に対応
+  //   道路情報板取付部行       → 現行 Xdi に統合（同一評価値を共有）
+  //   Sli行（灯具）           → 現行 Sli（灯具）と Slb（灯具取付部）に配布
+  //   灯具取付部行（記号なし）  → 現行 Slb に対応
+  //
+  // 方針: 各行のインデックスを「現行コード → 行番号」でマップ。
+  //       1つの行番号を複数の現行コードが参照できる構造にする。
+  // ============================================================
+
+  // まず全行を「点検箇所名」で引けるインデックスを作る
+  const nameRowMap = {};
+  r2.forEach((row, ri) => {
+    const name = String(row?.[2] ?? '').trim().replace(/\n/g, '').replace(/\r/g, '');
+    if(name) nameRowMap[name] = ri;
+  });
+  // 記号でも引けるインデックス
+  const codeRowRaw = {};
+  r2.forEach((row, ri) => {
+    const code = String(row?.[3] ?? '').trim();
+    if(code && code !== '0' && code !== '－') codeRowRaw[code] = ri;
+  });
+
+  // 現行コード → 過年度行インデックスのマッピング
+  // 名称マッチを優先、なければ記号マッチ、なければ旧記号からの派生
+  const nm = s => nameRowMap[s];  // 名称で行を探す（変数名衝突回避: n→nm）
+  const cr = s => codeRowRaw[s]; // 記号で行を探す（変数名衝突回避: c→cr）
+
+  const codeRowMap = {
+    // 支柱部
+    'Pph':   nm('支柱本体')                          ?? cr('Pph'),
+    'Ppj':   nm('支柱継手部')                         ?? cr('Ppj'),
+    'Ppd':   nm('支柱分岐部')                         ?? cr('Ppd'),
+    'Ppi':   nm('支柱内部')                           ?? cr('Ppi'),
+    'Pbr':   nm('リブ・取付溶接部')                    ?? cr('Pbr'),
+    'Pbp':   nm('柱・ベースプレート溶接部')              ?? cr('Pbp'),
+    'Pbb':   nm('ベースプレート取付部')                  ?? cr('Pbb'),
+    'Pgl-0': nm('路面境界部（GL-0）') ?? nm('路面境界部\n（GL-0）') ?? cr('Pgl-0'),
+    'Pgl-40':nm('路面境界部（GL-40）') ?? nm('路面境界部\n（GL-40）') ?? cr('Pgl-40'),
+    'Ppb':   nm('柱・基礎境界部')                      ?? cr('Ppb'),
+    'Phh':   nm('電気設備用開口部')                     ?? cr('Phh'),
+    'Phb':   nm('開口部ボルト')                        ?? cr('Phb'),
+    // 横梁
+    'Cbh':   nm('横梁本体')                           ?? cr('Cbh'),
+    'Cbi':   nm('横梁取付部')                          ?? cr('Cbi'),
+    'Cth':   nm('横梁トラス本体')                      ?? cr('Cth'),
+    'Cbw':   nm('横梁仕口溶接部')                      ?? cr('Cbw'),
+    'Ctw':   nm('横梁トラス溶接部')                     ?? cr('Ctw'),
+    'Cbj':   nm('横梁継手部')                          ?? cr('Cbj'),
+    // 基板部：旧Srs行の値をSrp・Srbの両方に配布、旧Sli行の値をSli・Slbに配布
+    'Srp':   nm('標識板（添架含む）')                   ?? cr('Srs'),  // 名称優先→旧Srs行でフォールバック
+    'Srb':   nm('標識板取付部')                        ?? cr('Srs'),  // 取付部独立行優先→なければSrs行を流用
+    'Xdi':   nm('道路情報板')                          ?? nm('道路情報板取付部'),
+    // 基礎
+    'Bbc':   nm('基礎コンクリート部')                   ?? cr('Bbc'),
+    'Bab':   nm('アンカーボルト・ナット')                 ?? cr('Bab'),
+    // ブラケット
+    'Brh':   nm('ブラケット本体')                       ?? cr('Brh'),
+    'Bri':   nm('ブラケット取付部')                      ?? cr('Bri'),
+    // その他
+    'Sli':   nm('灯具')                               ?? cr('Sli'),  // 名称優先→旧Sli行
+    'Slb':   nm('灯具取付部')                          ?? cr('Sli'), // 取付部独立行優先→なければSli行を流用
+    'Srq':   undefined,  // ビス・リベット：旧調書に行なし（FIXED_NA）
+    'Xbn':   nm('バンド部（共架型）')                    ?? cr('Xbn'),
+    'Xwi':   nm('配線部分')                            ?? cr('Xwi'),
+    'Xsc':   nm('管理用の足場・作業台')                   ?? undefined, // FIXED_NA
+  };
+
+  const prevDmg={};
+  DMG_ROWS.forEach(dr=>{
+    const ri=codeRowMap[dr.code];
+    if(ri===undefined) return;
+    const row=r2[ri]||[];
+    const na=gs(r2,ri,4)==='無';
+    prevDmg[dr.code]={na};
+    Object.entries(typeColMap).forEach(([type,col])=>{
+      if(col===null){ prevDmg[dr.code][type]=''; return; } // 旧調書に存在しない列は空欄
+      const val=gs(r2,ri,col);
+      prevDmg[dr.code][type]=['a','c','e'].includes(val)?val:'';
+    });
+  });
+
+  // 健全性診断・所見
+  let prevDiag='', prevOpinion='';
+  r2.forEach((row,ri)=>{
+    const cell=row?.[24]??'';
+    if(['Ⅰ','Ⅱ','Ⅲ','Ⅳ'].includes(String(cell).trim())){ prevDiag=String(cell).trim(); }
+  });
+  // 所見（行44〜46あたり）
+  for(let ri=42;ri<50;ri++){
+    const row=r2[ri]||[];
+    const txt=String(row[0]||'').trim();
+    if(txt.length>10 && !txt.startsWith('■') && !txt.startsWith('※') && !txt.startsWith('点検')){ prevOpinion=txt; break; }
+  }
+
+  return { fac, prevDmg, prevDiag, prevOpinion };
+}
+
+function showPreview(){
+  if(!S._imp?.length){ showStatus('ae','読み込めるデータがありませんでした'); return; }
+  document.getElementById('prev-info').textContent=`${S._imp.length}施設のデータが読み込まれました`;
+  document.getElementById('prev-th').innerHTML=`<tr><th>#</th><th>ファイル名</th><th>管理番号</th><th>施設種別</th><th>路線名</th><th>所在地</th><th>設置年月</th><th>前回診断</th></tr>`;
+  document.getElementById('prev-tb').innerHTML=S._imp.map((d,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td style="font-size:11px">${d.fac.srcFile}</td>
+      <td><strong>${d.fac.mn||'-'}</strong></td>
+      <td>${d.fac.tp||'-'}</td>
+      <td>${d.fac.route||'-'}</td>
+      <td>${d.fac.loc||'-'}</td>
+      <td>${d.fac.inst||'-'}</td>
+      <td>${d.prevDiag?`<span class="bdg ${BDGM[d.prevDiag]||'bg'}">${d.prevDiag}</span>`:'-'}</td>
+    </tr>`).join('');
+  document.getElementById('imp-preview').classList.remove('hid');
+}
+
+function doImport(){
+  const bid=v('imp-biz'); if(!bid){ alert('インポート先の業務を選択してください'); return; }
+  if(!S._imp?.length){ alert('インポートするデータがありません'); return; }
+  const biz = S.biz.find(b=>b.id===bid)||{};
+  let added=0, updated=0;
+  S._imp.forEach(d=>{
+    const mn=d.fac.mn||('IMP-'+Date.now());
+    const existing=S.fac.find(f=>f.bid===bid&&f.mn===mn);
+    const facData={...d.fac, bid, mn, prevDiag:d.prevDiag, prevOpinion:d.prevOpinion, prevDmg:d.prevDmg};
+    let fid;
+    if(existing){
+      Object.assign(existing,facData);
+      fid = existing.id;
+      updated++;
+    } else {
+      fid = 'f'+Date.now()+Math.random();
+      S.fac.push({id:fid, at:new Date().toISOString(),...facData});
+      added++;
+    }
+    // ============================================================
+    // インポート時にS.insの初期レコードを自動生成
+    // facDataに含まれる施設諸元をそのままinsに展開することで
+    // 手動保存なしにCSV出力できる
+    // ============================================================
+    const f = S.fac.find(f=>f.id===fid)||{};
+    const existingIns = S.ins.find(i=>i.fid===fid);
+    const insBase = {
+      fid, bid,
+      mn:  f.mn||'',
+      fnm: f.nm||'',   // 施設名コード
+      ftp: f.tp||'',   // 施設種別コード
+      pil: f.pil||'',  // 支柱形式コード
+      rdtype: f.rdtype||'',
+      ud:  f.ud||'',
+      pref: f.pref||'',
+      city: f.city||'',
+      loc: f.lc||f.loc||'',
+      km:  f.km||'',
+      lat: f.lt||f.lat||'',
+      lng: f.lg||f.lng||'',
+      route: f.route||'',
+      inst: f.inst||'',
+      surf: f.surf||'',
+      base: f.base||'',
+      rib:  f.rib||'',
+      gl:   f.gl||'',
+      signnum: f.signnum||'',
+      signno:  f.signno||'',
+      signatt: f.signatt||'',
+      fall:  f.fall||'',
+      losen: f.losen||'',
+      losen2:f.losen2||'',
+      mark:  f.mark||'',
+      mark2: f.mark2||'',
+      damp:  f.damp||'',
+      drain: f.drain||'',
+      env:   f.env||'',
+      sea:   f.sea||'',
+      snow:  f.snow||'',
+      wind:  f.wind||'',
+      snow2: f.snow2||'',
+      emg:   f.emg||'',
+      sch:   f.sch||'',
+      rdw:   f.rdw||'',
+      sdw:   f.sdw||'',
+      cens:  f.cens||'',
+      censno:f.censno||'',
+      trf:   f.trf||'',
+      // 業務の点検員情報を引き継ぎ
+      ins1:  biz.ins1||'',
+      ins1o: biz.ins1o||'',
+      // 過年度診断を引き継ぎ
+      prevDiag: d.prevDiag||'',
+      // 損傷評価は過年度データとして保持（今回は未入力）
+      dmg: {},
+      meas: {},
+      upd: new Date().toISOString()
+    };
+    if(existingIns){
+      // 既存insがある場合：施設諸元のみ更新（点検結果は上書きしない）
+      Object.assign(existingIns, {
+        fnm:insBase.fnm, ftp:insBase.ftp, pil:insBase.pil,
+        rdtype:insBase.rdtype, ud:insBase.ud, pref:insBase.pref,
+        city:insBase.city, loc:insBase.loc, km:insBase.km,
+        lat:insBase.lat, lng:insBase.lng, route:insBase.route,
+        inst:insBase.inst, surf:insBase.surf, base:insBase.base,
+        rib:insBase.rib, gl:insBase.gl, signnum:insBase.signnum,
+        signno:insBase.signno, signatt:insBase.signatt,
+        fall:insBase.fall, losen:insBase.losen, losen2:insBase.losen2,
+        mark:insBase.mark, mark2:insBase.mark2, damp:insBase.damp,
+        drain:insBase.drain, env:insBase.env, sea:insBase.sea,
+        snow:insBase.snow, wind:insBase.wind, snow2:insBase.snow2,
+        emg:insBase.emg, sch:insBase.sch, rdw:insBase.rdw,
+        sdw:insBase.sdw, cens:insBase.cens, censno:insBase.censno,
+        trf:insBase.trf
+      });
+    } else {
+      S.ins.push(insBase);
+    }
+  });
+  S.curBiz=bid;
+  save();
+  document.getElementById('sb-biz').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
+  document.getElementById('hdr-biz-lbl').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
+  alert(`✅ インポート完了\n追加: ${added}件 / 更新: ${updated}件\n\n施設諸元は自動保存済みです。点検結果を入力後にCSV出力してください。`);
+  showPage('fac');
+}
+
+function showStatus(cls,msg){
+  const el=document.getElementById('imp-status');
+  el.className=`alrt ${cls}`; el.textContent=msg; el.classList.remove('hid');
+}
+
+// ==================== CSV EXPORT ====================
+function updExpList(){
+  fillSelects();
+  const bid=v('exp-biz'), flt=v('exp-flt');
+  let fs=bid?S.fac.filter(f=>f.bid===bid):S.fac;
+  const rows=fs.map(f=>{
+    const i=S.ins.find(i=>i.fid===f.id);
+    const b=S.biz.find(b=>b.id===f.bid);
+    return {f,i,b};
+  }).filter(r=>flt==='34'?['Ⅲ','Ⅳ'].includes(r.i?.diag):true);
+  document.getElementById('exp-cnt').textContent=`${rows.length}件`;
+
+  // 必須項目チェック
+  const warns=[];
+  document.getElementById('exp-tb').innerHTML=rows.map(({f,i,b})=>{
+    // 施設ID（緯度経度）チェック
+    const hasLatLng = f.lt && f.lg;
+    const facIdVal = hasLatLng ? `${parseFloat(f.lt).toFixed(5)},${parseFloat(f.lg).toFixed(5)}` : '';
+    const idOk = hasLatLng && facIdVal.length <= 18;
+    // 必須項目チェック（付録04）
+    const missing=[];
+    if(!f.lt||!f.lg) missing.push('緯度経度');
+    if(!i?.dt)       missing.push('現地確認年月日');
+    if(!f.bid || !S.biz.find(bb=>bb.id===f.bid)?.kyoku) missing.push('管理者（局）');
+    if(!f.bid || !S.biz.find(bb=>bb.id===f.bid)?.jimusho) missing.push('管理者（事務所）');
+    if(missing.length) warns.push(`${f.mn}: ${missing.join(', ')}が未設定`);
+    const statusCell = missing.length
+      ? `<span style="color:var(--dg);font-size:11px">⚠ ${missing.join(' / ')}</span>`
+      : `<span style="color:var(--ac);font-size:11px">✓ OK</span>`;
+    return `<tr>
+      <td><input type="checkbox" class="exp-chk" value="${f.id}" checked></td>
+      <td>${b?.nm||'-'}</td>
+      <td><strong>${f.mn}</strong></td>
+      <td>${LBL_FNM[f.nm]||f.nm||'-'}</td>
+      <td style="font-size:11px;color:${idOk?'var(--ac)':'var(--dg)'}">${facIdVal||'⚠未設定'}</td>
+      <td>${f.prevDiag?`<span class="bdg ${BDGM[f.prevDiag]||'bg'}">${f.prevDiag}</span>`:'-'}</td>
+      <td>${i?.diag?`<span class="bdg ${BDGM[i.diag]||'bg'}">${i.diag}</span>`:'<span class="bdg bg">未</span>'}</td>
+      <td>${i?.dt||'-'}</td>
+      <td>${statusCell}</td>
+    </tr>`;
+  }).join('');
+
+  // 警告ボックス更新
+  const wb = document.getElementById('exp-warn-box');
+  if(warns.length){
+    wb.className='alrt aw'; wb.classList.remove('hid');
+    wb.innerHTML=`<strong>⚠ 未設定の必須項目があります</strong><br>${warns.map(w=>`・${w}`).join('<br>')}`;
+  } else {
+    wb.classList.add('hid');
+  }
+}
+function tglAll(chk){ document.querySelectorAll('.exp-chk').forEach(c=>c.checked=chk.checked); }
+function getSelIns(){ const ids=Array.from(document.querySelectorAll('.exp-chk:checked')).map(c=>c.value); return S.ins.filter(i=>ids.includes(i.fid)); }
+function getSelFac(){ const ids=Array.from(document.querySelectorAll('.exp-chk:checked')).map(c=>c.value); return ids.map(id=>S.fac.find(f=>f.id===id)).filter(Boolean); }
+
+// ============================================================
+// xROAD マスタコードテーブル（PDFマスタ一覧Ver2.0準拠）
+// ============================================================
+const CD_DIAG   = {'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4'};  // 施設の健全性の診断
+const CD_DMG    = {'a':'1','c':'2','e':'3'};               // 損傷程度の評価
+
+// ラベル→コード逆引き用（UIのvalue属性がコードに変わったため現在は不要だが念のため保持）
+// UIはvalue属性で直接コード番号を保持するため変換不要
+
+// 管理者コードテーブル（局）
+const MGMT_KYOKU = {
+  '北海道開発局':'81','東北地方整備局':'82','関東地方整備局':'83',
+  '北陸地方整備局':'84','中部地方整備局':'85','近畿地方整備局':'86',
+  '中国地方整備局':'87','四国地方整備局':'88','九州地方整備局':'89',
+  '沖縄総合事務局':'90'
+};
+// 管理者コードテーブル（事務所・東北のみ抜粋、拡張可）
+const MGMT_JIMUSHO = {
+  '青森河川国道事務所':{'kyoku':'82','code':'30','6digit':'823000'},
+  '岩手河川国道事務所':{'kyoku':'82','code':'35','6digit':'823500'},
+  '三陸国道事務所':{'kyoku':'82','code':'37','6digit':'823700'},
+  '南三陸沿岸国道事務所':{'kyoku':'82','code':'39','6digit':'823900'},
+  '仙台河川国道事務所':{'kyoku':'82','code':'40','6digit':'824000'},
+  '秋田河川国道事務所':{'kyoku':'82','code':'45','6digit':'824500'},
+  '湯沢河川国道事務所':{'kyoku':'82','code':'46','6digit':'824600'},
+  '能代河川国道事務所':{'kyoku':'82','code':'47','6digit':'824700'},
+  '山形河川国道事務所':{'kyoku':'82','code':'55','6digit':'825500'},
+  '酒田河川国道事務所':{'kyoku':'82','code':'56','6digit':'825600'},
+  '福島河川国道事務所':{'kyoku':'82','code':'65','6digit':'826500'},
+  '郡山国道事務所':{'kyoku':'82','code':'67','6digit':'826700'},
+  '磐城国道事務所':{'kyoku':'82','code':'68','6digit':'826800'}
+};
+// road_manager_div コード
+const CD_RDMGR = {'国':'1','都道府県':'2','道路公社':'3','政令市':'4','市区町村':'5','高速道路会社':'6'};
+
+const dt2csv=d=>d?d.replace(/-/g,'.'):''
+
+// ============================================================
+// 施設ID生成（付録04 No.5「施設ID」仕様準拠）
+// 形式：「緯度,経度」 整数2桁・小数6桁 = 18文字以内
+// 例：42.12345,139.12345
+// ============================================================
+function facId(i){
+  if(i.lat && i.lng){
+    const lat = parseFloat(i.lat);
+    const lng = parseFloat(i.lng);
+    if(!isNaN(lat) && !isNaN(lng)){
+      // 付録04仕様：半角数字＋記号 18文字
+      const latStr = lat.toFixed(5);
+      const lngStr = lng.toFixed(5);
+      return `${latStr},${lngStr}`;
+    }
+  }
+  // 緯度経度がない場合は管理番号で代替（エラー警告）
+  return i.mn || i.fid || '';
+}
+
+// 施設のビジネスデータから管理者情報を解決する
+function resolveMgmt(i){
+  const biz = S.biz.find(b=>b.id===i.bid)||{};
+  // 業務に直接コードが設定されている場合は最優先
+  if(biz.rdmgr||biz.kyoku||biz.jimusho){
+    return {
+      div: biz.rdmgr||'1',
+      kyoku: biz.kyoku||'',
+      jimusho: biz.jimusho||'',
+      shucchoJo: biz.shuccho||''
+    };
+  }
+  // 発注者名（cl）から事務所名で自動解決
+  const cl = biz.cl||'';
+  const jimu = MGMT_JIMUSHO[cl];
+  if(jimu) return {div:'1', kyoku:jimu.kyoku, jimusho:jimu.code, shucchoJo:''};
+  // 発注者名が都道府県・市区町村の場合
+  if(cl.endsWith('県')||cl.endsWith('府')||cl.endsWith('都')||cl.endsWith('道')) return {div:'2',kyoku:'',jimusho:'',shucchoJo:''};
+  if(cl.endsWith('市')||cl.endsWith('町')||cl.endsWith('村')) return {div:'5',kyoku:'',jimusho:'',shucchoJo:''};
+  // デフォルト：国
+  return {div:'1',kyoku:'',jimusho:'',shucchoJo:''};
+}
+
+function genCSV1(ins){
+  // ============================================================
+  // 付録04「01附属物の諸元と定期点検結果」93項目 完全準拠
+  // 列順はPDF付録04の番号順に従う
+  // ============================================================
+  const H=[
+    '処理区分',           // No.1  S=追加,C=更新,D=削除
+    '種別',               // No.2  コード表（種別）
+    '支柱形式',           // No.3  コード表（支柱形式）
+    '管理番号',           // No.4  最大50文字
+    '施設ID',             // No.5  緯度,経度 18文字
+    '設置位置_緯度',       // No.6  整数2桁・小数6桁
+    '設置位置_経度',       // No.7  整数3桁・小数6桁
+    '施設名',             // No.8  コード表（施設名）
+    '路線名',             // No.9  最大100文字
+    '管理者（局）',        // No.10 コード表（管理者（局））必須
+    '管理者（事務所）',    // No.11 コード表（管理者（事務所））必須
+    '管理者（出張所）',    // No.12 コード表（管理者（出張所））
+    '道路種別',           // No.13 コード表（道路種別）
+    '所在地（県）',        // No.14 コード表（都道府県）
+    '所在地（市）',        // No.15 コード表（市区町村）
+    '所在地（市以下）',    // No.16 最大30文字
+    '距離標_km',          // No.17 最大20文字
+    '現地確認年月日',      // No.18 必須 yyyy.mm.dd
+    '調書更新年月日',      // No.19 yyyy.mm.dd
+    '代替路の有無',        // No.20 コード表
+    '自専道or一般道',      // No.21 コード表
+    '上・下別',           // No.22 コード表
+    '占用物件（名称）',    // No.23 最大100文字
+    '設置環境',           // No.24 コード表
+    '設置施設種別',        // No.25 コード表
+    '設置施設ID',         // No.26 半角英数 最大30文字
+    '海岸からの距離',      // No.27 コード表
+    '融雪剤散布区間',      // No.28 コード表
+    '風規制実施区間',      // No.29 コード表
+    '防雪対策実施区間',    // No.30 コード表
+    '緊急輸送道路指定の有無',// No.31 コード表
+    'センサス年度',        // No.32 最大20文字
+    'センサス区間番号',    // No.33 最大11文字
+    '交通量_台/24h',       // No.34 整数
+    '道路幅員（m）',       // No.35 小数1桁
+    '歩道幅員（m）',       // No.36 小数1桁
+    '通学路指定の有無',    // No.37 コード表
+    '表面処理形式',        // No.38 コード表
+    '基礎形式',           // No.39 コード表
+    '支柱基部リブ形状',    // No.40 コード表
+    '路面境界部の状況',    // No.41 コード表
+    '灯具種類',           // No.42 コード表
+    '標識設置枚数',        // No.43 半角数字2桁
+    '標識番号',           // No.44 最大100文字
+    '標識板の取付形式①',  // No.45 コード表
+    '標識板の取付形式②',  // No.46 コード表
+    '標識板の取付形式③',  // No.47 コード表
+    '標識板の落下防止対策①',// No.48 コード表
+    '標識板の落下防止対策②',// No.49 最大100文字
+    'ゆるみ止め対策の有無①',// No.50 コード表
+    'ゆるみ止め対策の有無②',// No.51 最大100文字
+    '合いマーク①',        // No.52 コード表
+    '合いマーク②',        // No.53 最大100文字
+    '制振装置の有無①',    // No.54 コード表
+    '制振装置の有無②',    // No.55 最大100文字
+    '柱基部排水性向上対策①',// No.56 コード表
+    '柱基部排水性向上対策②',// No.57 最大100文字
+    '設置年月',           // No.58 半角7文字 yyyy.mm
+    '構造情報_備考',       // No.59 最大100文字
+    '告示に基づく健全性の診断の区分（門）',// No.60 コード表
+    '点検員（所属）',      // No.61 最大20文字
+    '点検員（氏名）',      // No.62 最大20文字
+    '健全性の診断の結果に関する補足（門）・備考（小）',// No.63
+    '位置図ファイル名',    // No.64 最大60文字
+    '全景その他ファイル名1',// No.65
+    '全景その他ファイル名2',// No.66
+    '全景その他ファイル名3',// No.67
+    '全景その他ファイル名4',// No.68
+    '全景その他ファイル名5',// No.69
+    '全景その他ファイル名6',// No.70
+    '全景その他ファイル名7',// No.71
+    '全景その他ファイル名8',// No.72
+    '全景その他ファイル名9',// No.73
+    '全景その他ファイル1タイトル',// No.74
+    '全景その他ファイル2タイトル',// No.75
+    '全景その他ファイル3タイトル',// No.76
+    '全景その他ファイル4タイトル',// No.77
+    '全景その他ファイル5タイトル',// No.78
+    '全景その他ファイル6タイトル',// No.79
+    '全景その他ファイル7タイトル',// No.80
+    '全景その他ファイル8タイトル',// No.81
+    '全景その他ファイル9タイトル',// No.82
+    'road_manager_c',     // No.83 記入不要・編集不可（管理者コード）
+    'road_manager_div',   // No.84 コード表
+    '作業内容フラグ_区分', // No.85 必須 コード表
+    '作業内容フラグ_内訳', // No.86 必須 コード表
+    '作業内容フラグ_内訳補足',// No.87 最大50文字
+    'Michi施設キー',       // No.88 必須 最大500文字 緯度経度;緯度経度...
+    '作業区分',           // No.89 必須 0=作業中,1=完了
+  ];
+  const rows=ins.map(i=>{
+    const z=i.zenei||[];
+    const mgmt=resolveMgmt(i);
+    const diagCode = CD_DIAG[i.diag]||i.diag||'';
+    // 処理区分：CSV出力画面のセレクト値を使用（デフォルト:S=追加）
+    const shoriKubun = (document.getElementById('exp-shori')?.value) || 'S';
+    // 施設IDの緯度経度（付録04仕様: 整数2-3桁.小数6桁）
+    const facIdVal = facId(i);
+    const latFmt = i.lat ? parseFloat(i.lat).toFixed(6) : '';
+    const lngFmt = i.lng ? parseFloat(i.lng).toFixed(6) : '';
+    // Michi施設キー：施設IDと同値（緯度,経度形式）- 複数ある場合はセミコロン区切り
+    const michiKey = i.michiKey || facIdVal;
+    // 設置年月：yyyy.mm 形式に正規化
+    const instFmt = (()=>{
+      const v = i.inst||'';
+      if(!v) return '';
+      // 「2025年4月」→「2025.04」
+      const m1 = v.match(/(\d{4})年(\d{1,2})月?/);
+      if(m1) return `${m1[1]}.${String(m1[2]).padStart(2,'0')}`;
+      // 「2025.04」形式はそのまま
+      if(/^\d{4}\.\d{2}$/.test(v)) return v;
+      return v;
+    })();
+
+    return [
+      shoriKubun,           // No.1  処理区分
+      i.ftp||'',            // No.2  種別（施設種別コード）
+      i.pil||'',            // No.3  支柱形式コード
+      i.mn||'',             // No.4  管理番号
+      facIdVal,             // No.5  施設ID
+      latFmt,               // No.6  緯度
+      lngFmt,               // No.7  経度
+      i.fnm||'',            // No.8  施設名コード
+      i.route||'',          // No.9  路線名
+      mgmt.kyoku,           // No.10 管理者（局）コード ※必須
+      mgmt.jimusho,         // No.11 管理者（事務所）コード ※必須
+      mgmt.shucchoJo,       // No.12 管理者（出張所）コード
+      i.rdtype||'',         // No.13 道路種別コード
+      i.pref||'',           // No.14 所在地（県）コード
+      i.city||'',           // No.15 所在地（市）コード
+      i.loc||'',            // No.16 所在地（市以下）
+      i.km||'',             // No.17 距離標
+      dt2csv(i.dt),         // No.18 現地確認年月日 ※必須
+      dt2csv(i.dt),         // No.19 調書更新年月日
+      i.alt||'',            // No.20 代替路の有無
+      i.rdknd||'',          // No.21 自専道or一般道
+      i.ud||'',             // No.22 上下別
+      i.occ||'',            // No.23 占用物件
+      i.env||'',            // No.24 設置環境
+      '',                   // No.25 設置施設種別（設置環境が橋梁等の場合）
+      '',                   // No.26 設置施設ID
+      i.sea||'',            // No.27 海岸からの距離
+      i.snow||'',           // No.28 融雪剤散布区間
+      i.wind||'',           // No.29 風規制実施区間
+      i.snow2||'',          // No.30 防雪対策実施区間
+      i.emg||'',            // No.31 緊急輸送道路指定
+      i.cens||'',           // No.32 センサス年度
+      i.censno||'',         // No.33 センサス区間番号
+      i.trf||'',            // No.34 交通量
+      i.rdw||'',            // No.35 道路幅員
+      i.sdw||'',            // No.36 歩道幅員
+      i.sch||'',            // No.37 通学路指定
+      i.surf||'',           // No.38 表面処理形式
+      i.base||'',           // No.39 基礎形式
+      i.rib||'',            // No.40 支柱基部リブ形状
+      i.gl||'',             // No.41 路面境界部の状況
+      i.lamp||'',           // No.42 灯具種類
+      i.signnum||'',        // No.43 標識設置枚数
+      i.signno||'',         // No.44 標識番号
+      i.signatt||'',        // No.45 標識板取付形式①
+      '',                   // No.46 標識板取付形式②
+      '',                   // No.47 標識板取付形式③
+      i.fall||'',           // No.48 標識板落下防止対策①
+      i.fall2||'',          // No.49 標識板落下防止対策② (詳細テキスト)
+      i.losen||'',          // No.50 ゆるみ止め対策①
+      i.losen2||'',         // No.51 ゆるみ止め対策②
+      i.mark||'',           // No.52 合いマーク①
+      i.mark2||'',          // No.53 合いマーク②
+      i.damp||'',           // No.54 制振装置①
+      i.damp2||'',          // No.55 制振装置②
+      i.drain||'',          // No.56 柱基部排水性向上対策①
+      i.drain2||'',         // No.57 柱基部排水性向上対策②
+      instFmt,              // No.58 設置年月
+      i.structNote||'',     // No.59 構造情報備考
+      diagCode,             // No.60 健全性の診断の区分コード(1〜4)
+      i.ins1o||'',          // No.61 点検員所属
+      i.ins1||'',           // No.62 点検員氏名
+      i.diagnote||'',       // No.63 診断結果補足・備考
+      i.locimg||'',         // No.64 位置図ファイル名
+      ...(Array.from({length:9},(_,k)=>z[k]||'')),  // No.65〜73 全景写真1〜9
+      ...(Array.from({length:9},()=>'')),            // No.74〜82 全景タイトル1〜9（空欄）
+      '',                   // No.83 road_manager_c（記入不要）
+      mgmt.div,             // No.84 road_manager_div
+      i.wkdiv||'1',         // No.85 作業内容フラグ_区分 ※必須（デフォルト:1=追加）
+      i.wkdet||'1',         // No.86 作業内容フラグ_内訳 ※必須（デフォルト:1=追加）
+      '',                   // No.87 作業内容フラグ_内訳補足
+      michiKey,             // No.88 Michi施設キー ※必須
+      '1',                  // No.89 作業区分 1=完了
+    ];
+  });
+  return csvStr([H,...rows]);
+}
+function genCSV2(ins){
+  // ============================================================
+  // 付録04「02措置の必要性の検討結果」仕様準拠
+  // 必須：施設ID、現地確認年月日
+  // ============================================================
+  const H=[
+    '施設ID',             // 必須
+    '現地確認年月日',      // 必須
+    // 門型標識等 機能及び構造安全性の評価（基板部・接続部・支柱部各々暴風/地震）
+    '門型標識等_暴風',
+    '門型標識等_地震',
+    '門型標識等_機能構造安全性評価_その他1（門）',
+    '門型標識等_機能構造安全性評価_その他2（門）',
+    '基板部_暴風（門）',
+    '基板部_暴風_写真番号（門）',
+    '基板部_地震（門）',
+    '基板部_地震_写真番号（門）',
+    '基板部_機能構造安全性評価_その他1（門）',
+    '基板部_機能構造安全性評価_その他2（門）',
+    '基板部_機能構造安全性評価_その他_写真番号（門）',
+    '基板部_塩害（門）',
+    '基板部_防食機能の低下（門）',
+    '基板部_特定事象の有無_その他1（門）',
+    '基板部_特定事象の有無_その他2（門）',
+    '基板部_措置の有無（門）',
+    '基板部_応急措置内容（門）',
+    '接続部_暴風（門）',
+    '接続部_暴風_写真番号（門）',
+    '接続部_地震（門）',
+    '接続部_地震_写真番号（門）',
+    '接続部_機能構造安全性評価_その他1（門）',
+    '接続部_機能構造安全性評価_その他2（門）',
+    '接続部_機能構造安全性評価_その他_写真番号（門）',
+    '接続部_塩害（門）',
+    '接続部_防食機能の低下（門）',
+    '接続部_特定事象の有無_その他1（門）',
+    '接続部_特定事象の有無_その他2（門）',
+    '接続部_措置の有無（門）',
+    '接続部_応急措置内容（門）',
+    '支柱部_暴風（門）',
+    '支柱部_暴風_写真番号（門）',
+    '支柱部_地震（門）',
+    '支柱部_地震_写真番号（門）',
+    '支柱部_機能構造安全性評価_その他1（門）',
+    '支柱部_機能構造安全性評価_その他2（門）',
+    '支柱部_機能構造安全性評価_その他_写真番号（門）',
+    '支柱部_塩害（門）',
+    '支柱部_防食機能の低下（門）',
+    '支柱部_特定事象の有無_その他1（門）',
+    '支柱部_特定事象の有無_その他2（門）',
+    '支柱部_措置の有無（門）',
+    '支柱部_応急措置内容（門）',
+    '基板部_写真番号',
+    '接続部_写真番号',
+    '支柱部_写真番号',
+    'その他_写真番号',
+    '特記事項',
+    '定期点検員所見',
+    '第三者被害_応急措置の有無',
+    '第三者被害_応急措置内容',
+    '定期点検員（所属・氏名）',
+    // 措置の必要性（小規模/門型共通）
+    '基板部_措置の必要性の有無',
+    '基板部_措置が必要な理由',
+    '接続部_措置の必要性の有無',
+    '接続部_措置が必要な理由',
+    '支柱部_措置の必要性の有無',
+    '支柱部_措置が必要な理由',
+    'その他_措置の必要性の有無',
+    'その他_措置が必要な理由',
+  ];
+  const rows=ins.map(i=>{
+    const m=i.meas||{};
+    const diagCode = CD_DIAG[i.diag]||i.diag||'';
+    return [
+      facId(i),           // 施設ID
+      dt2csv(i.dt),       // 現地確認年月日
+      // 門型標識等評価（A=1,B=2,C=3）
+      i.safety||'',       // 門型標識等_暴風
+      i.safety||'',       // 門型標識等_地震
+      '','',              // その他1,2
+      // 基板部
+      i.safety||'',m[0]?.p||'',
+      i.safety||'',m[0]?.p||'',
+      '','',m[0]?.p||'',
+      i.spcevt||'',i.spcevt||'','','',
+      m[0]?.n||'',m[0]?.r||'',
+      // 接続部
+      i.safety||'',m[1]?.p||'',
+      i.safety||'',m[1]?.p||'',
+      '','',m[1]?.p||'',
+      i.spcevt||'',i.spcevt||'','','',
+      m[1]?.n||'',m[1]?.r||'',
+      // 支柱部
+      i.safety||'',m[2]?.p||'',
+      i.safety||'',m[2]?.p||'',
+      '','',m[2]?.p||'',
+      i.spcevt||'',i.spcevt||'','','',
+      m[2]?.n||'',m[2]?.r||'',
+      // 写真番号・所見
+      m[0]?.p||'',m[1]?.p||'',m[2]?.p||'',m[3]?.p||'',
+      i.measPre||'',
+      i.opinion||'',
+      i.measyn||'','',
+      `${i.ins1o||''} ${i.ins1||''}`.trim(),
+      // 措置の必要性（小規模/門型共通）
+      m[0]?.n||'',m[0]?.r||'',
+      m[1]?.n||'',m[1]?.r||'',
+      m[2]?.n||'',m[2]?.r||'',
+      m[3]?.n||'',m[3]?.r||'',
+    ];
+  });
+  return csvStr([H,...rows]);
+}
+// 部材名→コード（PDFマスタ「部材名」01〜31準拠）
+const CD_PART = {
+  '支柱本体':'01','支柱継手部':'02','支柱分岐部':'03','支柱内部':'04',
+  'リブ・取付溶接部':'05','柱・ベースプレート溶接部':'06','ベースプレート取付部':'07',
+  '路面境界部（GL-0mm）':'08','路面境界部（GL-40mm）':'09','柱・基礎境界部':'10',
+  '電気設備用開口部':'11','開口部ボルト':'12','横梁本体':'13','横梁取付部':'14',
+  '横梁トラス本体':'15','横梁仕口溶接部':'16','横梁トラス溶接部':'17','横梁継手部':'18',
+  '基礎コンクリート部':'19','アンカーボルト・ナット':'20',
+  'ブラケット本体':'21','ブラケット取付部':'22',
+  '標識板（添架含む）':'23','道路情報板':'24','基板取付部':'25',
+  '灯具':'26','灯具取付部':'27','ビス・リベット（重ね貼り用）':'28',
+  'バンド部（共架型）':'29','配線部分':'30','管理用の足場・作業台':'31'
+};
+// 損傷の種類→コード（PDFマスタ「損傷の種類」01〜11準拠）
+const CD_DTYPE = {
+  '亀裂':'01','き裂':'01','ゆるみ・脱落':'02','破断':'03','防食機能の劣化':'04',
+  '腐食':'05','異種金属接触腐食':'06','変形・欠損':'07','ひびわれ':'08',
+  'うき・剥離':'09','滞水':'10','その他':'11'
+};
+
+function genCSV3(ins){
+  const H=['施設ID','現地確認年月日','写真番号','部材名','損傷の種類','撮影年月日','損傷写真ファイル名','メモ'];
+  const rows=[];
+  ins.forEach(i=>{
+    (i.photos||[]).forEach(p=>rows.push([
+      facId(i),
+      dt2csv(i.dt),
+      p.no||'',
+      CD_PART[p.part]||p.part||'',   // 部材名→コード
+      CD_DTYPE[p.type]||p.type||'',  // 損傷の種類→コード
+      dt2csv(p.dt),
+      p.file||'',
+      p.memo||''
+    ]));
+  });
+  return csvStr([H,...rows]);
+}
+function genCSV4(ins){
+  // R6.9要領準拠：部材ごとに適用される損傷種類のみ出力（適用外はハッチ＝空欄）
+  // 対象有無：有=1 / 無=2（PDFマスタ「対象有無」コード準拠）
+  // 損傷程度：a=1 / c=2 / e=3（PDFマスタ「損傷程度の評価」コード準拠）
+  const H=['施設ID','現地確認年月日（必須）',
+    ...DMG_ROWS.flatMap(r=>[
+      `${r.name}_該当有無`,
+      ...DMG_TYPES.map((t,ti)=>r.app[ti]?`${r.name}_${t}`:`${r.name}_${t}（適用外）`)
+    ])
+  ];
+  const rows=ins.map(i=>{
+    const d=i.dmg||{};
+    return [
+      facId(i), dt2csv(i.dt),
+      ...DMG_ROWS.flatMap(r=>{
+        const pd=d[r.code]||{};
+        // 対象有無：na=true→「2」(無), na=false→「1」(有)
+        const isNA = !!pd.na;
+        const naCode = isNA ? '2' : '1';
+        return [
+          naCode,
+          ...DMG_TYPES.map((t,ti)=>{
+            if(!r.app[ti]) return '';  // 適用外は空欄
+            if(isNA) return '';        // 対象無の場合も空欄
+            const raw = pd[t]||'';
+            return CD_DMG[raw]||raw;   // a→1, c→2, e→3
+          })
+        ];
+      })
+    ];
+  });
+  return csvStr([H,...rows]);
+}
+function genCSV5(ins){
+  const H=['施設ID','現地確認年月日','調査部位','部位記号','測定位置','番号','1回目_mm','2回目_mm','最小値_mm','管理板厚_mm','限界板厚_mm','評価区分','計測年月日','計測機器名'];
+  const rows=[];
+  ins.forEach(i=>{ (i.thick||[]).forEach(t=>rows.push([facId(i),dt2csv(i.dt),t.part||'',t.code||'',t.pos||'',t.no||'',t.v1||'',t.v2||'',t.min||'',t.mgmt||'',t.lim||'',t.ev||'',dt2csv(i.thkdt),i.thkdev||''])); });
+  return csvStr([H,...rows]);
+}
+function csvStr(rows){ return rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n'); }
+function dlCSV(content,name){ const b=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); }
+function expOne(n){ const i=getSelIns(); if(!i.length){alert('対象がありません');return;} const gs=[genCSV1,genCSV2,genCSV3,genCSV4,genCSV5]; const ns=['01 附属物の諸元と定期点検結果.CSV','02 措置の必要性の検討結果.CSV','03 損傷写真.CSV','04 損傷程度の評価記録.CSV','05 板厚調査記録.CSV']; dlCSV(gs[n-1](i),ns[n-1]); }
+function expAll(){ const i=getSelIns(); if(!i.length){alert('対象がありません');return;} if(!confirm('5種CSVを個別にダウンロードします。\nZIP一括出力をお勧めします（付録03仕様の完全なフォルダ構造が生成されます）。\n\n続けますか？')) return; [1,2,3,4,5].forEach((n,k)=>setTimeout(()=>expOne(n),k*400)); }
+
+// ============================================================
+// ZIP一括出力（付録03「一括登録用zipファイル仕様」完全準拠）
+// 構造:
+//   一括登録用.zip
+//     ├ 01 附属物の諸元と定期点検結果.CSV
+//     ├ 02 措置の必要性の検討結果.CSV
+//     ├ 03 損傷写真.CSV
+//     ├ 04 損傷程度の評価記録.CSV
+//     ├ 05 板厚調査記録.CSV
+//     └ Image/
+//         └ {施設ID}_{yyyymmdd}/
+//             ├ 位置図.jpg（プレースホルダ）
+//             ├ 全景写真_1.jpg〜
+//             └ 損傷写真/
+// ============================================================
+async function expZip(){
+  const ins = getSelIns();
+  if(!ins.length){ alert('出力対象がありません'); return; }
+
+  if(typeof JSZip === 'undefined'){
+    alert('JSZipライブラリが読み込まれていません。\nインターネット接続を確認してください。');
+    return;
+  }
+
+  // 画像登録状況の確認
+  const noImg = ins.filter(i=>!imgStore[i.fid]||
+    (Object.keys(imgStore[i.fid].fixed||{}).length===0 &&
+     Object.keys(imgStore[i.fid].dmg||{}).length===0));
+  if(noImg.length>0 && noImg.length===ins.length){
+    if(!confirm(`⚠️ まだ画像が1枚も登録されていません。\n写真管理タブで画像をアップロードしてからZIPを出力することをおすすめします。\n\n画像なしでZIPを出力しますか？`)) return;
+  }
+
+  const btn = document.getElementById('btn-zip');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ ZIP作成中...'; }
+  showProg(true, 'CSVを生成中...');
+
+  try{
+    const zip = new JSZip();
+
+    // 5種CSV（BOM付きUTF-8）
+    const csvData = [
+      { name:'01 附属物の諸元と定期点検結果.CSV', gen: genCSV1 },
+      { name:'02 措置の必要性の検討結果.CSV',     gen: genCSV2 },
+      { name:'03 損傷写真.CSV',                    gen: genCSV3 },
+      { name:'04 損傷程度の評価記録.CSV',           gen: genCSV4 },
+      { name:'05 板厚調査記録.CSV',                gen: genCSV5 },
+    ];
+    csvData.forEach(c=> zip.file(c.name, '\uFEFF'+c.gen(ins)));
+
+    // 画像を各施設フォルダに梱包（addImagesToZip内でフォルダも作成）
+    showProg(true, '写真を梱包中...');
+    await addImagesToZip(zip, ins);
+
+    // 配置ガイドtxt（Imageフォルダの外・ルート直下）
+    const allGuides = [
+      '附属物点検 写真配置ガイド',
+      `出力日: ${new Date().toLocaleDateString('ja-JP')}`,
+      `対象施設数: ${ins.length}件`,
+      '',
+      '【Imageフォルダをそのままzip化してxROADにアップロードできます】',
+      '※ 写真管理タブでアップロードした画像は自動で梱包済みです',
+      '※ まだアップロードしていない写真は各フォルダに手動で追加してください',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    ];
+
+    ins.forEach((i,idx)=>{
+      const dt = (i.dt||'').replace(/-/g,'');
+      const folderName = `${facId(i)}_${dt}`;
+      const store = imgStore[i.fid]||{};
+      const fixedKeys = Object.keys(store.fixed||{});
+      const dmgKeys   = Object.keys(store.dmg||{});
+      const photoList = (i.photos||[]).filter(p=>p.file);
+
+      allGuides.push(
+        '',
+        `【${idx+1}】${i.mn||''} ${LBL_FNM[i.fnm]||i.fnm||''}（点検日: ${i.dt||''}）`,
+        `フォルダ → Image/${folderName}/`,
+        '',
+        `  ＜フォルダ直下＞ 登録済: ${fixedKeys.length}枚`,
+        ...(fixedKeys.length
+          ? fixedKeys.map(k=>`    ✅ ${store.fixed[k].fname}（${fmtSize(store.fixed[k].size)}）`)
+          : ['    （未登録 → 手動で配置してください）',
+             '    位置図.jpg / 全景.jpg / 点検ステッカー.jpg']),
+        '',
+        `  ＜損傷写真/ フォルダ内＞ 登録済: ${dmgKeys.length}枚 / 合計: ${photoList.length}件`,
+        ...(dmgKeys.length
+          ? dmgKeys.map(k=>`    ✅ ${store.dmg[k].fname}（${fmtSize(store.dmg[k].size)}）`)
+          : ['    （未登録 → 手動で配置してください）']),
+        ...(photoList.length > dmgKeys.length
+          ? [`    ⚠ 未登録: ${photoList.filter(p=>!store.dmg?.[p.no]).map(p=>p.file).join(', ')}`]
+          : []),
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      );
+    });
+
+    allGuides.push(
+      '', '■ ファイル仕様（付録03準拠）',
+      '  ・拡張子: .jpg .jpeg .png / 1ファイル2MB以下 / ZIP全体1GB以下 / 画像100枚以下',
+    );
+    zip.file('_写真配置ガイド.txt', allGuides.join('\n'));
+
+    // ZIP生成
+    showProg(true, 'ZIP圧縮中...');
+    const biz     = S.biz.find(b=>b.id===ins[0]?.bid);
+    const bizName = biz?.nm || '附属物点検';
+    const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const zipName = `${bizName}_一括登録用_${dateStr}.zip`;
+
+    const blob = await zip.generateAsync(
+      { type:'blob', compression:'DEFLATE', compressionOptions:{level:5} },
+      meta => {
+        const bar = document.getElementById('photo-prog-bar');
+        if(bar) bar.style.width = Math.round(meta.percent)+'%';
+      }
+    );
+
+    showProg(false);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = zipName.replace(/[\\/:*?"<>|]/g,'_');
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    // 梱包済み画像数の集計
+    let totalFixed=0, totalDmg=0;
+    ins.forEach(i=>{ const s=imgStore[i.fid]||{};
+      totalFixed+=Object.keys(s.fixed||{}).length;
+      totalDmg  +=Object.keys(s.dmg||{}).length; });
+
+    alert(`✅ ZIP出力完了\n\nファイル: ${a.download}\n\n` +
+      `【梱包済み画像】\n` +
+      `  フォルダ直下写真: ${totalFixed}枚\n` +
+      `  損傷写真: ${totalDmg}枚\n\n` +
+      `【xROADへのアップロード手順】\n` +
+      `1. ZIPを解凍する\n` +
+      `2. 未登録の写真があれば各施設フォルダに手動で追加\n` +
+      `3. Image/ フォルダをzip化してxROADにアップロード`);
+
+  }catch(e){
+    console.error(e);
+    showProg(false);
+    alert('ZIP生成中にエラーが発生しました:\n'+e.message);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='📦 ZIP一括出力（xROAD登録用）'; }
+  }
+}
+
+// ==================== DASHBOARD ====================
+// ============================================================
+// 必須項目チェック定義
+// ============================================================
+const REQUIRED_CHECKS = [
+  { key:'dt',      label:'現地確認年月日', icon:'📅', check: i=> !!i.dt },
+  { key:'lat',     label:'緯度・経度',     icon:'📍', check: i=> !!i.lat && !!i.lng },
+  { key:'diag',    label:'健全性診断区分', icon:'📊', check: i=> !!i.diag },
+  { key:'opinion', label:'定期点検員所見', icon:'📝', check: i=> !!(i.opinion||'').trim() },
+  { key:'ins1',    label:'点検員氏名',     icon:'🧑', check: i=> !!(i.ins1||'').trim() },
+  { key:'locimg',  label:'位置図ファイル名', icon:'🗺️', check: i=> !!(i.locimg||'').trim() },
+  { key:'zenei',   label:'全景写真ファイル名', icon:'📷', check: i=> (i.zenei||[]).some(v=>v) },
+  { key:'pref',    label:'都道府県',       icon:'🏔️', check: i=> !!i.pref },
+  { key:'mn',      label:'管理番号',       icon:'🔢', check: i=> !!(i.mn||'').trim() },
+];
+
+function updDash(){
+  // 全業務・全施設を対象に集計（選択業務によらず常に最新）
+  const allFac = S.fac;
+  const allIns = S.ins;
+
+  // ---- メトリクス（全業務合計） ----
+  const totalDone = allFac.filter(f=>allIns.find(i=>i.fid===f.id)).length;
+  const totalAlrt = allIns.filter(i=>['Ⅲ','Ⅳ'].includes(i.diag)).length;
+  document.getElementById('m-biz').textContent  = S.biz.length;
+  document.getElementById('m-fac').textContent  = allFac.length;
+  document.getElementById('m-done').textContent = totalDone;
+  document.getElementById('m-alrt').textContent = totalAlrt;
+
+  // ラベルを「全業務」に統一
+  const q = id => document.getElementById(id)?.closest('.met')?.querySelector('.met-l');
+  if(q('m-fac'))  q('m-fac').textContent  = '施設数（全業務）';
+  if(q('m-done')) q('m-done').textContent = '点検完了（全業務）';
+  if(q('m-alrt')) q('m-alrt').textContent = '要措置（全業務）';
+
+  // 選択業務がある場合の補足バッジ
+  const note = document.getElementById('dash-biz-note');
+  if(note){
+    const b = S.biz.find(b=>b.id===S.curBiz);
+    if(b){
+      const cFac  = allFac.filter(f=>f.bid===S.curBiz);
+      const cDone = cFac.filter(f=>allIns.find(i=>i.fid===f.id)).length;
+      note.style.display = '';
+      note.innerHTML = `📁 選択中の業務：<strong>${escHtml(b.nm)}</strong>　施設 ${cFac.length}件 / 完了 ${cDone}件`;
+    } else {
+      note.style.display = 'none';
+    }
+  }
+
+  // ---- 健全性診断サマリー（全業務合計） ----
+  const cnt = {I:0,II:0,III:0,IV:0};
+  allFac.forEach(f=>{
+    const i = allIns.find(i=>i.fid===f.id);
+    if(i?.diag){ const k={'Ⅰ':'I','Ⅱ':'II','Ⅲ':'III','Ⅳ':'IV'}[i.diag]; if(k) cnt[k]++; }
+  });
+  document.getElementById('c1').textContent = cnt.I;
+  document.getElementById('c2').textContent = cnt.II;
+  document.getElementById('c3').textContent = cnt.III;
+  document.getElementById('c4').textContent = cnt.IV;
+
+  // ---- 未入力チェックカード（全施設対象） ----
+  const mc = document.getElementById('missing-cards');
+  if(mc){
+    if(!allFac.length){
+      mc.innerHTML = '<div style="grid-column:1/-1;padding:10px 14px;color:var(--tx2);font-size:12px">施設が登録されていません</div>';
+    } else {
+      const checkResults = REQUIRED_CHECKS.map(chk=>{
+        const missing = allFac.map(f=>{
+          const ins    = allIns.find(i=>i.fid===f.id) || {};
+          const merged = {...f, ...ins};
+          return chk.check(merged) ? null : f;
+        }).filter(Boolean);
+        return { ...chk, missing, count: missing.length };
+      }).filter(r=> r.count > 0);
+
+      if(!checkResults.length){
+        mc.innerHTML = `<div style="grid-column:1/-1;padding:12px 16px;background:var(--acp);border-radius:8px;color:var(--ac);font-size:13px;font-weight:600">✅ 全施設の必須項目がすべて入力済みです</div>`;
+      } else {
+        window._missingData = checkResults;
+        mc.innerHTML = checkResults.map((r,idx)=>`
+          <div class="miss-card" data-idx="${idx}"
+            style="background:var(--wnp);border:1px solid rgba(186,117,23,.25);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;user-select:none">
+            <div style="font-size:22px;margin-bottom:4px">${r.icon}</div>
+            <div style="font-size:22px;font-weight:700;color:var(--wn)">${r.count}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--wn);margin-top:2px">${r.label}</div>
+            <div style="font-size:10px;color:var(--tx2);margin-top:2px">未入力 ▾</div>
+          </div>`).join('');
+
+        mc.querySelectorAll('.miss-card').forEach(card=>{
+          card.addEventListener('mouseenter', ()=>{
+            showMissingPopup(card, window._missingData[parseInt(card.dataset.idx)]);
+          });
+          card.addEventListener('mouseleave', scheduleHidePopup);
+        });
+      }
+    }
+  }
+
+  // ---- 最近の記録（全業務 最新5件） ----
+  const rec = [...allIns].sort((a,b)=>new Date(b.upd||0)-new Date(a.upd||0)).slice(0,5);
+  const el = document.getElementById('rec-list');
+  if(!rec.length){ el.innerHTML='<div style="text-align:center;padding:32px;color:var(--tx2)">まだ記録がありません</div>'; return; }
+  el.innerHTML = rec.map(i=>{
+    const f = S.fac.find(f=>f.id===i.fid);
+    const b = S.biz.find(b=>b.id===i.bid);
+    return `<div class="fxc g12" style="padding:8px 0;border-bottom:1px solid var(--bd)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${escHtml(f?.mn||'')} ${escHtml(LBL_FNM[i.fnm]||i.fnm||'')}</div>
+        <div style="font-size:11px;color:var(--tx2)">${escHtml(b?.nm||'')} / ${i.dt||''}</div>
+      </div>
+      ${i.diag?`<span class="bdg ${BDGM[i.diag]||'bg'}">${i.diag}</span>`:''}
+      <button class="btn btn-sm" onclick="openInsp('${i.fid}')">編集</button>
+    </div>`;
+  }).join('');
+}
+
+
+// ============================================================
+// 未入力施設ポップアップ制御
+// ============================================================
+let _popupTimer = null;
+
+function showMissingPopup(cardEl, result){
+  clearTimeout(_popupTimer);
+  const popup = document.getElementById('missing-popup');
+  const inner = document.getElementById('missing-popup-inner');
+  if(!popup || !inner) return;
+
+  const facList = result.missing;
+  const label   = result.label;
+
+  // 施設リストをHTMLで生成（JSでclickイベントを後付け）
+  inner.innerHTML = `
+    <div style="padding:8px 14px 6px;font-size:12px;font-weight:600;color:var(--wn);border-bottom:1px solid var(--bd)">
+      ⚠ ${escHtml(label)}が未入力の施設（${facList.length}件）
+    </div>
+    ${facList.map((f,i)=>`
+      <div class="miss-fac-item" data-fid="${escHtml(f.id)}"
+        style="padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span>
+          <span style="font-weight:600">${escHtml(f.mn)}</span>
+          <span style="color:var(--tx2);font-size:11px;margin-left:6px">${escHtml(LBL_FNM[f.nm]||f.nm||'')}</span>
+        </span>
+        <span style="font-size:11px;color:var(--pr);white-space:nowrap">点検入力 →</span>
+      </div>`).join('')}`;
+
+  // 施設行のイベントをJSで登録
+  inner.querySelectorAll('.miss-fac-item').forEach(row=>{
+    row.addEventListener('mouseenter', ()=>{ row.style.background='var(--prp)'; clearTimeout(_popupTimer); });
+    row.addEventListener('mouseleave', ()=>{ row.style.background=''; scheduleHidePopup(); });
+    row.addEventListener('click', ()=>{
+      hideMissingPopup();
+      openInsp(row.dataset.fid);
+    });
+  });
+
+  // ポップアップの表示位置：カードの直下
+  const r = cardEl.getBoundingClientRect();
+  const popW = 340;
+  let left = r.left + window.scrollX;
+  // 画面右端にはみ出す場合は左寄せ
+  if(left + popW > window.innerWidth) left = window.innerWidth - popW - 8;
+  popup.style.top  = (r.bottom + window.scrollY + 6) + 'px';
+  popup.style.left = Math.max(8, left) + 'px';
+  popup.style.display = 'block';
+
+  // ポップアップ自身のホバーで消えないようにする
+  popup.onmouseenter = ()=> clearTimeout(_popupTimer);
+  popup.onmouseleave = ()=> scheduleHidePopup();
+}
+
+function hideMissingPopup(){
+  const popup = document.getElementById('missing-popup');
+  if(popup) popup.style.display = 'none';
+  clearTimeout(_popupTimer);
+}
+
+function scheduleHidePopup(){
+  _popupTimer = setTimeout(hideMissingPopup, 300);
+}
+
+// ページ外クリックで閉じる
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.miss-card') && !e.target.closest('#missing-popup')){
+    hideMissingPopup();
+  }
+});
+function refresh(){ updDash(); fillSelects(); const b=S.biz.find(b=>b.id===S.curBiz); document.getElementById('sb-biz').textContent=b?.nm||'業務を選択してください'; document.getElementById('hdr-biz-lbl').textContent=b?.nm||''; }
+
+// ==================== UTILS ====================
+function resetAllData(){
+  if(!confirm('⚠️ 全データを削除してリセットします。\nインポートした施設・点検記録が全て消えます。\n\n本当によろしいですか？')) return;
+  // localStorageとメモリを両方クリア
+  try{ localStorage.removeItem('fd2_data'); }catch(e){}
+  _memStore = null;
+  // 状態をリセット
+  S = { biz:[], fac:[], ins:[], curBiz:null, curFac:null, editBiz:null, _imp:null };
+  refresh();
+  showPage('dash');
+  alert('✅ リセット完了しました。');
+}
+function v(id){ const el=document.getElementById(id); return el?el.value:''; }
+function sv(id,val){ const el=document.getElementById(id); if(el) el.value=val??''; }
+function closeMod(id){ document.getElementById(id).classList.add('hid'); }
+</script>
+</body>
+</html>
