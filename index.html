@@ -6,6 +6,7 @@
 <title>附属物点検管理システム v2 | 株式会社フレックスデザイン</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--pr:#1a4a7a;--pr2:#2d6bb5;--prp:#e8f0fb;--ac:#0f6e56;--ac2:#1d9e75;--acp:#e1f5ee;--wn:#ba7517;--wnp:#faeeda;--dg:#a32d2d;--dgp:#fcebeb;--g1:#f7f6f3;--g2:#eceae4;--g3:#b4b2a9;--g4:#5f5e5a;--tx:#1c1c1a;--tx2:#5f5e5a;--bd:rgba(0,0,0,0.12);--r:8px;--rl:12px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1079,8 +1080,9 @@ function updMichiKey(){
 }
 
 // ==================== INIT ====================
-window.addEventListener('DOMContentLoaded', ()=>{
-  load();
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await load();
+  setupRealtime();
   document.getElementById('dash-dt').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   buildDmgTable();
   buildMeasTable();
@@ -1095,27 +1097,90 @@ window.addEventListener('DOMContentLoaded', ()=>{
   });
 });
 
+// ==================== SUPABASE ====================
+const _SB_URL = 'https://twolywmokxggjnugzuig.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3b2x5d21va3hnZ2pudWd6dWlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDQ0MzksImV4cCI6MjA5MTEyMDQzOX0.fviTO35D3s3Rqz3VtTVcXdlgESjiO9yz4PRvsxGHVCI';
+const _sb = supabase.createClient(_SB_URL, _SB_KEY);
+
 // ==================== STORAGE ====================
-// ストレージ（localStorage非対応環境でもメモリで動作）
+// ストレージ（Supabase優先、localStorage/メモリをオフラインキャッシュとして使用）
 let _memStore = null;
 function _lsAvail(){
   try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return true; }catch(e){ return false; }
 }
-function save(){
+// ローカルキャッシュ保存
+function saveLocal(){
   const json = JSON.stringify(S);
-  _memStore = json; // メモリに常に保存
+  _memStore = json;
   try{ if(_lsAvail()) localStorage.setItem('fd2_data', json); }catch(e){}
 }
-function load(){
+// 互換性のため残す（ローカルキャッシュのみ更新）
+function save(){ saveLocal(); }
+
+// Supabase upsert ヘルパー（非同期・fire and forget）
+function _sbBiz(b){ _sb.from('biz').upsert({id:b.id,data:b,updated_at:new Date().toISOString()}).then(({error})=>{ if(error) console.error('biz upsert:',error); }); }
+function _sbFac(f){ _sb.from('fac').upsert({id:f.id,bid:f.bid,data:f,updated_at:new Date().toISOString()}).then(({error})=>{ if(error) console.error('fac upsert:',error); }); }
+function _sbIns(i){ _sb.from('ins').upsert({fid:i.fid,bid:i.bid,data:i,updated_at:new Date().toISOString()}).then(({error})=>{ if(error) console.error('ins upsert:',error); }); }
+function _sbBulkFac(facs){ if(!facs.length) return; _sb.from('fac').upsert(facs.map(f=>({id:f.id,bid:f.bid,data:f,updated_at:new Date().toISOString()}))).then(({error})=>{ if(error) console.error('fac bulk upsert:',error); }); }
+function _sbBulkIns(inss){ if(!inss.length) return; _sb.from('ins').upsert(inss.map(i=>({fid:i.fid,bid:i.bid,data:i,updated_at:new Date().toISOString()}))).then(({error})=>{ if(error) console.error('ins bulk upsert:',error); }); }
+
+// Supabase delete ヘルパー
+function _sbDelBiz(id){
+  _sb.from('ins').delete().eq('bid',id).then(({error})=>{ if(error) console.error('ins del:',error); });
+  _sb.from('fac').delete().eq('bid',id).then(({error})=>{ if(error) console.error('fac del:',error); });
+  _sb.from('biz').delete().eq('id',id).then(({error})=>{ if(error) console.error('biz del:',error); });
+}
+function _sbDelAll(){
+  _sb.from('ins').delete().not('fid','is',null).then();
+  _sb.from('fac').delete().not('id','is',null).then();
+  _sb.from('biz').delete().not('id','is',null).then();
+}
+
+// Supabaseからデータ取得 → ローカル読込へフォールバック
+async function load(){
   try{
-    // まずlocalStorageから試みる
-    if(_lsAvail()){
-      const d = localStorage.getItem('fd2_data');
-      if(d){ const p=JSON.parse(d); S={...S,...p}; return; }
+    const [r1,r2,r3] = await Promise.all([
+      _sb.from('biz').select('data'),
+      _sb.from('fac').select('data'),
+      _sb.from('ins').select('data'),
+    ]);
+    if(!r1.error && !r2.error && !r3.error){
+      S.biz=(r1.data||[]).map(r=>r.data);
+      S.fac=(r2.data||[]).map(r=>r.data);
+      S.ins=(r3.data||[]).map(r=>r.data);
+      saveLocal();
+      return;
     }
-    // メモリフォールバック
+    console.warn('Supabase load error, falling back to localStorage');
+  }catch(e){ console.warn('Supabase unreachable, falling back to localStorage'); }
+  // オフラインフォールバック
+  try{
+    if(_lsAvail()){ const d=localStorage.getItem('fd2_data'); if(d){ const p=JSON.parse(d); S={...S,...p}; return; } }
     if(_memStore){ const p=JSON.parse(_memStore); S={...S,...p}; }
   }catch(e){}
+}
+
+// リアルタイム購読（他ユーザーの変更を即時反映）
+function setupRealtime(){
+  _sb.channel('db-changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'biz'},p=>{
+      if(p.eventType==='DELETE'){ S.biz=S.biz.filter(b=>b.id!==p.old.id); }
+      else{ const d=p.new.data; const i=S.biz.findIndex(b=>b.id===d.id); if(i>=0) S.biz[i]=d; else S.biz.push(d); }
+      saveLocal(); refresh();
+      if(!document.getElementById('page-biz').classList.contains('hid')) renderBiz();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'fac'},p=>{
+      if(p.eventType==='DELETE'){ S.fac=S.fac.filter(f=>f.id!==p.old.id); }
+      else{ const d=p.new.data; const i=S.fac.findIndex(f=>f.id===d.id); if(i>=0) S.fac[i]=d; else S.fac.push(d); }
+      saveLocal(); refresh();
+      if(!document.getElementById('page-fac').classList.contains('hid')) renderFac();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'ins'},p=>{
+      if(p.eventType==='DELETE'){ S.ins=S.ins.filter(i=>i.fid!==p.old.fid); }
+      else{ const d=p.new.data; const i=S.ins.findIndex(x=>x.fid===d.fid); if(i>=0) S.ins[i]=d; else S.ins.push(d); }
+      saveLocal(); updDash();
+    })
+    .subscribe(status=>{ console.log('Realtime:',status); });
 }
 
 // ==================== NAV ====================
@@ -1445,12 +1510,13 @@ function saveBiz(){
     city:    ['2','4','5'].includes(rdmgr) ? v('biz-city') : '',
   };
 
-  if(S.editBiz){ const b=S.biz.find(b=>b.id===S.editBiz); Object.assign(b,bizData); }
-  else S.biz.push({id:'b'+Date.now(),...bizData,at:new Date().toISOString()});
+  if(S.editBiz){ const b=S.biz.find(b=>b.id===S.editBiz); Object.assign(b,bizData); _sbBiz(b); }
+  else{ const nb={id:'b'+Date.now(),...bizData,at:new Date().toISOString()}; S.biz.push(nb); _sbBiz(nb); }
   save(); closeMod('mod-biz'); renderBiz(); refresh();
 }
 function delBiz(id){
   if(!confirm('この業務を削除しますか？関連する施設・点検記録も削除されます。')) return;
+  _sbDelBiz(id);
   S.biz=S.biz.filter(b=>b.id!==id);
   S.fac=S.fac.filter(f=>f.bid!==id);
   S.ins=S.ins.filter(i=>i.bid!==id);
@@ -1508,8 +1574,8 @@ function saveFac(){
   const mn=v('fac-mn'), nm=v('fac-nm');
   if(!mn||!nm){ alert('管理番号と施設名は必須です'); return; }
   const eid=document.getElementById('mod-fac').getAttribute('data-eid');
-  if(eid){ const f=S.fac.find(f=>f.id===eid); Object.assign(f,{mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg')}); }
-  else S.fac.push({id:'f'+Date.now(),bid:S.curBiz,mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg'),at:new Date().toISOString()});
+  if(eid){ const f=S.fac.find(f=>f.id===eid); Object.assign(f,{mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg')}); _sbFac(f); }
+  else{ const nf={id:'f'+Date.now(),bid:S.curBiz,mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg'),at:new Date().toISOString()}; S.fac.push(nf); _sbFac(nf); }
   save(); closeMod('mod-fac'); renderFac();
 }
 // ============================================================
@@ -1929,6 +1995,8 @@ function saveInsp(silent=false){
   Object.assign(f,{nm:data.fnm,tp:data.ftp,pil:data.pil,pref:data.pref,city:data.city,lc:data.loc,alt:data.alt,rdknd:data.rdknd,lamp:data.lamp,wkdiv:data.wkdiv,wkdet:data.wkdet,lt:data.lat,lg:data.lng,inst:data.inst,route:data.route,rdtype:data.rdtype,ud:data.ud,surf:data.surf,base:data.base,rib:data.rib,gl:data.gl,signnum:data.signnum,signno:data.signno,signatt:data.signatt,fall:data.fall,losen:data.losen,losen2:data.losen2,mark:data.mark,mark2:data.mark2,damp:data.damp,drain:data.drain,env:data.env,sea:data.sea,snow:data.snow,wind:data.wind,snow2:data.snow2,emg:data.emg,sch:data.sch,rdw:data.rdw,sdw:data.sdw,cens:data.cens,censno:data.censno,trf:data.trf});
   const idx=S.ins.findIndex(i=>i.fid===fid);
   if(idx>=0) S.ins[idx]=data; else S.ins.push(data);
+  _sbIns(data);
+  _sbFac(f);
   save();
   updDash();
   if(silent){
@@ -2950,6 +3018,7 @@ function doImport(){
   if(!S._imp?.length){ alert('インポートするデータがありません'); return; }
   const biz = S.biz.find(b=>b.id===bid)||{};
   let added=0, updated=0;
+  const _impFids=[];
   S._imp.forEach(d=>{
     const mn=d.fac.mn||('IMP-'+Date.now());
     const existing=S.fac.find(f=>f.bid===bid&&f.mn===mn);
@@ -3044,9 +3113,13 @@ function doImport(){
     } else {
       S.ins.push(insBase);
     }
+    _impFids.push(fid);
   });
   S.curBiz=bid;
   save();
+  // Supabaseに一括upsert
+  _sbBulkFac(S.fac.filter(f=>_impFids.includes(f.id)));
+  _sbBulkIns(S.ins.filter(i=>_impFids.includes(i.fid)));
   document.getElementById('sb-biz').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
   document.getElementById('hdr-biz-lbl').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
   alert(`✅ インポート完了\n追加: ${added}件 / 更新: ${updated}件\n\n施設諸元は自動保存済みです。点検結果を入力後にCSV出力してください。`);
@@ -3926,6 +3999,7 @@ function refresh(){ updDash(); fillSelects(); const b=S.biz.find(b=>b.id===S.cur
 // ==================== UTILS ====================
 function resetAllData(){
   if(!confirm('⚠️ 全データを削除してリセットします。\nインポートした施設・点検記録が全て消えます。\n\n本当によろしいですか？')) return;
+  _sbDelAll();
   // localStorageとメモリを両方クリア
   try{ localStorage.removeItem('fd2_data'); }catch(e){}
   _memStore = null;
