@@ -188,8 +188,9 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 
 <header class="hdr">
   <h1>📋 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v3</span></h1>
-  <div class="hdr-r">
+  <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
+    <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap">📖 操作ガイド</button>
   </div>
 </header>
 
@@ -200,7 +201,6 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div class="sb-item" id="nav-biz" onclick="showPage('biz')"><span>📁</span> 業務管理</div>
   <div class="sb-item" id="nav-fac" onclick="showPage('fac')"><span>🏗️</span> 施設一覧</div>
   <div class="sb-item" id="nav-insp" onclick="showPage('insp')"><span>📝</span> 点検記録入力</div>
-  <div class="sb-item" id="nav-guide" onclick="showPage('guide')"><span>📖</span> 操作ガイド</div>
   <div class="sb-div"></div>
   <div class="sb-lbl">データ</div>
   <div class="sb-item" id="nav-imp" onclick="showPage('imp')"><span>📥</span> Excelインポート</div>
@@ -780,10 +780,14 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   </div>
 </div>
 
-<!-- 操作ガイド -->
-<div id="page-guide" class="hid">
-  <div class="pg-ttl">操作ガイド</div>
-  <div class="pg-sub" style="margin-bottom:20px">附属物点検管理システム の使い方</div>
+<!-- モーダル: 操作ガイド -->
+<div id="mod-guide" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
+  <div class="mod" style="max-width:860px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700">📖 操作ガイド</div>
+      <button onclick="document.getElementById('mod-guide').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
+    </div>
+    <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム の使い方</div>
 
   <div class="card" style="margin-bottom:12px">
     <div class="card-hdr"><div class="card-ttl">📋 基本フロー</div></div>
@@ -886,6 +890,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       </ul>
     </div>
 
+  </div>
   </div>
 </div>
 
