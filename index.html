@@ -3471,19 +3471,18 @@ async function parsePDF(buffer, fname){
     const tpRaw   = tpRow ? first(between(tpRow,'種別','管理者')) : '';
 
     const rdRow   = findRow(r1,'道路種別');
-    const rdtypeRaw = rdRow ? first(between(rdRow,'道路種別','路線名')) : '';
+    const rdtypeRaw = rdRow ? between(rdRow,'道路種別','路線名').map(i=>i.s).join(' ') : '';
     const routeRow  = rdRow || findRow(r1,'路線名');
     const routeRaw  = routeRow ? first(between(routeRow,'路線名','上')) || first(afterKw(routeRow,'路線名')) : '';
     const udRaw     = routeRow ? first(afterKw(routeRow,'上・下別')) : '';
 
     const locRow    = findRow(r1,'所在地');
-    const locItems  = locRow ? between(locRow,'所在地','距離標') : [];
+    const locItems  = locRow ? afterKw(locRow,'所在地') : [];
     const prefTxt   = locItems[0]?.s || '';
     const cityTxt   = locItems[1]?.s || '';
-    const detailTxt = locItems.slice(2).map(i=>i.s).join('');
+    const detailTxt = locItems.slice(2).map(i=>i.s).join('').replace(/[\d.]+kp[+\-]?[\d.]*/gi,'').trim();
 
-    const kmRow   = findRow(r1,'距離標');
-    const kmRaw   = kmRow ? first(afterKw(kmRow,'距離標').filter(i=>i.s.match(/[\d.]/))) : '';
+    const kmRaw   = pval(p1,'距離標', 8);  // ラベルy=725.2, 値y=721.1(diff=4.1), tol=8で取得
 
     const latRow  = findRow(r1,'緯度');
     let latStr='', lngStr='';
@@ -3506,11 +3505,11 @@ async function parsePDF(buffer, fname){
     const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
     const baseRaw    = pval(p1,'基礎形式');
     const ribRaw     = pval(p1,'リブ形状');
-    const glRaw      = pval(p1,'路面境界');   // "露出" → TXT2CD_GL['露出']='4'(ベースプレート露出)
-    const signnumRaw = pval(p1,'枚数');       // "標識設置枚数及び標識番号"のラベルを含む
-    const signnoRaw  = '';                    // PDFでは識別困難なため省略
-    const signattRaw = pval(p1,'取付形式');
-    const fallRaw    = pval(p1,'落下防止');
+    const glRaw      = pval(p1,'路面境界', 6);  // tol=6で"露出"のみ、tol=8以上だと"の状況"を誤取得
+    const signnumRaw = pval(p1,'枚数', 6);      // tol=6で"2"、tol=8以上だと"及び標識番号"を誤取得
+    const signnoRaw  = '';                      // PDFでは識別困難なため省略
+    const signattRaw = pval(p1,'取付形式', 8);  // tol=6-12で"固定式"、tol=16だと"有"を誤取得
+    const fallRaw    = pval(p1,'落下', 6);      // キーワード"落下防止"では未ヒット→"落下"に変更、tol=6で"無"
 
     const losenRow = findRow(r1,'ゆるみ止め');
     const losenRaw = losenRow ? first(between(losenRow,'ゆるみ止め','合いマーク')) : '';
@@ -3544,7 +3543,7 @@ async function parsePDF(buffer, fname){
     if(insDateRow){
       insTypRaw    = first(between(insDateRow,'点検種別','点検方法'));
       insDateStr   = join(between(insDateRow,'点検年月日','前回'));
-      prevInsDateStr = join(afterKw(insDateRow,'前回点検年月日').filter(i=>!i.s.includes('備考')));
+      prevInsDateStr = join(afterKw(insDateRow,'前回').filter(i=>!i.s.includes('備考') && !i.s.includes('点検年月日')));
     }
 
     const insPersonRow = findRow(r1,'点検員');
