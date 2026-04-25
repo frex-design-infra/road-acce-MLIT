@@ -200,6 +200,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div class="sb-item" id="nav-biz" onclick="showPage('biz')"><span>📁</span> 業務管理</div>
   <div class="sb-item" id="nav-fac" onclick="showPage('fac')"><span>🏗️</span> 施設一覧</div>
   <div class="sb-item" id="nav-insp" onclick="showPage('insp')"><span>📝</span> 点検記録入力</div>
+  <div class="sb-item" id="nav-guide" onclick="showPage('guide')"><span>📖</span> 操作ガイド</div>
   <div class="sb-div"></div>
   <div class="sb-lbl">データ</div>
   <div class="sb-item" id="nav-imp" onclick="showPage('imp')"><span>📥</span> Excelインポート</div>
@@ -776,6 +777,115 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       <button class="btn btn-sm" onclick="expOne(4)">📄 04_損傷程度の評価記録.CSV</button>
       <button class="btn btn-sm" onclick="expOne(5)">📄 05_板厚調査記録.CSV</button>
     </div>
+  </div>
+</div>
+
+<!-- 操作ガイド -->
+<div id="page-guide" class="hid">
+  <div class="pg-ttl">操作ガイド</div>
+  <div class="pg-sub" style="margin-bottom:20px">附属物点検管理システム の使い方</div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hdr"><div class="card-ttl">📋 基本フロー</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;padding:4px 0">
+      <span style="background:var(--prp);color:var(--pr);padding:6px 12px;border-radius:20px;font-weight:600">①業務登録</span>
+      <span style="color:var(--tx2)">→</span>
+      <span style="background:var(--prp);color:var(--pr);padding:6px 12px;border-radius:20px;font-weight:600">②施設追加 / Excelインポート</span>
+      <span style="color:var(--tx2)">→</span>
+      <span style="background:var(--prp);color:var(--pr);padding:6px 12px;border-radius:20px;font-weight:600">③点検記録入力</span>
+      <span style="color:var(--tx2)">→</span>
+      <span style="background:var(--prp);color:var(--pr);padding:6px 12px;border-radius:20px;font-weight:600">④CSV出力</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">🏠 ダッシュボード</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>上部の業務セレクタで表示する業務を選択</li>
+        <li>施設数・点検完了数・要措置件数を確認</li>
+        <li>未入力チェックカード：オレンジ＝未入力あり、グリーン＝完了</li>
+        <li>未入力カードにマウスオーバーで対象施設一覧を表示</li>
+        <li>健全性診断区分サマリーで区分Ⅰ〜Ⅳの件数を確認</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">📁 業務管理</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>「＋ 新規業務登録」で案件を作成</li>
+        <li><strong>定期点検員（氏名・所属）は必須</strong>。点検フォームに自動反映される</li>
+        <li>業務名・点検年度・道路管理者・発注者を登録</li>
+        <li>業務行の「施設を開く」で施設一覧に遷移</li>
+        <li>定期点検員を変更すると点検フォームにもリアルタイム反映</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">🏗️ 施設一覧</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>上部セレクタで業務を選択すると施設が表示される</li>
+        <li><strong>行をクリック</strong>で点検記録入力画面に遷移</li>
+        <li>現地確認年月日は一覧上でも直接クリック入力可能</li>
+        <li>「＋ 施設追加」で手動登録、「Excelインポート」でまとめて登録</li>
+        <li>「編集」ボタンで施設基本情報を修正</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">📥 Excelインポート</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>国交省様式の点検Excelファイル（.xlsx）に対応</li>
+        <li>複数ファイルを一括でドラッグ＆ドロップ可能</li>
+        <li>緯度経度はDMS形式（度分秒）を10進数に自動変換</li>
+        <li>都道府県・市区町村を所在地テキストから自動判定</li>
+        <li>インポート後にプレビュー確認してから確定</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">📝 点検記録入力</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>業務・施設を選択、または施設一覧の行クリックで開く</li>
+        <li>「← 前 / 次 →」で施設間を移動（自動保存あり）</li>
+        <li>「💾 保存」ボタンで保存（画面はそのまま維持）</li>
+        <li>定期点検員（氏名・所属）は業務設定から自動反映・変更不可</li>
+        <li>タブ切り替えで基本情報・点検結果・損傷記録・写真管理などを入力</li>
+        <li>保存データはSupabaseへ即時自動同期</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">📤 CSV出力（xROAD）</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>業務を選択してCSVを出力</li>
+        <li>xROAD付録04フォーマット準拠</li>
+        <li>管理番号・Michi施設キーが必須項目</li>
+        <li>ダッシュボードの未入力チェックで漏れを事前確認</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">☁️ データ保存について</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>全操作は<strong>Supabaseに自動保存</strong>（手動操作不要）</li>
+        <li>複数端末でリアルタイム同期</li>
+        <li>「全データ再同期」ボタンは障害復旧・初回移行時のみ使用</li>
+        <li>ブラウザを閉じてもデータは保持される</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-ttl">⭐ ポイント</div></div>
+      <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
+        <li>赤い <span style="color:var(--dg)">＊</span> マークは必須項目</li>
+        <li>Michi施設キーは緯度経度から自動生成（10進数6桁）</li>
+        <li>緑バッジ＝診断区分Ⅰ、橙＝Ⅱ・Ⅲ、赤＝Ⅳ</li>
+        <li>健全性診断未設定の施設は「未」バッジで表示</li>
+      </ul>
+    </div>
+
   </div>
 </div>
 
