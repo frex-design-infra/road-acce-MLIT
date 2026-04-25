@@ -1907,7 +1907,18 @@ function loadInsp(fid){
   if(!v('f-pref')) autoDetectPref(i.loc||f.lc||'');
   onPrefChg();  // 市区町村selectを都道府県に合わせて更新
   sv('f-city', i.city||f.city||'');
-  sv('f-loc',  i.loc||f.lc||'');
+  // 所在地：都道府県・市区町村名が含まれていれば除いた残りを表示
+  {
+    let _loc = i.loc||f.lc||'';
+    const _pv = v('f-pref'), _cv = v('f-city');
+    const _pe = PREF_MAP.find(([,c])=>c===_pv);
+    if(_pe && _loc.startsWith(_pe[0])) _loc = _loc.slice(_pe[0].length);
+    if(_cv && CITY_MASTER[_pv]){
+      const _ce = CITY_MASTER[_pv].find(([c])=>c===_cv);
+      if(_ce && _loc.startsWith(_ce[1])) _loc = _loc.slice(_ce[1].length);
+    }
+    sv('f-loc', _loc.trim());
+  }
   sv('f-km',    i.km||f.km||'');
   sv('f-inst',  i.inst||f.inst||'');
   sv('f-lat',   dms2dec(i.lat||f.lt||''));
@@ -2852,6 +2863,18 @@ function parseExcel(wb, fname){
 
   // 施設諸元シートから情報取得
   // ※実際のExcelはタイトル行+空行の後にデータ開始(row+1)、列Aは空白でBからデータ(col+1)
+
+  // 所在地セルから都道府県・市区町村コードを事前計算
+  const _locPrefTxt = gs(r1,5,2); // 例: '岩手県'
+  const _locCityTxt = gs(r1,5,3); // 例: '盛岡市'
+  const _locDetail  = gs(r1,5,4); // 例: '向中野'（字・番地等）
+  const _mgrText    = gs(r1,2,6); // 管理者テキスト（都道府県推定フォールバック）
+  const _prefEntry  = PREF_MAP.find(([n]) => (_locPrefTxt||_mgrText).includes(n));
+  const _prefCode   = _prefEntry ? _prefEntry[1] : '';
+  const _cityCodes  = CITY_MASTER[_prefCode] || [];
+  const _cityEntry  = _cityCodes.find(([,name]) => _locCityTxt.includes(name));
+  const _cityCode   = _cityEntry ? _cityEntry[0] : '';
+
   const fac={
     srcFile: fname,
     mn: gs(r1,2,12),    // 管理番号
@@ -2860,15 +2883,9 @@ function parseExcel(wb, fname){
     rdtype: gs(r1,4,2), // 道路種別
     route: gs(r1,4,6),  // 路線名
     ud: gs(r1,4,12),    // 上下別
-    loc: [gs(r1,5,2),gs(r1,5,3),gs(r1,5,4)].filter(x=>x).join(''),
-    pref: (()=>{
-      // 所在地（都道府県セル）→コード変換。なければ道路管理者テキストで推定
-      const locPref = gs(r1,5,2);
-      const mgrText = gs(r1,2,6);
-      const src = locPref || mgrText;
-      const found = PREF_MAP.find(([n]) => src.includes(n));
-      return found ? found[1] : '';
-    })(),
+    pref: _prefCode,    // 都道府県コード
+    city: _cityCode,    // 市区町村コード
+    loc: _locDetail,    // 字・番地等のみ（都道府県・市区町村名は除く）
     km: gs(r1,5,12),    // 距離標
     lat: dms2dec(gs(r1,6,2)),
     lng: dms2dec(gs(r1,6,5)),
