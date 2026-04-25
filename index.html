@@ -1832,7 +1832,7 @@ function renderFac(){
     const i=S.ins.find(i=>i.fid===f.id)||{};
     const bd=d=>d?`<span class="bdg ${BDGM[d]||'bg'}">${d}</span>`:'<span class="bdg bg">未</span>';
     return `<tr>
-      <td style="font-size:11px;word-break:break-all;max-width:120px"><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
+      <td style="font-size:11px;white-space:nowrap"><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
       <td>${f.lc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
       <td><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
       <td><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
