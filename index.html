@@ -3614,11 +3614,12 @@ async function parsePDF(buffer, fname){
     const udRaw     = routeRow ? first(afterKw(routeRow,'上・下別')) : '';
 
     // 構造情報: 複数行ラベル対応のため生アイテム(p1)をワイドy許容で直接検索
-    const pval = (items, kw, yTol=16, xMax=400) => {
+    // xMin: ラベル右端から最低限離れていないと値と見なさない（隣接する別ラベルを除外）
+    const pval = (items, kw, yTol=16, xMax=400, xMin=0) => {
       const lb = items.find(it => it.s.includes(kw));
       if(!lb) return '';
       return items.filter(it =>
-        Math.abs(it.y - lb.y) <= yTol && it.x > lb.x && it.x < lb.x + xMax && !it.s.includes(kw)
+        Math.abs(it.y - lb.y) <= yTol && it.x > lb.x + xMin && it.x < lb.x + xMax && !it.s.includes(kw)
       ).sort((a,b) => a.x - b.x)[0]?.s || '';
     };
 
@@ -3637,11 +3638,7 @@ async function parsePDF(buffer, fname){
       lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
     }
 
-    // デバッグ：支柱形式周辺のアイテムを確認
-    const _pilLb = p1.find(it=>it.s.includes('支柱形式'));
-    if(_pilLb){ const _cands=p1.filter(it=>Math.abs(it.y-_pilLb.y)<=20&&it.x>_pilLb.x&&it.x<_pilLb.x+400&&!it.s.includes('支柱形式')).sort((a,b)=>a.x-b.x); console.log('支柱形式 label:',_pilLb,'candidates:',_cands); }
-    const pilRaw     = pval(p1,'支柱形式', 13);  // tol=16だと支柱基部(y差13.8)が混入するためtol=13
-    console.log('pilRaw:', pilRaw);
+    const pilRaw     = pval(p1,'支柱形式', 16, 400, 20);  // xMin=20: 支柱基部(x差~3pt)を除外、門型(x差~38pt)は取得
     const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
     const baseRaw    = pval(p1,'基礎形式');
     const ribRaw     = pval(p1,'リブ形状');
