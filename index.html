@@ -1083,6 +1083,13 @@ function calSel(iso){
   calClose();
 }
 
+// 度分秒→10進法変換（例: 39°42′25.2″ → 39.707000）。変換できない値はそのまま返す
+function dms2dec(s){
+  s = String(s||'').trim();
+  const m = s.match(/(\d+)[°\u00b0]\s*(\d+)[′\u2032']\s*([\d.]+)[″\u2033"]/);
+  return m ? (+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6) : s;
+}
+
 // 緯度経度変更時にMichi施設キーを自動更新
 function updMichiKey(){
   const lat = parseFloat(v('f-lat')), lng = parseFloat(v('f-lng'));
@@ -1901,8 +1908,8 @@ function loadInsp(fid){
   sv('f-loc',  i.loc||f.lc||'');
   sv('f-km',    i.km||f.km||'');
   sv('f-inst',  i.inst||f.inst||'');
-  sv('f-lat',   i.lat||f.lt||'');
-  sv('f-lng',   i.lng||f.lg||'');
+  sv('f-lat',   dms2dec(i.lat||f.lt||''));
+  sv('f-lng',   dms2dec(i.lng||f.lg||''));
   sv('f-michi', i.michiKey||f.michiKey||'');
   // Michi施設キーが未設定の場合は緯度経度から自動生成
   if(!v('f-michi') && v('f-lat') && v('f-lng')){
@@ -2842,8 +2849,8 @@ function parseExcel(wb, fname){
     ud: gs(r1,4,12),    // 上下別
     loc: [gs(r1,5,2),gs(r1,5,3),gs(r1,5,4)].filter(x=>x).join(''),
     km: gs(r1,5,12),    // 距離標
-    lat: (()=>{ const s=gs(r1,6,2); const m=s.match(/(\d+)[°]\s*(\d+)[′']\s*([\d.]+)[″"]/); return m?(+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6):s; })(),
-    lng: (()=>{ const s=gs(r1,6,5); const m=s.match(/(\d+)[°]\s*(\d+)[′']\s*([\d.]+)[″"]/); return m?(+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6):s; })(),
+    lat: dms2dec(gs(r1,6,2)),
+    lng: dms2dec(gs(r1,6,5)),
     pil: gs(r1,8,2),    // 支柱形式
     surf: gs(r1,8,6),   // 表面処理形式
     base: gs(r1,8,11),  // 基礎形式
