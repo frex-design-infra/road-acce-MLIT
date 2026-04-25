@@ -1061,7 +1061,12 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       <div class="fgrp"><label class="flbl">緯度</label><input type="text" class="finp" id="fac-lt" placeholder="38.82670"></div>
       <div class="fgrp"><label class="flbl">経度</label><input type="text" class="finp" id="fac-lg" placeholder="139.84151"></div>
     </div>
-    <div class="mod-ft"><button class="btn" onclick="closeMod('mod-fac')">キャンセル</button><button class="btn btn-pr" onclick="saveFac()">追加</button></div>
+    <div class="mod-ft">
+      <button class="btn" id="fac-del-btn" style="display:none;color:var(--dg);border-color:var(--dg)" onclick="delFac(document.getElementById('mod-fac').getAttribute('data-eid'))">削除</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="closeMod('mod-fac')">キャンセル</button>
+      <button class="btn btn-pr" id="fac-save-btn" onclick="saveFac()">追加</button>
+    </div>
   </div>
 </div>
 
@@ -1829,6 +1834,8 @@ function openFacMod(id){
   const f=id?S.fac.find(f=>f.id===id):{};
   document.getElementById('mod-fac-ttl').textContent=id?'施設編集':'施設追加';
   document.getElementById('mod-fac').setAttribute('data-eid',id||'');
+  document.getElementById('fac-del-btn').style.display=id?'':'none';
+  document.getElementById('fac-save-btn').textContent=id?'保存':'追加';
   document.getElementById('fac-mn').value=f.mn||'';
   document.getElementById('fac-tp').value=f.tp||'';
   onFacTypeChg('fac-tp','fac-nm');
@@ -1844,6 +1851,16 @@ function saveFac(){
   const eid=document.getElementById('mod-fac').getAttribute('data-eid');
   if(eid){ const f=S.fac.find(f=>f.id===eid); Object.assign(f,{mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg')}); _sbFac(f); }
   else{ const nf={id:'f'+Date.now(),bid:S.curBiz,mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg'),at:new Date().toISOString()}; S.fac.push(nf); _sbFac(nf); }
+  save(); closeMod('mod-fac'); renderFac();
+}
+function delFac(id){
+  if(!id) return;
+  const f = S.fac.find(f=>f.id===id); if(!f) return;
+  if(!confirm(`施設「${f.mn}」を削除しますか？\n関連する点検記録も削除されます。`)) return;
+  _sb.from('ins').delete().eq('fid',id).then(({error})=>{ if(error) console.error('ins del:',error); });
+  _sb.from('fac').delete().eq('id',id).then(({error})=>{ if(error) console.error('fac del:',error); });
+  S.fac=S.fac.filter(f=>f.id!==id);
+  S.ins=S.ins.filter(i=>i.fid!==id);
   save(); closeMod('mod-fac'); renderFac();
 }
 // ============================================================
