@@ -3722,7 +3722,8 @@ async function parsePDF(buffer, fname){
     const TXT2CD_SCH  = {'有':'1','無':'2'};
     const TXT2CD_RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','都道府県道':'5','市町村道':'6','その他':'7','一般国道(指定区間内　高規格以外)':'3','一般国道(指定区間内 高規格以外)':'3'};
     const TXT2CD_UD   = {'上り':'1','下り':'2','上・下':'3','下':'2','上':'1'};
-    const c2 = (map,val) => map[val]||val||'';
+    // マップにない値は空に（要領・マニュアルに存在しないコードは無効）
+    const c2 = (map,val) => map[val]||'';
 
     const _prefEntry = PREF_MAP.find(([n])=>(prefTxt||'').includes(n));
     const _prefCode  = _prefEntry ? _prefEntry[1] : '';
