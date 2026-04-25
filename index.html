@@ -1910,11 +1910,22 @@ function loadInsp(fid){
   sv('f-inst',  i.inst||f.inst||'');
   sv('f-lat',   dms2dec(i.lat||f.lt||''));
   sv('f-lng',   dms2dec(i.lng||f.lg||''));
-  sv('f-michi', i.michiKey||f.michiKey||'');
-  // Michi施設キーが未設定の場合は緯度経度から自動生成
-  if(!v('f-michi') && v('f-lat') && v('f-lng')){
+  // Michi施設キー：緯度経度から再生成（DMS変換後の正確な値を使う）
+  // 手動設定値（緯度,経度形式以外）はそのまま保持
+  const _storedMichi = i.michiKey||f.michiKey||'';
+  const _autoMichiPat = /^\d+\.\d+,\d+\.\d+$/;  // 自動生成パターン
+  if(v('f-lat') && v('f-lng')){
     const lat = parseFloat(v('f-lat')), lng = parseFloat(v('f-lng'));
-    if(!isNaN(lat) && !isNaN(lng)) sv('f-michi', `${lat.toFixed(6)},${lng.toFixed(6)}`);
+    if(!isNaN(lat) && !isNaN(lng)){
+      // 座標が正常なら再生成（手動で別形式が入っている場合のみ保持）
+      if(!_storedMichi || _autoMichiPat.test(_storedMichi)){
+        sv('f-michi', `${lat.toFixed(6)},${lng.toFixed(6)}`);
+      } else {
+        sv('f-michi', _storedMichi);
+      }
+    }
+  } else {
+    sv('f-michi', _storedMichi);
   }
   // 構造情報
   sv('f-pil',    _c(_PIL,  i.pil||f.pil||''));
