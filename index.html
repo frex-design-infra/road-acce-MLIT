@@ -3637,7 +3637,7 @@ async function parsePDF(buffer, fname){
       lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
     }
 
-    const pilRaw     = pval(p1,'支柱形式');
+    const pilRaw     = pval(p1,'支柱形式', 13);  // tol=16だと支柱基部(y差13.8)が混入するためtol=13
     const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
     const baseRaw    = pval(p1,'基礎形式');
     const ribRaw     = pval(p1,'リブ形状');
