@@ -903,8 +903,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div style="border-top:1px solid var(--bd);margin:12px 0;padding-top:12px">
       <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">🧑‍💼 定期点検員（業務共通・CSV出力用）</div>
       <div class="fg">
-        <div class="fgrp"><label class="flbl">氏名</label><input type="text" class="finp" id="biz-ins1" placeholder="例：山田 太郎"></div>
-        <div class="fgrp"><label class="flbl">所属</label><input type="text" class="finp" id="biz-ins1o" placeholder="例：株式会社フレックスデザイン" value="株式会社フレックスデザイン"></div>
+        <div class="fgrp"><label class="flbl req">氏名</label><input type="text" class="finp" id="biz-ins1" placeholder="例：山田 太郎"></div>
+        <div class="fgrp"><label class="flbl req">所属</label><input type="text" class="finp" id="biz-ins1o" placeholder="例：株式会社フレックスデザイン" value="株式会社フレックスデザイン"></div>
       </div>
     </div>
     <div class="fgrp mt12"><label class="flbl">備考</label><textarea class="ftxt" id="biz-nt" rows="2"></textarea></div>
@@ -1558,6 +1558,8 @@ function saveBiz(){
   if(!nm||!yr){ alert('業務名と年度は必須です'); return; }
   const rdmgr = v('biz-rdmgr');
   if(!rdmgr){ alert('管理者区分を選択してください'); return; }
+  const ins1=v('biz-ins1'), ins1o=v('biz-ins1o');
+  if(!ins1||!ins1o){ alert('定期点検員の氏名と所属は必須です'); return; }
 
   // 発注者名を取得（国の場合は biz-cl-kuni、他は biz-cl）
   const cl = rdmgr==='1'
