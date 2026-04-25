@@ -3475,30 +3475,33 @@ async function parsePDF(buffer, fname){
       lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
     }
 
-    const pilRow  = findRow(r1,'支柱形式');
-    const pilRaw  = pilRow ? first(between(pilRow,'支柱形式','表面処理')) : '';
-    const surfRaw = pilRow ? first(between(pilRow,'表面処理','基礎形式')) : '';
-    const baseRaw = pilRow ? first(afterKw(pilRow,'基礎形式')) : '';
+    // 構造情報: 複数行ラベル対応のため生アイテム(p1)をワイドy許容で直接検索
+    // (行グルーピングは ±4pt だが、折り返しラベルとデータセルはズレが大きいため)
+    const pval = (items, kw, yTol=16, xMax=400) => {
+      const lb = items.find(it => it.s.includes(kw));
+      if(!lb) return '';
+      return items.filter(it =>
+        Math.abs(it.y - lb.y) <= yTol && it.x > lb.x && it.x < lb.x + xMax && !it.s.includes(kw)
+      ).sort((a,b) => a.x - b.x)[0]?.s || '';
+    };
 
-    const ribRow  = findRow(r1,'リブ形状');
-    const ribRaw  = ribRow ? first(between(ribRow,'リブ形状','路面境界')) || first(afterKw(ribRow,'リブ形状')) : '';
-    const glRaw   = ribRow ? first(afterKw(ribRow,'路面境界').filter(i=>!i.s.includes('灯具'))) : '';
-
-    const sgnRow     = findRow(r1,'構識設置枚数') || findRow(r1,'標識設置枚数');
-    const signnumRaw = sgnRow ? first(between(sgnRow,'枚数','番号')) : '';
-    const signnoRaw  = sgnRow ? first(between(sgnRow,'番号','取付')) : '';
-    const signattRaw = sgnRow ? first(between(sgnRow,'取付形式','落下')) : '';
-    const fallRaw    = sgnRow ? first(afterKw(sgnRow,'落下防止')) : '';
+    const pilRaw     = pval(p1,'支柱形式');
+    const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
+    const baseRaw    = pval(p1,'基礎形式');
+    const ribRaw     = pval(p1,'リブ形状');
+    const glRaw      = pval(p1,'路面境界');   // "露出" → TXT2CD_GL['露出']='4'(ベースプレート露出)
+    const signnumRaw = pval(p1,'枚数');       // "標識設置枚数及び標識番号"のラベルを含む
+    const signnoRaw  = '';                    // PDFでは識別困難なため省略
+    const signattRaw = pval(p1,'取付形式');
+    const fallRaw    = pval(p1,'落下防止');
 
     const losenRow = findRow(r1,'ゆるみ止め');
     const losenRaw = losenRow ? first(between(losenRow,'ゆるみ止め','合いマーク')) : '';
     const markRaw  = losenRow ? first(between(losenRow,'合いマーク','制振')) : '';
-    const dampRaw  = losenRow ? first(afterKw(losenRow,'制振装置')) : '';
+    const dampRaw  = losenRow ? first(afterKw(losenRow,'制振装置').filter(i=>i.s.match(/有|無|今回/))) : '';
 
-    const drainRow = findRow(r1,'排水性');
-    const drainRaw = drainRow ? first(between(drainRow,'排水性','設置年月')) : '';
-    const instRow  = drainRow || findRow(r1,'設置年月');
-    const instRaw  = instRow  ? first(afterKw(instRow,'設置年月')) : '';
+    const drainRaw = pval(p1,'排水性');
+    const instRaw  = pval(p1,'設置年月');
 
     const envRow  = findRow(r1,'設置環境');
     const envRaw  = envRow ? first(between(envRow,'設置環境','海岸')) : '';
