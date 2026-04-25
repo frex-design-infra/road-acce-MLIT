@@ -211,8 +211,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   </div>
   <div class="sb-div"></div>
   <div style="padding:0 8px 4px">
-    <button onclick="syncToSupabase()" style="width:100%;padding:7px 4px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="現在のデータをSupabaseに一括同期">
-      ☁️ Supabaseへ同期
+    <button onclick="syncToSupabase()" style="width:100%;padding:7px 4px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="全データをSupabaseに一括再同期（初回移行・障害復旧用）">
+      ☁️ 全データ再同期
     </button>
   </div>
   <div style="padding:4px 8px 12px">
@@ -226,10 +226,17 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 
 <!-- DASHBOARD -->
 <div id="page-dash">
-  <div class="pg-ttl">ダッシュボード</div>
-  <div class="pg-sub" id="dash-dt"></div>
-  <!-- 選択業務補足バッジ -->
-  <div id="dash-biz-note" style="display:none;margin-bottom:12px;padding:8px 14px;background:var(--prp);border-radius:8px;font-size:13px;color:var(--pr)"></div>
+  <div class="fxc g12 mb16" style="justify-content:space-between;flex-wrap:wrap;align-items:flex-end">
+    <div>
+      <div class="pg-ttl" style="margin-bottom:2px">ダッシュボード</div>
+      <div class="pg-sub" id="dash-dt" style="margin-bottom:0"></div>
+    </div>
+    <select class="fsel" id="dash-biz" onchange="onDashBizChg()" style="min-width:220px;font-size:13px">
+      <option value="">業務を選択してください</option>
+    </select>
+  </div>
+  <!-- 選択業務補足バッジ（非表示） -->
+  <div id="dash-biz-note" style="display:none"></div>
   <div class="mets">
     <div class="met"><div class="met-l">業務数</div><div class="met-v" id="m-biz">0</div></div>
     <div class="met"><div class="met-l">施設数（選択業務）</div><div class="met-v" id="m-fac">0</div></div>
@@ -1240,7 +1247,11 @@ function showPage(p){
   if(p==='exp'){ fillSelects(); updExpList(); }
   if(p==='imp') fillSelects();
   if(p==='insp') fillSelects();
-  if(p==='dash') updDash();
+  if(p==='dash'){
+    if(!S.curBiz && S.biz.length===1) S.curBiz=S.biz[0].id;
+    fillSelects();
+    updDash();
+  }
 }
 function swTab(id,el){
   document.querySelectorAll('#page-insp .tab').forEach(t=>t.classList.remove('active'));
@@ -1249,8 +1260,8 @@ function swTab(id,el){
   document.getElementById(id).classList.remove('hid');
 }
 function fillSelects(){
-  const _defTxt={'fac-biz':'業務を選択してください'};
-  ['sel-biz','imp-biz','exp-biz','fac-biz'].forEach(id=>{
+  const _defTxt={'fac-biz':'業務を選択してください','dash-biz':'業務を選択してください'};
+  ['sel-biz','imp-biz','exp-biz','fac-biz','dash-biz'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value;
     el.innerHTML=`<option value="">${_defTxt[id]||'-- 選択 --'}</option>`+S.biz.map(b=>`<option value="${b.id}" ${b.id===S.curBiz?'selected':''}>${b.nm}（${b.yr}）</option>`).join('');
@@ -1261,6 +1272,10 @@ function fillSelects(){
 function onFacBizChg(){
   const bid=document.getElementById('fac-biz').value;
   S.curBiz=bid||null; renderFac();
+}
+function onDashBizChg(){
+  const bid=document.getElementById('dash-biz').value;
+  S.curBiz=bid||null; updDash();
 }
 
 // ============================================================
@@ -1834,11 +1849,11 @@ function renderFac(){
   tb.innerHTML=fs.map(f=>{
     const i=S.ins.find(i=>i.fid===f.id)||{};
     const bd=d=>d?`<span class="bdg ${BDGM[d]||'bg'}">${d}</span>`:'<span class="bdg bg">未</span>';
-    return `<tr>
+    return `<tr style="cursor:pointer" onclick="openInsp('${f.id}')" title="クリックで点検入力">
       <td style="font-size:11px;white-space:nowrap"><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
       <td>${f.lc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
-      <td><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
-      <td><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
+      <td onclick="event.stopPropagation()"><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
+      <td onclick="event.stopPropagation()"><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
     </tr>`;
   }).join('');
 }
@@ -1856,6 +1871,7 @@ function setInspDate(fid, dt){
   i.dt = dt;
   i.upd = new Date().toISOString();
   save();
+  _sbIns(i);
 }
 
 // ==================== INSPECTION ====================
@@ -3960,39 +3976,35 @@ const REQUIRED_CHECKS = [
 ];
 
 function updDash(){
-  // 全業務・全施設を対象に集計（選択業務によらず常に最新）
-  const allFac = S.fac;
-  const allIns = S.ins;
+  // 業務セレクタ同期
+  const dbSel = document.getElementById('dash-biz');
+  if(dbSel && dbSel.value !== (S.curBiz||'')) dbSel.value = S.curBiz||'';
 
-  // ---- メトリクス（全業務合計） ----
+  // 選択業務でフィルタ（未選択時は全業務）
+  const bizFiltered = S.curBiz ? S.fac.filter(f=>f.bid===S.curBiz) : S.fac;
+  const insFiltered = S.curBiz ? S.ins.filter(i=>i.bid===S.curBiz) : S.ins;
+  const allFac = bizFiltered;
+  const allIns = insFiltered;
+
+  // ---- メトリクス ----
   const totalDone = allFac.filter(f=>allIns.find(i=>i.fid===f.id)).length;
   const totalAlrt = allIns.filter(i=>['Ⅲ','Ⅳ'].includes(i.diag)).length;
+  const bizLbl = S.curBiz ? '業務数' : '業務数（全体）';
+  const facLbl = S.curBiz ? '施設数' : '施設数（全体）';
+  const doneLbl = S.curBiz ? '点検完了' : '点検完了（全体）';
+  const alrtLbl = S.curBiz ? '要措置施設' : '要措置（全体）';
   document.getElementById('m-biz').textContent  = S.biz.length;
   document.getElementById('m-fac').textContent  = allFac.length;
   document.getElementById('m-done').textContent = totalDone;
   document.getElementById('m-alrt').textContent = totalAlrt;
 
-  // ラベルを「全業務」に統一
   const q = id => document.getElementById(id)?.closest('.met')?.querySelector('.met-l');
-  if(q('m-fac'))  q('m-fac').textContent  = '施設数（全業務）';
-  if(q('m-done')) q('m-done').textContent = '点検完了（全業務）';
-  if(q('m-alrt')) q('m-alrt').textContent = '要措置（全業務）';
+  if(q('m-biz'))  q('m-biz').textContent  = bizLbl;
+  if(q('m-fac'))  q('m-fac').textContent  = facLbl;
+  if(q('m-done')) q('m-done').textContent = doneLbl;
+  if(q('m-alrt')) q('m-alrt').textContent = alrtLbl;
 
-  // 選択業務がある場合の補足バッジ
-  const note = document.getElementById('dash-biz-note');
-  if(note){
-    const b = S.biz.find(b=>b.id===S.curBiz);
-    if(b){
-      const cFac  = allFac.filter(f=>f.bid===S.curBiz);
-      const cDone = cFac.filter(f=>allIns.find(i=>i.fid===f.id)).length;
-      note.style.display = '';
-      note.innerHTML = `📁 選択中の業務：<strong>${escHtml(b.nm)}</strong>　施設 ${cFac.length}件 / 完了 ${cDone}件`;
-    } else {
-      note.style.display = 'none';
-    }
-  }
-
-  // ---- 健全性診断サマリー（全業務合計） ----
+  // ---- 健全性診断サマリー ----
   const cnt = {I:0,II:0,III:0,IV:0};
   allFac.forEach(f=>{
     const i = allIns.find(i=>i.fid===f.id);
@@ -4003,10 +4015,12 @@ function updDash(){
   document.getElementById('c3').textContent = cnt.III;
   document.getElementById('c4').textContent = cnt.IV;
 
-  // ---- 未入力チェックカード（全施設対象） ----
+  // ---- 未入力チェックカード ----
   const mc = document.getElementById('missing-cards');
   if(mc){
-    if(!allFac.length){
+    if(!S.curBiz){
+      mc.innerHTML = '<div style="grid-column:1/-1;padding:10px 14px;color:var(--tx2);font-size:12px">業務を選択すると未入力チェックが表示されます</div>';
+    } else if(!allFac.length){
       mc.innerHTML = '<div style="grid-column:1/-1;padding:10px 14px;color:var(--tx2);font-size:12px">施設が登録されていません</div>';
     } else {
       const checkResults = REQUIRED_CHECKS.map(chk=>{
@@ -4041,7 +4055,7 @@ function updDash(){
     }
   }
 
-  // ---- 最近の記録（全業務 最新5件） ----
+  // ---- 最近の記録（選択業務 最新5件） ----
   const rec = [...allIns].sort((a,b)=>new Date(b.upd||0)-new Date(a.upd||0)).slice(0,5);
   const el = document.getElementById('rec-list');
   if(!rec.length){ el.innerHTML='<div style="text-align:center;padding:32px;color:var(--tx2)">まだ記録がありません</div>'; return; }
