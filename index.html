@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>附属物点検管理システム v2 | 株式会社フレックスデザイン</title>
+<title>附属物点検管理システム v3 | 株式会社フレックスデザイン</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -187,7 +187,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <body>
 
 <header class="hdr">
-  <h1>📋 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v2</span></h1>
+  <h1>📋 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v3</span></h1>
   <div class="hdr-r">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
   </div>
@@ -1849,11 +1849,11 @@ function renderFac(){
   tb.innerHTML=fs.map(f=>{
     const i=S.ins.find(i=>i.fid===f.id)||{};
     const bd=d=>d?`<span class="bdg ${BDGM[d]||'bg'}">${d}</span>`:'<span class="bdg bg">未</span>';
-    return `<tr style="cursor:pointer" onclick="openInsp('${f.id}')" title="クリックで点検入力">
+    return `<tr style="cursor:pointer" onclick="if(!event.target.closest('button,input')) openInsp('${f.id}')" title="クリックで点検入力">
       <td style="font-size:11px;white-space:nowrap"><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
       <td>${f.lc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
-      <td onclick="event.stopPropagation()"><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
-      <td onclick="event.stopPropagation()"><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
+      <td><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
+      <td><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
     </tr>`;
   }).join('');
 }
