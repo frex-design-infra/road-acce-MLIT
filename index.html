@@ -2135,12 +2135,7 @@ function saveInsp(silent=false){
   _sbFac(f);
   save();
   updDash();
-  if(silent){
-    // 前へ・次へ移動時：ボタンの横に一時的に「保存済み」を表示
-    showSaveToast(`💾 ${f.mn||'施設'} を自動保存しました`);
-  } else {
-    alert('✅ 保存しました');
-  }
+  showSaveToast(`💾 ${f.mn||f.id} を保存しました`);
 }
 
 // 自動保存のトースト通知
