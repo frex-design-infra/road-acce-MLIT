@@ -2897,14 +2897,25 @@ function parseExcel(wb, fname){
   const ws2=wb.Sheets[sn.find(n=>n.includes('点検結果')||n.includes('点検結果票'))||sn[1]];
   if(!ws1) return null;
 
-  const r1=XLSX.utils.sheet_to_json(ws1,{header:1,defval:null});
-  const r2=ws2?XLSX.utils.sheet_to_json(ws2,{header:1,defval:null}):[];
+  let r1=XLSX.utils.sheet_to_json(ws1,{header:1,defval:null});
+  let r2=ws2?XLSX.utils.sheet_to_json(ws2,{header:1,defval:null}):[];
+
+  // フォーマット検出・正規化
+  // 旧形式(001-003): タイトル行の後に空行、列Aが空白 → r1[0][0]===null
+  // 新形式(004+)  : 空行なし、列Aにデータあり → r1[0][0]!==null
+  // 新形式の場合、各行の先頭にnullを挿入し先頭に空行を追加して旧形式と同じ座標系に統一
+  const _isnew = r1[0]?.[0] != null;
+  if(_isnew){
+    const _norm = arr => { arr.unshift(null); arr.forEach((row,i)=>{ if(row) arr[i]=[null,...row]; }); };
+    _norm(r1); _norm(r2);
+  }
 
   const g=(rows,rowIdx,colIdx)=>{ try{ return rows[rowIdx]?.[colIdx]??null; }catch(e){ return null; } };
   const gs=(...args)=>{ const v=g(...args); return v!=null?String(v).trim():''; };
 
   // 施設諸元シートから情報取得
-  // ※実際のExcelはタイトル行+空行の後にデータ開始(row+1)、列Aは空白でBからデータ(col+1)
+  // ※旧形式: タイトル行+空行の後にデータ開始(row+1)、列Aは空白でBからデータ(col+1)
+  // ※新形式: 正規化済みなので以下の座標系は共通
 
   // 所在地セルから都道府県・市区町村コードを事前計算
   const _locPrefTxt = gs(r1,5,2); // 例: '岩手県'
