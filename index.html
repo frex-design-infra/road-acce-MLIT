@@ -4033,9 +4033,9 @@ function updDash(){
       });
 
       window._missingData = checkResults;
-      mc.innerHTML = checkResults.map((r,idx)=>{
-        const done = r.count === 0;
-        return `
+      const missing = checkResults.filter(r=>r.count>0);
+      const done_   = checkResults.filter(r=>r.count===0);
+      const cardHtml = (r,idx,done) => `
           <div class="miss-card" data-idx="${idx}"
             style="background:${done?'var(--acp)':'var(--wnp)'};border:1px solid ${done?'rgba(34,197,94,.3)':'rgba(186,117,23,.25)'};border-radius:10px;padding:12px 14px;${done?'':'cursor:pointer;'}transition:all .15s;user-select:none">
             <div style="font-size:22px;margin-bottom:4px">${r.icon}</div>
@@ -4043,7 +4043,11 @@ function updDash(){
             <div style="font-size:11px;font-weight:600;color:${done?'var(--ac)':'var(--wn)'};margin-top:2px">${r.label}</div>
             <div style="font-size:10px;color:var(--tx2);margin-top:2px">${done?'✅ 完了':'未入力 ▾'}</div>
           </div>`;
-      }).join('');
+      const groupHdr = (label, color) =>
+        `<div style="grid-column:1/-1;font-size:11px;font-weight:700;color:${color};margin-top:4px;padding-bottom:2px;border-bottom:1px solid ${color}20">${label}</div>`;
+      mc.innerHTML =
+        (missing.length ? groupHdr('⚠ 未入力あり','var(--wn)') + missing.map(r=>cardHtml(r, checkResults.indexOf(r), false)).join('') : '') +
+        (done_.length   ? groupHdr('✅ 入力済み', 'var(--ac)') + done_.map(r=>cardHtml(r, checkResults.indexOf(r), true)).join('')  : '');
 
         mc.querySelectorAll('.miss-card').forEach(card=>{
           card.addEventListener('mouseenter', ()=>{
