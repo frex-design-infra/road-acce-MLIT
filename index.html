@@ -1279,6 +1279,71 @@ function _sbIns(i){ _sb.from('ins').upsert({fid:i.fid,bid:i.bid,data:i,updated_a
 function _sbBulkFac(facs){ if(!facs.length) return; _sb.from('fac').upsert(facs.map(f=>({id:f.id,bid:f.bid,data:f,updated_at:new Date().toISOString()}))).then(({error})=>{ if(error) console.error('fac bulk upsert:',error); }); }
 function _sbBulkIns(inss){ if(!inss.length) return; _sb.from('ins').upsert(inss.map(i=>({fid:i.fid,bid:i.bid,data:i,updated_at:new Date().toISOString()}))).then(({error})=>{ if(error) console.error('ins bulk upsert:',error); }); }
 
+// ============================================================
+// Supabase Storage（写真管理）
+// バケット名: photos / パス: {bid}/{fid}/fixed/{key} or dmg/{no}
+// Free プランではバケット不存在 → 自動的にメモリオンリーにフォールバック
+// ============================================================
+const _PHOTO_BUCKET = 'photos';
+let _storageOk = null; // null=未確認, true=利用可, false=利用不可
+
+async function _sbStorageCheck(){
+  if(_storageOk !== null) return _storageOk;
+  try {
+    const { data, error } = await _sb.storage.getBucket(_PHOTO_BUCKET);
+    _storageOk = !error;
+  } catch(e){ _storageOk = false; }
+  return _storageOk;
+}
+
+async function _sbUploadPhoto(bid, fid, type, key, blob){
+  if(!await _sbStorageCheck()) return false;
+  try {
+    const path = `${bid}/${fid}/${type}/${key}`;
+    const { error } = await _sb.storage.from(_PHOTO_BUCKET)
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if(error){ console.error('Storage upload:', error); return false; }
+    return true;
+  } catch(e){ console.error('Storage upload:', e); return false; }
+}
+
+async function _sbDeletePhoto(bid, fid, type, key){
+  if(!await _sbStorageCheck()) return;
+  try {
+    const { error } = await _sb.storage.from(_PHOTO_BUCKET)
+      .remove([`${bid}/${fid}/${type}/${key}`]);
+    if(error) console.error('Storage delete:', error);
+  } catch(e){ console.error('Storage delete:', e); }
+}
+
+async function _sbLoadPhotos(fid, bid){
+  if(!await _sbStorageCheck()) return;
+  try {
+    const store = getImgStore(fid);
+    for(const subtype of ['fixed','dmg']){
+      const { data: files, error } = await _sb.storage.from(_PHOTO_BUCKET)
+        .list(`${bid}/${fid}/${subtype}`, { limit: 200 });
+      if(error || !files || !files.length) continue;
+      for(const file of files){
+        const key = file.name;
+        if(subtype==='fixed' && store.fixed[key]?.blob) continue;
+        if(subtype==='dmg'   && store.dmg[key]?.blob)   continue;
+        const { data: blob, error: dlErr } = await _sb.storage.from(_PHOTO_BUCKET)
+          .download(`${bid}/${fid}/${subtype}/${key}`);
+        if(dlErr || !blob) continue;
+        const dataUrl = await new Promise(res=>{
+          const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(blob);
+        });
+        const sl = subtype==='fixed' ? FIXED_SLOTS.find(s=>s.id===key) : null;
+        const entry = { blob, dataUrl, size: blob.size, origName: key, fname: sl?.fname || key };
+        if(subtype==='fixed') store.fixed[key] = entry;
+        else                  store.dmg[key]   = entry;
+      }
+    }
+    refreshSlots();
+  } catch(e){ console.error('Storage load:', e); }
+}
+
 // Supabase delete ヘルパー
 function _sbDelBiz(id){
   _sb.from('ins').delete().eq('bid',id).then(({error})=>{ if(error) console.error('ins del:',error); });
@@ -2199,6 +2264,9 @@ function loadInsp(fid){
   }
   // スロットUI更新（画像が既にimgStoreにあれば反映）
   refreshSlots();
+  // Supabase Storage から写真を非同期ロード（Free プランでは無操作）
+  const _lf = S.fac.find(f=>f.id===fid);
+  if(_lf) _sbLoadPhotos(fid, _lf.bid).catch(()=>{});
   // 板厚
   sv('f-thkdt',i.thkdt||''); sv('f-thkdev',i.thkdev||''); loadThick(i.thick||[]);
   // f-date（現地確認年月日）変更時→全写真行の撮影日を自動更新
@@ -2718,6 +2786,9 @@ function clearSlot(type, key){
   if(type==='fixed') delete store.fixed[key];
   else               delete store.dmg[key];
   refreshSlots();
+  // Supabase Storage からも削除（Free プランでは無操作）
+  const f = S.fac.find(f=>f.id===fid);
+  if(f) _sbDeletePhoto(f.bid, fid, type, key).catch(()=>{});
 }
 
 async function processSlotFile(type, key, file){
@@ -2744,6 +2815,13 @@ async function processSlotFile(type, key, file){
 
   if(type==='fixed') store.fixed[key] = result;
   else               store.dmg[key]   = result;
+
+  // Supabase Storage にアップロード（Free プランでは無操作）
+  const _uf = S.fac.find(f=>f.id===fid);
+  if(_uf){
+    showProg(true, `アップロード中: ${result.fname}…`);
+    await _sbUploadPhoto(_uf.bid, fid, type, key, result.blob);
+  }
 
   showProg(false);
   refreshSlots();
@@ -2778,6 +2856,12 @@ async function addImagesToZip(zip, ins){
     const folderName = `${facId(i)}_${dt}`;
     const facFolder  = imgFolder.folder(folderName);
     const dmgFolder  = facFolder.folder('損傷写真');
+
+    // メモリにない施設はStorageから取得
+    if(!imgStore[i.fid] && i.bid){
+      if(lbl) lbl.textContent = `写真ダウンロード中… ${i.mn||''}`;
+      await _sbLoadPhotos(i.fid, i.bid);
+    }
     const store = imgStore[i.fid];
 
     if(store){
