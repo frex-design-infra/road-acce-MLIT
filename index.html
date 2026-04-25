@@ -2739,7 +2739,7 @@ async function generateLocImg(){
 
   showProg(true,'位置図を生成中…');
   try{
-    const z=16, TILE=256, GRID=3;
+    const z=15, TILE=256, GRID=3;
     const tx=Math.floor((lng+180)/360*(1<<z));
     const ty=Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*(1<<z));
 
