@@ -1430,6 +1430,7 @@ function showPage(p){
     if(!S.curBiz && S.biz.length===1) S.curBiz=S.biz[0].id;
     fillSelects();
     renderFac();
+    generateLocImgAll().catch(()=>{});
   }
   if(p==='exp'){ fillSelects(); updExpList(); }
   if(p==='imp') fillSelects();
@@ -2806,6 +2807,57 @@ async function generateLocImg(){
     },'image/jpeg',0.92);
   }catch(e){
     showProg(false); console.error(e); alert('位置図生成エラー: '+e.message);
+  }
+}
+
+// ============================================================
+// 位置図一括生成（施設一覧表示時に全施設分を生成）
+// ============================================================
+async function generateLocImgAll(){
+  const targets = S.fac.filter(f=>f.lt&&f.lg&&!getImgStore(f.id).fixed?.loc);
+  if(!targets.length) return;
+  for(const fac of targets){
+    try{
+      const lat=parseFloat(fac.lt), lng=parseFloat(fac.lg);
+      if(isNaN(lat)||isNaN(lng)) continue;
+      const z=15, TILE=256, GRID=3;
+      const tx=Math.floor((lng+180)/360*(1<<z));
+      const ty=Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*(1<<z));
+      const canvas=document.createElement('canvas');
+      canvas.width=TILE*GRID; canvas.height=TILE*GRID;
+      const ctx=canvas.getContext('2d');
+      await Promise.all(
+        [-1,0,1].flatMap(dy=>[-1,0,1].map(dx=>new Promise(res=>{
+          const img=new Image(); img.crossOrigin='anonymous';
+          img.onload=()=>{ ctx.drawImage(img,(dx+1)*TILE,(dy+1)*TILE,TILE,TILE); res(); };
+          img.onerror=()=>res();
+          img.src=`https://cyberjapandata.gsi.go.jp/xyz/std/${z}/${tx+dx}/${ty+dy}.png`;
+        })))
+      );
+      const cx=canvas.width/2, cy=canvas.height/2;
+      ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2);
+      ctx.fillStyle='rgba(220,38,38,0.85)'; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+      const mPerPx=40075017*Math.cos(lat*Math.PI/180)/(TILE*(1<<z));
+      const barPx=Math.round(100/mPerPx);
+      const bx=14, by=canvas.height-28;
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.fillRect(bx-4,by-14,barPx+8+40,22);
+      ctx.fillStyle='#111'; ctx.fillRect(bx,by-6,barPx,4);
+      ctx.fillRect(bx,by-10,2,8); ctx.fillRect(bx+barPx-2,by-10,2,8);
+      ctx.font='bold 11px sans-serif'; ctx.fillText('100m',bx+barPx+4,by);
+      await new Promise(res=>canvas.toBlob(async blob=>{
+        if(!blob){ res(); return; }
+        const reader=new FileReader();
+        reader.onload=async()=>{
+          const store=getImgStore(fac.id);
+          store.fixed['loc']={blob,dataUrl:reader.result,size:blob.size,fname:'位置図.jpg'};
+          if(_storageOk!==false) await _sbUploadPhoto(fac.bid,fac.id,'fixed','loc',blob).catch(()=>{});
+          res();
+        };
+        reader.readAsDataURL(blob);
+      },'image/jpeg',0.92));
+    }catch(e){ console.warn('位置図生成スキップ:',fac.id,e); }
   }
 }
 
