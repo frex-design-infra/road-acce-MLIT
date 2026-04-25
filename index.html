@@ -269,7 +269,12 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <!-- 施設一覧 -->
 <div id="page-fac" class="hid">
   <div class="fxc g12 mb16" style="justify-content:space-between;flex-wrap:wrap">
-    <div><div class="pg-ttl">施設一覧</div><div class="pg-sub" id="fac-lbl" style="margin-bottom:0">業務を選択してください</div></div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="pg-ttl" style="margin-bottom:0">施設一覧</div>
+      <select class="fsel" id="fac-biz" onchange="onFacBizChg()" style="min-width:200px;font-size:13px">
+        <option value="">-- 業務を選択 --</option>
+      </select>
+    </div>
     <div class="btn-grp">
       <button class="btn btn-sm" onclick="showPage('imp')">📥 Excelインポート</button>
       <button class="btn btn-pr" onclick="openFacMod()">＋ 施設追加</button>
@@ -1222,7 +1227,12 @@ function showPage(p){
   document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
   const n=document.getElementById('nav-'+p); if(n) n.classList.add('active');
   if(p==='biz') renderBiz();
-  if(p==='fac') renderFac();
+  if(p==='fac'){
+    // 業務未選択かつ1件のみの場合は自動選択
+    if(!S.curBiz && S.biz.length===1) S.curBiz=S.biz[0].id;
+    fillSelects();
+    renderFac();
+  }
   if(p==='exp'){ fillSelects(); updExpList(); }
   if(p==='imp') fillSelects();
   if(p==='insp') fillSelects();
@@ -1235,13 +1245,17 @@ function swTab(id,el){
   document.getElementById(id).classList.remove('hid');
 }
 function fillSelects(){
-  ['sel-biz','imp-biz','exp-biz'].forEach(id=>{
+  ['sel-biz','imp-biz','exp-biz','fac-biz'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value;
     el.innerHTML='<option value="">-- 選択 --</option>'+S.biz.map(b=>`<option value="${b.id}" ${b.id===S.curBiz?'selected':''}>${b.nm}（${b.yr}）</option>`).join('');
     if(cur) el.value=cur;
   });
   if(S.curBiz) onBizChg();
+}
+function onFacBizChg(){
+  const bid=document.getElementById('fac-biz').value;
+  S.curBiz=bid||null; renderFac();
 }
 
 // ============================================================
