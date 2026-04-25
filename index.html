@@ -2842,8 +2842,8 @@ function parseExcel(wb, fname){
     ud: gs(r1,4,12),    // 上下別
     loc: [gs(r1,5,2),gs(r1,5,3),gs(r1,5,4)].filter(x=>x).join(''),
     km: gs(r1,5,12),    // 距離標
-    lat: gs(r1,6,2),    // 緯度
-    lng: gs(r1,6,5),    // 経度
+    lat: (()=>{ const s=gs(r1,6,2); const m=s.match(/(\d+)[°]\s*(\d+)[′']\s*([\d.]+)[″"]/); return m?(+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6):s; })(),
+    lng: (()=>{ const s=gs(r1,6,5); const m=s.match(/(\d+)[°]\s*(\d+)[′']\s*([\d.]+)[″"]/); return m?(+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6):s; })(),
     pil: gs(r1,8,2),    // 支柱形式
     surf: gs(r1,8,6),   // 表面処理形式
     base: gs(r1,8,11),  // 基礎形式
