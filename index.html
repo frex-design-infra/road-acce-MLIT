@@ -1860,7 +1860,7 @@ function onBizChg(){
   const bid=v('sel-biz'); S.curBiz=bid||null;
   const fs=S.fac.filter(f=>f.bid===bid);
   const sel=document.getElementById('sel-fac');
-  sel.innerHTML='<option value="">-- 施設を選択 --</option>'+fs.map(f=>`<option value="${f.id}">${f.mn} ${f.nm} ${f.lc||''}</option>`).join('');
+  sel.innerHTML='<option value="">-- 施設を選択 --</option>'+fs.map(f=>`<option value="${f.id}">${f.mn}　${LBL_FNM[f.nm]||LBL_FTP[f.tp]||''}　${f.lc||f.loc||''}</option>`).join('');
   document.getElementById('insp-body').classList.add('hid');
 }
 function onFacChg(){
