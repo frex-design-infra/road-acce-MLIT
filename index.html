@@ -2853,6 +2853,9 @@ async function generateLocImgAll(){
           const store=getImgStore(fac.id);
           store.fixed['loc']={blob,dataUrl:reader.result,size:blob.size,fname:'位置図.jpg'};
           if(_storageOk!==false) await _sbUploadPhoto(fac.bid,fac.id,'fixed','loc',blob).catch(()=>{});
+          // ins レコードの locimg フィールドも更新
+          const ins=S.ins.find(i=>i.fid===fac.id);
+          if(ins && !ins.locimg){ ins.locimg='位置図.jpg'; _sbIns(ins); }
           res();
         };
         reader.readAsDataURL(blob);
