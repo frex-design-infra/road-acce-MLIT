@@ -2052,7 +2052,7 @@ function renderFac(){
     const bd=d=>d?`<span class="bdg ${BDGM[d]||'bg'}">${d}</span>`:'<span class="bdg bg">未</span>';
     return `<tr style="cursor:pointer" onclick="if(!event.target.closest('button,input')) openInsp('${f.id}')" title="クリックで点検入力">
       <td style="font-size:11px;white-space:nowrap"><strong>${f.mn}</strong></td><td>${LBL_FNM[f.nm]||f.nm||'-'}</td><td>${LBL_FTP[f.tp]||f.tp||'-'}</td><td>${LBL_PIL[f.pil]||f.pil||'-'}</td>
-      <td>${f.lc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
+      <td>${f.lc||f.loc||'-'}</td><td>${f.inst||'-'}</td><td>${bd(f.prevDiag)}</td><td>${bd(i.diag)}</td>
       <td><input type="text" class="finp" value="${i.dt||''}" readonly placeholder="yyyy-mm-dd" style="width:120px;font-size:11px;cursor:pointer;caret-color:transparent" onclick="calOpen(this,v=>setInspDate('${f.id}',v))" title="クリックして日付を選択"></td>
       <td><div class="btn-grp"><button class="btn btn-sm btn-pr" onclick="openInsp('${f.id}')">点検入力</button><button class="btn btn-sm" onclick="openFacMod('${f.id}')">編集</button></div></td>
     </tr>`;
@@ -3460,7 +3460,7 @@ async function parsePDF(buffer, fname){
     const udRaw     = routeRow ? first(afterKw(routeRow,'上・下別')) : '';
 
     const locRow    = findRow(r1,'所在地');
-    const locItems  = locRow ? afterKw(locRow,'所在地').filter(i=>!i.s.match(/距離標|（km）/)) : [];
+    const locItems  = locRow ? between(locRow,'所在地','距離標') : [];
     const prefTxt   = locItems[0]?.s || '';
     const cityTxt   = locItems[1]?.s || '';
     const detailTxt = locItems.slice(2).map(i=>i.s).join('');
