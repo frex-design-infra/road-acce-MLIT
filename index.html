@@ -1950,8 +1950,8 @@ function loadInsp(fid){
   }
   sv('f-km',    i.km||f.km||'');
   sv('f-inst',  i.inst||f.inst||'');
-  sv('f-lat',   dms2dec(i.lat||f.lt||''));
-  sv('f-lng',   dms2dec(i.lng||f.lg||''));
+  sv('f-lat',   dms2dec(i.lat||f.lt||f.lat||''));
+  sv('f-lng',   dms2dec(i.lng||f.lg||f.lng||''));
   // Michi施設キー：緯度経度から再生成（DMS変換後の正確な値を使う）
   // 手動設定値（緯度,経度形式以外）はそのまま保持
   const _storedMichi = i.michiKey||f.michiKey||'';
@@ -2916,8 +2916,8 @@ function parseExcel(wb, fname){
     city: _cityCode,    // 市区町村コード
     loc: _locDetail,    // 字・番地等のみ（都道府県・市区町村名は除く）
     km: gs(r1,5,12),    // 距離標
-    lat: dms2dec(gs(r1,6,2)),
-    lng: dms2dec(gs(r1,6,5)),
+    lt: dms2dec(gs(r1,6,2)),
+    lg: dms2dec(gs(r1,6,5)),
     pil: gs(r1,8,2),    // 支柱形式
     surf: gs(r1,8,6),   // 表面処理形式
     base: gs(r1,8,11),  // 基礎形式
@@ -3281,12 +3281,13 @@ function updExpList(){
   const warns=[];
   document.getElementById('exp-tb').innerHTML=rows.map(({f,i,b})=>{
     // 施設ID（緯度経度）チェック
-    const hasLatLng = f.lt && f.lg;
-    const facIdVal = hasLatLng ? `${parseFloat(f.lt).toFixed(5)},${parseFloat(f.lg).toFixed(5)}` : '';
+    const _lt=f.lt||f.lat||'', _lg=f.lg||f.lng||'';
+    const hasLatLng = _lt && _lg;
+    const facIdVal = hasLatLng ? `${parseFloat(_lt).toFixed(5)},${parseFloat(_lg).toFixed(5)}` : '';
     const idOk = hasLatLng && facIdVal.length <= 18;
     // 必須項目チェック（付録04）
     const missing=[];
-    if(!f.lt||!f.lg) missing.push('緯度経度');
+    if(!(f.lt||f.lat)||!(f.lg||f.lng)) missing.push('緯度経度');
     if(!i?.dt)       missing.push('現地確認年月日');
     if(!f.bid || !S.biz.find(bb=>bb.id===f.bid)?.kyoku) missing.push('管理者（局）');
     if(!f.bid || !S.biz.find(bb=>bb.id===f.bid)?.jimusho) missing.push('管理者（事務所）');
