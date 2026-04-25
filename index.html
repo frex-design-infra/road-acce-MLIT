@@ -2286,6 +2286,9 @@ function loadInsp(fid){
   // Supabase Storage から写真を非同期ロード（Free プランでは無操作）
   const _lf = S.fac.find(f=>f.id===fid);
   if(_lf) _sbLoadPhotos(fid, _lf.bid).catch(()=>{});
+  // 位置図が未登録で緯度経度があれば自動生成
+  const _store = getImgStore(fid);
+  if(!_store.fixed?.loc && _lf?.lt && _lf?.lg) generateLocImg().catch(()=>{});
   // 板厚
   sv('f-thkdt',i.thkdt||''); sv('f-thkdev',i.thkdev||''); loadThick(i.thick||[]);
   // f-date（現地確認年月日）変更時→全写真行の撮影日を自動更新
