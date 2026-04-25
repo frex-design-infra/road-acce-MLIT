@@ -3956,6 +3956,7 @@ const REQUIRED_CHECKS = [
   { key:'zenei',   label:'全景写真ファイル名', icon:'📷', check: i=> (i.zenei||[]).some(v=>v) },
   { key:'pref',    label:'都道府県',       icon:'🏔️', check: i=> !!i.pref },
   { key:'mn',      label:'管理番号',       icon:'🔢', check: i=> !!(i.mn||'').trim() },
+  { key:'nm',      label:'施設名（種別）', icon:'🏗️', check: i=> !!(i.nm||'').trim() },
 ];
 
 function updDash(){
