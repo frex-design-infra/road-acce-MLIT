@@ -3637,7 +3637,11 @@ async function parsePDF(buffer, fname){
       lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
     }
 
+    // デバッグ：支柱形式周辺のアイテムを確認
+    const _pilLb = p1.find(it=>it.s.includes('支柱形式'));
+    if(_pilLb){ const _cands=p1.filter(it=>Math.abs(it.y-_pilLb.y)<=20&&it.x>_pilLb.x&&it.x<_pilLb.x+400&&!it.s.includes('支柱形式')).sort((a,b)=>a.x-b.x); console.log('支柱形式 label:',_pilLb,'candidates:',_cands); }
     const pilRaw     = pval(p1,'支柱形式', 13);  // tol=16だと支柱基部(y差13.8)が混入するためtol=13
+    console.log('pilRaw:', pilRaw);
     const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
     const baseRaw    = pval(p1,'基礎形式');
     const ribRaw     = pval(p1,'リブ形状');
