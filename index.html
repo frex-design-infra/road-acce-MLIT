@@ -3476,23 +3476,7 @@ async function parsePDF(buffer, fname){
     const routeRaw  = routeRow ? first(between(routeRow,'路線名','上')) || first(afterKw(routeRow,'路線名')) : '';
     const udRaw     = routeRow ? first(afterKw(routeRow,'上・下別')) : '';
 
-    const locRow    = findRow(r1,'所在地');
-    const locItems  = locRow ? afterKw(locRow,'所在地') : [];
-    const prefTxt   = locItems[0]?.s || '';
-    const cityTxt   = locItems[1]?.s || '';
-    const detailTxt = locItems.slice(2).map(i=>i.s).join('').replace(/[\d.]+kp[+\-]?[\d.]*/gi,'').trim();
-
-    const kmRaw   = pval(p1,'距離標', 8);  // ラベルy=725.2, 値y=721.1(diff=4.1), tol=8で取得
-
-    const latRow  = findRow(r1,'緯度');
-    let latStr='', lngStr='';
-    if(latRow){
-      latStr = join(between(latRow,'緯度','経度'));
-      lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
-    }
-
     // 構造情報: 複数行ラベル対応のため生アイテム(p1)をワイドy許容で直接検索
-    // (行グルーピングは ±4pt だが、折り返しラベルとデータセルはズレが大きいため)
     const pval = (items, kw, yTol=16, xMax=400) => {
       const lb = items.find(it => it.s.includes(kw));
       if(!lb) return '';
@@ -3500,6 +3484,21 @@ async function parsePDF(buffer, fname){
         Math.abs(it.y - lb.y) <= yTol && it.x > lb.x && it.x < lb.x + xMax && !it.s.includes(kw)
       ).sort((a,b) => a.x - b.x)[0]?.s || '';
     };
+
+    const locRow    = findRow(r1,'所在地');
+    const locItems  = locRow ? afterKw(locRow,'所在地') : [];
+    const prefTxt   = locItems[0]?.s || '';
+    const cityTxt   = locItems[1]?.s || '';
+    const detailTxt = locItems.slice(2).map(i=>i.s).join('').replace(/[\d.]+kp[+\-]?[\d.]*/gi,'').trim();
+
+    const kmRaw   = pval(p1,'距離標', 8);
+
+    const latRow  = findRow(r1,'緯度');
+    let latStr='', lngStr='';
+    if(latRow){
+      latStr = join(between(latRow,'緯度','経度'));
+      lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
+    }
 
     const pilRaw     = pval(p1,'支柱形式');
     const surfRaw    = pval(p1,'表面処理');   // "表面処理形式"のラベルを含む
