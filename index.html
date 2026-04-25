@@ -1092,7 +1092,7 @@ function calSel(iso){
 // 度分秒→10進法変換（例: 39°42′25.2″ → 39.707000）。変換できない値はそのまま返す
 function dms2dec(s){
   s = String(s||'').trim();
-  const m = s.match(/(\d+)[°\u00b0]\s*(\d+)[′\u2032']\s*([\d.]+)[″\u2033"]/);
+  const m = s.match(/(\d+)[°\u00b0\u309c]\s*(\d+)[′\u2032']\s*([\d.]+)[″\u2033"]/);
   return m ? (+m[1]+(+m[2])/60+(+m[3])/3600).toFixed(6) : s;
 }
 
