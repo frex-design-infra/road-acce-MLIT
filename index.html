@@ -2706,7 +2706,8 @@ function buildFixedSlots(){
            ${img.size>MAX_BYTES ? `<span class="slot-warn">⚠ ${fmtSize(img.size)}</span>`
                                 : `<span class="slot-size">✓ ${fmtSize(img.size)}</span>`}
            <button class="del-btn" onclick="event.stopPropagation();clearSlot('fixed','${sl.id}')" title="削除">×</button>`
-        : `<span style="font-size:22px">${sl.required?'📷':'🖼️'}</span>`
+        : `<span style="font-size:22px">${sl.required?'📷':'🖼️'}</span>
+           ${sl.id==='loc' ? `<button class="btn" onclick="event.stopPropagation();generateLocImg()" style="margin-top:4px;font-size:11px;padding:2px 8px">地図から生成</button>` : ''}`
       }
       <span class="slot-lbl">${sl.label}${sl.required?' <span style="color:var(--dg)">必須</span>':''}</span>
       <span class="slot-fname">${hasImg ? img.fname : sl.fname}</span>
@@ -2725,6 +2726,70 @@ function buildFixedSlots(){
       if(el && !el._manual) el.value = img ? img.fname : (idx===0?'全景.jpg':idx===1?'点検ステッカー.jpg':'');
     }
   });
+}
+
+// ============================================================
+// 位置図自動生成（国土地理院タイルAPI）
+// ============================================================
+async function generateLocImg(){
+  const fac = S.fac.find(f=>f.id===S.curFac);
+  if(!fac||!fac.lt||!fac.lg){ alert('緯度経度が登録されていません'); return; }
+  const lat=parseFloat(fac.lt), lng=parseFloat(fac.lg);
+  if(isNaN(lat)||isNaN(lng)){ alert('緯度経度が不正です'); return; }
+
+  showProg(true,'位置図を生成中…');
+  try{
+    const z=17, TILE=256, GRID=3;
+    const tx=Math.floor((lng+180)/360*(1<<z));
+    const ty=Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*(1<<z));
+
+    const canvas=document.createElement('canvas');
+    canvas.width=TILE*GRID; canvas.height=TILE*GRID;
+    const ctx=canvas.getContext('2d');
+
+    // タイル読み込み
+    await Promise.all(
+      [-1,0,1].flatMap(dy=>[-1,0,1].map(dx=>new Promise(res=>{
+        const img=new Image(); img.crossOrigin='anonymous';
+        img.onload=()=>{ ctx.drawImage(img,(dx+1)*TILE,(dy+1)*TILE,TILE,TILE); res(); };
+        img.onerror=()=>res();
+        img.src=`https://cyberjapandata.gsi.go.jp/xyz/std/${z}/${tx+dx}/${ty+dy}.png`;
+      })))
+    );
+
+    // 中心マーカー
+    const cx=canvas.width/2, cy=canvas.height/2;
+    ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI*2);
+    ctx.fillStyle='rgba(220,38,38,0.85)'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+
+    // スケールバー（100m）
+    const mPerPx=40075017*Math.cos(lat*Math.PI/180)/(TILE*(1<<z));
+    const barPx=Math.round(100/mPerPx);
+    const bx=14, by=canvas.height-28;
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.fillRect(bx-4,by-14,barPx+8+40,22);
+    ctx.fillStyle='#111'; ctx.fillRect(bx,by-6,barPx,4);
+    ctx.fillRect(bx,by-10,2,8); ctx.fillRect(bx+barPx-2,by-10,2,8);
+    ctx.font='bold 11px sans-serif'; ctx.fillText('100m',bx+barPx+4,by);
+
+    canvas.toBlob(async blob=>{
+      if(!blob){ showProg(false); alert('画像生成に失敗しました'); return; }
+      const reader=new FileReader();
+      reader.onload=async()=>{
+        const store=getImgStore(S.curFac);
+        store.fixed['loc']={blob,dataUrl:reader.result,size:blob.size,fname:'位置図.jpg'};
+        const el=document.getElementById('f-locimg');
+        if(el&&!el._manual) el.value='位置図.jpg';
+        buildFixedSlots();
+        if(_storageOk!==false) await _sbUploadPhoto(fac.bid,S.curFac,'fixed','loc',blob);
+        showProg(false);
+      };
+      reader.readAsDataURL(blob);
+    },'image/jpeg',0.92);
+  }catch(e){
+    showProg(false); console.error(e); alert('位置図生成エラー: '+e.message);
+  }
 }
 
 // ============================================================
