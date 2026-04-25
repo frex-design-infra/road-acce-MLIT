@@ -1246,7 +1246,7 @@ function showPage(p){
   }
   if(p==='exp'){ fillSelects(); updExpList(); }
   if(p==='imp') fillSelects();
-  if(p==='insp') fillSelects();
+  if(p==='insp'){ fillSelects(); if(S.curBiz) onBizChg(); }
   if(p==='dash'){
     if(!S.curBiz && S.biz.length===1) S.curBiz=S.biz[0].id;
     fillSelects();
@@ -1267,7 +1267,15 @@ function fillSelects(){
     el.innerHTML=`<option value="">${_defTxt[id]||'-- 選択 --'}</option>`+S.biz.map(b=>`<option value="${b.id}" ${b.id===S.curBiz?'selected':''}>${b.nm}（${b.yr}）</option>`).join('');
     if(cur) el.value=cur;
   });
-  if(S.curBiz) onBizChg();
+  // sel-fac だけ現在の業務で再構築（onBizChg は呼ばない＝insp-bodyを隠さない）
+  if(S.curBiz){
+    const sel=document.getElementById('sel-fac'); if(sel){
+      const _cur=sel.value;
+      const _fs=S.fac.filter(f=>f.bid===S.curBiz);
+      sel.innerHTML='<option value="">-- 施設を選択 --</option>'+_fs.map(f=>`<option value="${f.id}">${f.mn}　${LBL_FNM[f.nm]||LBL_FTP[f.tp]||''}　${f.lc||f.loc||''}</option>`).join('');
+      if(_cur) sel.value=_cur;
+    }
+  }
 }
 function onFacBizChg(){
   const bid=document.getElementById('fac-biz').value;
