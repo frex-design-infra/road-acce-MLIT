@@ -1853,12 +1853,26 @@ function saveFac(){
   else{ const nf={id:'f'+Date.now(),bid:S.curBiz,mn,nm,tp:v('fac-tp'),lc:v('fac-lc'),lt:v('fac-lt'),lg:v('fac-lg'),at:new Date().toISOString()}; S.fac.push(nf); _sbFac(nf); }
   save(); closeMod('mod-fac'); renderFac();
 }
-function delFac(id){
+async function delFac(id){
   if(!id) return;
   const f = S.fac.find(f=>f.id===id); if(!f) return;
   if(!confirm(`施設「${f.mn}」を削除しますか？\n関連する点検記録も削除されます。`)) return;
   _sb.from('ins').delete().eq('fid',id).then(({error})=>{ if(error) console.error('ins del:',error); });
   _sb.from('fac').delete().eq('id',id).then(({error})=>{ if(error) console.error('fac del:',error); });
+  // Storage の写真・位置図を一括削除
+  if(await _sbStorageCheck()){
+    const { data: files } = await _sb.storage.from(_PHOTO_BUCKET).list(`${f.bid}/${id}`);
+    if(files && files.length){
+      // fixed/* と dmg/* をまとめて削除
+      const paths = [];
+      for(const sub of files){
+        const { data: subs } = await _sb.storage.from(_PHOTO_BUCKET).list(`${f.bid}/${id}/${sub.name}`);
+        if(subs && subs.length) paths.push(...subs.map(s=>`${f.bid}/${id}/${sub.name}/${s.name}`));
+        else paths.push(`${f.bid}/${id}/${sub.name}`);
+      }
+      if(paths.length) await _sb.storage.from(_PHOTO_BUCKET).remove(paths);
+    }
+  }
   S.fac=S.fac.filter(f=>f.id!==id);
   S.ins=S.ins.filter(i=>i.fid!==id);
   save(); closeMod('mod-fac'); renderFac();
