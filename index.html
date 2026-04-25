@@ -1903,6 +1903,8 @@ function loadInsp(fid){
   sv('f-ud',    _c(_UD,  i.ud||f.ud||''));
   // 都道府県・市区町村（2段階select）
   sv('f-pref', i.pref||f.pref||'');
+  // prefが未設定の場合は所在地テキストから自動判定
+  if(!v('f-pref')) autoDetectPref(i.loc||f.lc||'');
   onPrefChg();  // 市区町村selectを都道府県に合わせて更新
   sv('f-city', i.city||f.city||'');
   sv('f-loc',  i.loc||f.lc||'');
@@ -2859,6 +2861,14 @@ function parseExcel(wb, fname){
     route: gs(r1,4,6),  // 路線名
     ud: gs(r1,4,12),    // 上下別
     loc: [gs(r1,5,2),gs(r1,5,3),gs(r1,5,4)].filter(x=>x).join(''),
+    pref: (()=>{
+      // 所在地（都道府県セル）→コード変換。なければ道路管理者テキストで推定
+      const locPref = gs(r1,5,2);
+      const mgrText = gs(r1,2,6);
+      const src = locPref || mgrText;
+      const found = PREF_MAP.find(([n]) => src.includes(n));
+      return found ? found[1] : '';
+    })(),
     km: gs(r1,5,12),    // 距離標
     lat: dms2dec(gs(r1,6,2)),
     lng: dms2dec(gs(r1,6,5)),
