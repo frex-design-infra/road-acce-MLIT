@@ -353,8 +353,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <div class="fg">
           <div class="fgrp"><label class="flbl req">現地確認年月日</label><input type="text" class="finp" id="f-date" readonly placeholder="yyyy-mm-dd" style="cursor:pointer;caret-color:transparent" onclick="calOpen(this)"></div>
           <div class="fgrp"><label class="flbl req">管理番号</label><input type="text" class="finp" id="f-mgmt" placeholder="例：R7-156k229-下0"></div>
-          <div class="fgrp"><label class="flbl req">定期点検員（氏名）</label><input type="text" class="finp" id="f-ins1"></div>
-          <div class="fgrp"><label class="flbl">定期点検員（所属）</label><input type="text" class="finp" id="f-ins1o" value="株式会社フレックスデザイン"></div>
+          <div class="fgrp"><label class="flbl req">定期点検員（氏名）</label><input type="text" class="finp" id="f-ins1" readonly style="background:var(--g1);cursor:default" title="業務設定の定期点検員から自動反映"></div>
+          <div class="fgrp"><label class="flbl req">定期点検員（所属）</label><input type="text" class="finp" id="f-ins1o" readonly style="background:var(--g1);cursor:default" title="業務設定の定期点検員から自動反映"></div>
           <div class="fgrp"><label class="flbl">点検種別</label>
             <select class="fsel" id="f-instype">
               <option>定期点検（初回）</option><option>定期点検（中間）</option><option>定期点検（最終）</option><option>初期点検</option><option>異常時点検</option>
@@ -1589,6 +1589,15 @@ function saveBiz(){
   if(S.editBiz){ const b=S.biz.find(b=>b.id===S.editBiz); Object.assign(b,bizData); _sbBiz(b); }
   else{ const nb={id:'b'+Date.now(),...bizData,at:new Date().toISOString()}; S.biz.push(nb); _sbBiz(nb); }
   save(); closeMod('mod-biz'); renderBiz(); refresh();
+  // 点検フォームが開いていて同業務の施設を表示中なら氏名・所属を即時反映
+  if(!document.getElementById('page-insp').classList.contains('hid') && S.curFac){
+    const _cf=S.fac.find(f=>f.id===S.curFac);
+    const _bid=S.editBiz||(S.biz[S.biz.length-1]?.id);
+    if(_cf && _cf.bid===_bid){
+      const _b=S.biz.find(b=>b.id===_bid);
+      if(_b){ sv('f-ins1',_b.ins1||''); sv('f-ins1o',_b.ins1o||''); }
+    }
+  }
 }
 function delBiz(id){
   if(!confirm('この業務を削除しますか？関連する施設・点検記録も削除されます。')) return;
@@ -1910,8 +1919,8 @@ function loadInsp(fid){
   // 基本情報
   const biz=S.biz.find(b=>b.id===f.bid)||{};
   sv('f-date',i.dt||''); sv('f-mgmt',i.mn||f.mn||'');
-  sv('f-ins1',i.ins1||biz.ins1||'');       // 業務の定期点検員氏名をデフォルト
-  sv('f-ins1o',i.ins1o||biz.ins1o||'');    // 業務の所属をデフォルト
+  sv('f-ins1', biz.ins1||'');   // 常に業務設定から引用
+  sv('f-ins1o', biz.ins1o||''); // 常に業務設定から引用
   sv('f-instype',i.instype||'定期点検（中間）'); sv('f-insmethod',i.insmethod||'近接目視');
   // -------------------------------------------------------
   // テキスト値→コード変換マップ（旧データ互換）
