@@ -2831,49 +2831,50 @@ function parseExcel(wb, fname){
   const gs=(...args)=>{ const v=g(...args); return v!=null?String(v).trim():''; };
 
   // 施設諸元シートから情報取得
+  // ※実際のExcelはタイトル行+空行の後にデータ開始(row+1)、列Aは空白でBからデータ(col+1)
   const fac={
     srcFile: fname,
-    mn: gs(r1,1,11),    // 管理番号
-    nm: gs(r1,1,1),     // 種別
-    tp: gs(r1,1,1),     // 施設種別
-    rdtype: gs(r1,3,1), // 道路種別
-    route: gs(r1,3,5),  // 路線名
-    ud: gs(r1,3,11),    // 上下別
-    loc: [gs(r1,4,1),gs(r1,4,2),gs(r1,4,3)].filter(x=>x).join(''),
-    km: gs(r1,4,11),    // 距離標
-    lat: gs(r1,5,1),    // 緯度
-    lng: gs(r1,5,4),    // 経度
-    pil: gs(r1,7,1),    // 支柱形式
-    surf: gs(r1,7,5),   // 表面処理形式
-    base: gs(r1,7,10),  // 基礎形式
-    rib: gs(r1,8,1),    // リブ形状
-    gl: gs(r1,8,5),     // 路面境界部
-    signnum: gs(r1,9,1),// 標識設置枚数
-    signno: gs(r1,9,2), // 標識番号
-    signatt: gs(r1,9,5),// 取付形式
-    fall: gs(r1,9,10),  // 落下防止
-    losen: gs(r1,10,1), // ゆるみ止め
-    losen2: gs(r1,10,2),// ゆるみ止め内容
-    mark: gs(r1,10,5),  // 合いマーク
-    mark2: gs(r1,10,6), // 合いマーク箇所
-    damp: gs(r1,10,10), // 制振装置
-    drain: gs(r1,11,1), // 排水性向上
-    inst: (()=>{ const y=gs(r1,11,5),m=gs(r1,11,6); return (y&&m)?`${y}年${m}月`:y||''; })(),
-    env: gs(r1,13,1),   // 設置環境
-    sea: gs(r1,13,4),   // 海岸距離
-    snow: gs(r1,13,7),  // 融雪剤
-    wind: gs(r1,13,11), // 風規制
-    snow2: gs(r1,14,1), // 防雪対策
-    cens: gs(r1,14,4),  // センサス年度
-    censno: gs(r1,14,7),// センサス区間番号
-    trf: gs(r1,14,11),  // 交通量
-    rdw: gs(r1,15,1),   // 道路幅員
-    sdw: gs(r1,15,4),   // 歩道幅員
-    emg: gs(r1,15,7),   // 緊急輸送
-    sch: gs(r1,15,11),  // 通学路
-    prevInsType: gs(r1,17,1), // 前回点検種別
-    prevInsDate: [gs(r1,17,7),gs(r1,17,8),gs(r1,17,9)].filter(x=>x&&x!=='0').join('.'),
-    prevInspector: [gs(r1,18,1),gs(r1,18,4)].filter(x=>x&&x!=='0').join(' '),
+    mn: gs(r1,2,12),    // 管理番号
+    nm: gs(r1,2,2),     // 種別（後でtp変換後に上書き）
+    tp: gs(r1,2,2),     // 施設種別
+    rdtype: gs(r1,4,2), // 道路種別
+    route: gs(r1,4,6),  // 路線名
+    ud: gs(r1,4,12),    // 上下別
+    loc: [gs(r1,5,2),gs(r1,5,3),gs(r1,5,4)].filter(x=>x).join(''),
+    km: gs(r1,5,12),    // 距離標
+    lat: gs(r1,6,2),    // 緯度
+    lng: gs(r1,6,5),    // 経度
+    pil: gs(r1,8,2),    // 支柱形式
+    surf: gs(r1,8,6),   // 表面処理形式
+    base: gs(r1,8,11),  // 基礎形式
+    rib: gs(r1,9,2),    // リブ形状
+    gl: gs(r1,9,6),     // 路面境界部
+    signnum: gs(r1,10,2),// 標識設置枚数
+    signno: gs(r1,10,3), // 標識番号
+    signatt: gs(r1,10,6),// 取付形式
+    fall: gs(r1,10,11),  // 落下防止
+    losen: gs(r1,11,2), // ゆるみ止め
+    losen2: gs(r1,11,3),// ゆるみ止め内容
+    mark: gs(r1,11,6),  // 合いマーク
+    mark2: gs(r1,11,7), // 合いマーク箇所
+    damp: gs(r1,11,11), // 制振装置
+    drain: gs(r1,12,2), // 排水性向上
+    inst: (()=>{ const y=gs(r1,12,6),m=gs(r1,12,7); return (y&&m)?`${y}年${m}月`:y||''; })(),
+    env: gs(r1,14,2),   // 設置環境
+    sea: gs(r1,14,5),   // 海岸距離
+    snow: gs(r1,14,8),  // 融雪剤
+    wind: gs(r1,14,12), // 風規制
+    snow2: gs(r1,15,2), // 防雪対策
+    cens: gs(r1,15,5),  // センサス年度
+    censno: gs(r1,15,8),// センサス区間番号
+    trf: gs(r1,15,12),  // 交通量
+    rdw: gs(r1,16,2),   // 道路幅員
+    sdw: gs(r1,16,5),   // 歩道幅員
+    emg: gs(r1,16,8),   // 緊急輸送
+    sch: gs(r1,16,12),  // 通学路
+    prevInsType: gs(r1,18,2), // 前回点検種別
+    prevInsDate: gs(r1,18,12),// 前回点検年月日
+    prevInspector: [gs(r1,19,2),gs(r1,19,5)].filter(x=>x&&x!=='0').join(' '),
   };
 
   // ============================================================
@@ -2887,7 +2888,7 @@ function parseExcel(wb, fname){
   const TXT2CD_RIB  = {'三角リブ':'1','Ｕ字リブ':'2','U字リブ':'2','その他':'3','無':'4'};
   const TXT2CD_GL   = {'コンクリート':'1','アスファルト':'2','土砂':'3','ベースプレート露出':'4','インターロッキング':'5','その他':'6'};
   const TXT2CD_SATT = {'固定式':'1','吊下式':'2','その他':'3'};
-  const TXT2CD_15   = {'有（全部）':'1','有（一部）':'2','今回実施（全部）':'3','今回実施（一部）':'4','無':'5'};
+  const TXT2CD_15   = {'有（全部）':'1','有（一部）':'2','今回実施（全部）':'3','今回実施（一部）':'4','無':'5','有(全部)':'1','有(一部)':'2','今回実施(全部)':'3','今回実施(一部)':'4'};
   const TXT2CD_DAMP = {'有':'1','今回実施':'2','無':'3'};
   const TXT2CD_DRAIN= {'有':'1','今回実施':'2','無':'3','該当無し':'4','該当なし':'4'};
   const TXT2CD_ENV  = {'一般部':'1','橋梁部':'2','トンネル':'3','横断歩道橋':'4','その他':'5'};
@@ -2895,13 +2896,13 @@ function parseExcel(wb, fname){
   const TXT2CD_12   = {'該当する':'1','該当しない':'2'};
   const TXT2CD_EMG  = {'一次':'1','二次':'2','三次':'3','無':'4','市町村指定':'6'};
   const TXT2CD_SCH  = {'有':'1','無':'2'};
-  const TXT2CD_RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','都道府県道':'5','市町村道':'6','その他':'7'};
+  const TXT2CD_RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','都道府県道':'5','市町村道':'6','その他':'7','一般国道(指定区間内　高規格)':'2','一般国道(指定区間内 高規格)':'2','一般国道(指定区間内　高規格以外)':'3','一般国道(指定区間内 高規格以外)':'3','一般国道(指定区間外)':'4'};
   const TXT2CD_UD   = {'上り':'1','下り':'2','上・下':'3'};
   const c2 = (map, val) => map[val]||val||'';  // テキスト→コード変換ヘルパー
 
   // 取得した値をコードに変換
-  fac.nm      = c2(TXT2CD_FNM, fac.nm);
   fac.tp      = c2(TXT2CD_FTP, fac.tp);
+  fac.nm      = fac.tp==='4' ? '7' : '';  // 照明=道路照明固定、それ以外は空
   fac.rdtype  = c2(TXT2CD_RDT, fac.rdtype);
   fac.ud      = c2(TXT2CD_UD,  fac.ud);
   fac.pil     = c2(TXT2CD_PIL, fac.pil);
@@ -2930,17 +2931,17 @@ function parseExcel(wb, fname){
   // 列: E=4(対象有無), G=6(き裂), I=8(ゆるみ脱落), K=10(破断), M=12(腐食), O=14(変形欠損),
   //     Q=16(ひびわれ), S=18(うき剥離), U=20(滞水), W=22(その他), Y=24(対策要否)
   const typeColMap={
-    'き裂':6,
+    'き裂':7,
     '防食機能の劣化':null,   // 旧調書に列なし→空欄で引き継ぎ
-    '腐食':12,
+    '腐食':13,
     '異種金属接触腐食':null, // 旧調書に列なし→空欄で引き継ぎ
-    '変形・欠損':14,
-    'ゆるみ・脱落':8,
-    '破断':10,
-    'ひびわれ':16,
-    'うき・剥離':18,
-    '滞水':20,
-    'その他':22
+    '変形・欠損':15,
+    'ゆるみ・脱落':9,
+    '破断':11,
+    'ひびわれ':17,
+    'うき・剥離':19,
+    '滞水':21,
+    'その他':23
   };
 
   // コード→行のマッピングを構築
@@ -2966,15 +2967,16 @@ function parseExcel(wb, fname){
   // ============================================================
 
   // まず全行を「点検箇所名」で引けるインデックスを作る
+  const normName = s => String(s??'').replace(/\n|\r/g,'').replace(/･/g,'・').replace(/\(/g,'（').replace(/\)/g,'）').trim();
   const nameRowMap = {};
   r2.forEach((row, ri) => {
-    const name = String(row?.[2] ?? '').trim().replace(/\n/g, '').replace(/\r/g, '');
+    const name = normName(row?.[3]);
     if(name) nameRowMap[name] = ri;
   });
   // 記号でも引けるインデックス
   const codeRowRaw = {};
   r2.forEach((row, ri) => {
-    const code = String(row?.[3] ?? '').trim();
+    const code = String(row?.[4] ?? '').trim();
     if(code && code !== '0' && code !== '－') codeRowRaw[code] = ri;
   });
 
@@ -3028,7 +3030,7 @@ function parseExcel(wb, fname){
     const ri=codeRowMap[dr.code];
     if(ri===undefined) return;
     const row=r2[ri]||[];
-    const na=gs(r2,ri,4)==='無';
+    const na=gs(r2,ri,5)==='無';
     prevDmg[dr.code]={na};
     Object.entries(typeColMap).forEach(([type,col])=>{
       if(col===null){ prevDmg[dr.code][type]=''; return; } // 旧調書に存在しない列は空欄
@@ -3040,13 +3042,13 @@ function parseExcel(wb, fname){
   // 健全性診断・所見
   let prevDiag='', prevOpinion='';
   r2.forEach((row,ri)=>{
-    const cell=row?.[24]??'';
+    const cell=row?.[25]??'';
     if(['Ⅰ','Ⅱ','Ⅲ','Ⅳ'].includes(String(cell).trim())){ prevDiag=String(cell).trim(); }
   });
   // 所見（行44〜46あたり）
   for(let ri=42;ri<50;ri++){
     const row=r2[ri]||[];
-    const txt=String(row[0]||'').trim();
+    const txt=String(row[1]||'').trim();
     if(txt.length>10 && !txt.startsWith('■') && !txt.startsWith('※') && !txt.startsWith('点検')){ prevOpinion=txt; break; }
   }
 
