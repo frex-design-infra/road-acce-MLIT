@@ -1919,11 +1919,21 @@ function loadInsp(fid){
   sv('f-ud',    _c(_UD,  i.ud||f.ud||''));
   // 都道府県・市区町村（2段階select）
   sv('f-pref', i.pref||f.pref||'');
-  // prefが未設定の場合は所在地テキストから自動判定
   if(!v('f-pref')) autoDetectPref(i.loc||f.lc||'');
-  onPrefChg();  // 市区町村selectを都道府県に合わせて更新
+  onPrefChg();
   sv('f-city', i.city||f.city||'');
-  // 所在地：都道府県・市区町村名が含まれていれば除いた残りを表示
+  // cityが未設定の場合、locテキストから市区町村を推定（旧データ対応）
+  if(!v('f-city')){
+    const _pv0=v('f-pref'), _rawL=i.loc||f.lc||'';
+    if(_pv0 && CITY_MASTER[_pv0]){
+      const _pe0=PREF_MAP.find(([,c])=>c===_pv0);
+      let _aP=_rawL;
+      if(_pe0 && _aP.startsWith(_pe0[0])) _aP=_aP.slice(_pe0[0].length);
+      const _fc=CITY_MASTER[_pv0].find(([,name])=>_aP.startsWith(name));
+      if(_fc) document.getElementById('f-city').value=_fc[0];
+    }
+  }
+  // 所在地：都道府県・市区町村名を除いた残りを表示
   {
     let _loc = i.loc||f.lc||'';
     const _pv = v('f-pref'), _cv = v('f-city');
