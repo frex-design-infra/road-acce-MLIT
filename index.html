@@ -363,7 +363,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
           </div>
           <div class="fgrp"><label class="flbl">路線名</label><input type="text" class="finp" id="f-route" placeholder="例：一般国道7号"></div>
           <div class="fgrp"><label class="flbl req">施設種別</label>
-            <select class="fsel" id="f-type"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select>
+            <select class="fsel" id="f-type" onchange="onFacTypeChg('f-type','f-name')"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select>
           </div>
           <div class="fgrp"><label class="flbl">道路種別</label>
             <select class="fsel" id="f-rdtype"><option value="">選択</option><option value="1">高速自動車国道</option><option value="2">一般国道（指定区間内 高規格）</option><option value="3">一般国道（指定区間内 高規格以外）</option><option value="4">一般国道（指定区間外）</option><option value="5">都道府県道</option><option value="6">市町村道</option><option value="7">その他</option></select>
@@ -926,7 +926,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="fg">
       <div class="fgrp"><label class="flbl req">管理番号</label><input type="text" class="finp" id="fac-mn" placeholder="例：AK-2024-001"></div>
       <div class="fgrp"><label class="flbl req">施設名</label><select class="fsel" id="fac-nm"><option value="">選択</option><option value="1">案内標識</option><option value="2">警戒標識</option><option value="3">その他（道路標識）</option><option value="4">提供装置</option><option value="5">収集装置</option><option value="6">その他（情報装置）</option><option value="7">道路照明</option></select></div>
-      <div class="fgrp"><label class="flbl">施設種別</label><select class="fsel" id="fac-tp"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select></div>
+      <div class="fgrp"><label class="flbl">施設種別</label><select class="fsel" id="fac-tp" onchange="onFacTypeChg('fac-tp','fac-nm')"><option value="">選択</option><option value="1">道路標識</option><option value="2">道路情報提供装置</option><option value="3">道路情報提供装置（添架物有）</option><option value="4">道路照明施設</option><option value="5">その他</option></select></div>
       <div class="fgrp"><label class="flbl">所在地</label><input type="text" class="finp" id="fac-lc"></div>
       <div class="fgrp"><label class="flbl">緯度</label><input type="text" class="finp" id="fac-lt" placeholder="38.82670"></div>
       <div class="fgrp"><label class="flbl">経度</label><input type="text" class="finp" id="fac-lg" placeholder="139.84151"></div>
@@ -1588,8 +1588,9 @@ function openFacMod(id){
   document.getElementById('mod-fac-ttl').textContent=id?'施設編集':'施設追加';
   document.getElementById('mod-fac').setAttribute('data-eid',id||'');
   document.getElementById('fac-mn').value=f.mn||'';
-  document.getElementById('fac-nm').value=f.nm||'';
   document.getElementById('fac-tp').value=f.tp||'';
+  onFacTypeChg('fac-tp','fac-nm');
+  document.getElementById('fac-nm').value=f.nm||'';
   document.getElementById('fac-lc').value=f.lc||'';
   document.getElementById('fac-lt').value=f.lt||'';
   document.getElementById('fac-lg').value=f.lg||'';
@@ -1694,6 +1695,37 @@ const CITY_MASTER = {
     ['075612','新地町'],['075647','飯舘村']
   ]
 };
+
+// 施設種別連動で施設名の選択肢を絞り込む
+function onFacTypeChg(typeId, nameId){
+  const typeVal = document.getElementById(typeId).value;
+  const nameEl  = document.getElementById(nameId);
+  const cur     = nameEl.value;
+  const OPT = [
+    {v:'',  t:'選択'},
+    {v:'1', t:'案内標識'},
+    {v:'2', t:'警戒標識'},
+    {v:'3', t:'その他（道路標識）'},
+    {v:'4', t:'提供装置'},
+    {v:'5', t:'収集装置'},
+    {v:'6', t:'その他（情報装置）'},
+    {v:'7', t:'道路照明'},
+  ];
+  let show, autoVal = null;
+  if(typeVal === '1'){
+    show = [0,1,2,3];                  // 道路標識
+  } else if(typeVal === '2' || typeVal === '3'){
+    show = [0,4,5,6];                  // 道路情報提供装置
+  } else if(typeVal === '4'){
+    show = [7]; autoVal = '7';         // 道路照明施設 → 道路照明に固定
+  } else {
+    show = [0,1,2,3,4,5,6,7];         // その他 or 未選択 → 全件
+  }
+  nameEl.innerHTML = show.map(i=>`<option value="${OPT[i].v}">${OPT[i].t}</option>`).join('');
+  nameEl.disabled  = autoVal !== null;
+  nameEl.value     = autoVal !== null ? autoVal
+                   : show.some(i => OPT[i].v === cur) ? cur : '';
+}
 
 // 都道府県変更時に市区町村selectを更新
 function onPrefChg(){
@@ -1855,10 +1887,11 @@ function loadInsp(fid){
   const _SCH  = {'有':'1','無':'2'};
   const _MEAS = {'有':'1','無':'2'};
 
-  // 施設諸元
-  sv('f-name',  _c(_FNM, i.fnm||f.nm||''));
+  // 施設諸元（type→絞り込み→nameの順で設定）
   sv('f-route', i.route||f.route||'');
   sv('f-type',  _c(_FTP, i.ftp||f.tp||''));
+  onFacTypeChg('f-type','f-name');
+  sv('f-name',  _c(_FNM, i.fnm||f.nm||''));
   sv('f-rdtype',_c(_RDT, i.rdtype||f.rdtype||''));
   sv('f-ud',    _c(_UD,  i.ud||f.ud||''));
   // 都道府県・市区町村（2段階select）
