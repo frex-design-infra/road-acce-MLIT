@@ -6,6 +6,7 @@
 <title>附属物点検管理システム | 株式会社フレックスデザイン</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--pr:#26251e;--pr2:#f54e00;--prp:#ebeae5;--ac:#1f8a65;--ac2:#27a87e;--acp:#e6f5ef;--wn:#c08532;--wnp:#f5ead8;--dg:#cf2d56;--dgp:#fce8ed;--g1:#f2f1ed;--g2:#ebeae5;--g3:rgba(38,37,30,0.35);--g4:rgba(38,37,30,0.55);--tx:#26251e;--tx2:rgba(38,37,30,0.55);--bd:rgba(38,37,30,0.1);--r:8px;--rl:12px}
@@ -690,10 +691,10 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   </div><!-- /insp-body -->
 </div>
 
-<!-- Excelインポート -->
+<!-- インポート -->
 <div id="page-imp" class="hid">
-  <div class="pg-ttl">Excelインポート</div>
-  <div class="pg-sub">過年度の点検調書（Excel）を読み込み、今年度の点検記録の土台を自動作成します</div>
+  <div class="pg-ttl">インポート</div>
+  <div class="pg-sub">過年度の点検調書（Excel・PDF）を読み込み、今年度の点検記録の土台を自動作成します</div>
 
   <div class="card">
     <div class="card-hdr"><div class="card-ttl">インポート先の業務</div></div>
@@ -704,16 +705,17 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   </div>
 
   <div class="card">
-    <div class="card-hdr"><div class="card-ttl">過年度Excelの読み込み</div></div>
+    <div class="card-hdr"><div class="card-ttl">過年度ファイルの読み込み</div></div>
     <div class="alrt ai">
-      <strong>対応フォーマット：</strong>点検表（施設諸元）シート＋点検表（点検結果票）シートを含む.xlsxファイル<br>
-      過年度の評価値（a/c/e）・健全性診断・所見・施設諸元が自動で引き継がれます。
+      <strong>対応フォーマット：</strong><br>
+      <b>Excel (.xlsx)</b>：点検表（施設諸元）＋点検表（点検結果票）シートを含むファイル。評価値（a/c/e）・健全性診断・所見・施設諸元を引き継ぎ。<br>
+      <b>PDF (.pdf)</b>：点検表（施設諸元）ページを含むPDFファイル。施設諸元・健全性診断・所見を引き継ぎ（部材評価値は引き継ぎ不可）。
     </div>
     <div class="upz" id="upz" onclick="document.getElementById('fi').click()" ondragover="dov(event)" ondrop="ddr(event)">
-      <div style="font-size:32px;margin-bottom:8px">📊</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Excelファイルをドロップ、またはクリックして選択</div>
-      <div style="font-size:12px;color:var(--tx2)">.xlsx / .xls 対応　─　複数ファイル一括インポート可</div>
-      <input type="file" id="fi" style="display:none" accept=".xlsx,.xls" multiple onchange="handleFiles(event)">
+      <div style="font-size:32px;margin-bottom:8px">📂</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">ファイルをドロップ、またはクリックして選択</div>
+      <div style="font-size:12px;color:var(--tx2)">.xlsx / .xls / .pdf 対応　─　複数ファイル一括インポート可</div>
+      <input type="file" id="fi" style="display:none" accept=".xlsx,.xls,.pdf" multiple onchange="handleFiles(event)">
     </div>
     <div id="imp-status" class="hid" style="margin-top:12px"></div>
   </div>
@@ -3083,24 +3085,31 @@ function dov(e){ e.preventDefault(); document.getElementById('upz').classList.ad
 function ddr(e){ e.preventDefault(); document.getElementById('upz').classList.remove('ov'); handleFilesArr(Array.from(e.dataTransfer.files)); }
 function handleFiles(e){ handleFilesArr(Array.from(e.target.files)); }
 function handleFilesArr(files){
-  const xlsFiles=files.filter(f=>f.name.match(/\.xlsx?$/i));
-  if(!xlsFiles.length){ showStatus('ae','Excelファイルが選択されていません'); return; }
-  showStatus('ai',`📊 ${xlsFiles.length}件のExcelファイルを読み込んでいます...`);
+  const xlsFiles = files.filter(f=>f.name.match(/\.xlsx?$/i));
+  const pdfFiles = files.filter(f=>f.name.match(/\.pdf$/i));
+  const total = xlsFiles.length + pdfFiles.length;
+  if(!total){ showStatus('ae','Excel または PDF ファイルが選択されていません'); return; }
+  showStatus('ai',`📂 ${total}件のファイルを読み込んでいます...`);
   S._imp=[];
   let done=0;
+  const onDone=()=>{ done++; if(done===total){ showStatus('as',`✅ ${S._imp.length}件のデータを読み込みました`); showPreview(); } };
+
   xlsFiles.forEach(file=>{
     const reader=new FileReader();
     reader.onload=e=>{
-      try{
-        const wb=XLSX.read(e.target.result,{type:'array'});
-        const parsed=parseExcel(wb,file.name);
-        if(parsed) S._imp.push(parsed);
-      }catch(err){ console.error(err); }
-      done++;
-      if(done===xlsFiles.length){
-        showStatus('as',`✅ ${S._imp.length}件のデータを読み込みました`);
-        showPreview();
-      }
+      try{ const wb=XLSX.read(e.target.result,{type:'array'}); const p=parseExcel(wb,file.name); if(p) S._imp.push(p); }
+      catch(err){ console.error(err); }
+      onDone();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  pdfFiles.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{ const p=await parsePDF(e.target.result, file.name); if(p) S._imp.push(p); }
+      catch(err){ console.error(err); }
+      onDone();
     };
     reader.readAsArrayBuffer(file);
   });
@@ -3367,6 +3376,231 @@ function parseExcel(wb, fname){
   }
 
   return { fac, prevDmg, prevDiag, prevOpinion };
+}
+
+// ============================================================
+// PDF インポート（点検表PDF → fac/insデータ）
+// PDF.js を使用。バケット存在確認と同様にブラウザ内で完結。
+// ============================================================
+if(typeof pdfjsLib !== 'undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+async function parsePDF(buffer, fname){
+  try {
+    if(typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+    // ページのテキストアイテムを位置情報付きで取得
+    async function pageItems(n){
+      if(n > pdf.numPages) return [];
+      const pg = await pdf.getPage(n);
+      const tc = await pg.getTextContent();
+      return tc.items
+        .filter(it => it.str?.trim())
+        .map(it => ({ s: it.str.trim(), x: it.transform[4], y: it.transform[5] }));
+    }
+
+    const p1 = await pageItems(1); // 施設諸元
+    const p2 = await pageItems(2); // 点検結果票
+
+    // y座標（上から下）でグループ化して行配列に変換
+    function groupRows(items, tol=4){
+      const sorted = [...items].sort((a,b) => b.y - a.y || a.x - b.x);
+      const rows = [];
+      for(const it of sorted){
+        const last = rows[rows.length-1];
+        if(last && Math.abs(last[0].y - it.y) <= tol){ last.push(it); last.sort((a,b)=>a.x-b.x); }
+        else rows.push([it]);
+      }
+      return rows;
+    }
+
+    const r1 = groupRows(p1);
+    const r2 = groupRows(p2);
+
+    // キーワードを含む行を取得
+    const findRow = (rows, kw) => rows.find(r => r.some(it => it.s.includes(kw)));
+
+    // 行内でキーワードの右側を返す
+    function afterKw(row, kw){
+      const i = row.findIndex(it => it.s.includes(kw));
+      return i >= 0 ? row.slice(i+1) : [];
+    }
+
+    // 行内でkw1〜kw2の間のアイテムを返す
+    function between(row, kw1, kw2){
+      const i1 = row.findIndex(it => it.s.includes(kw1));
+      const i2 = row.findIndex(it => it.s.includes(kw2));
+      if(i1 < 0) return [];
+      return (i2 > i1) ? row.slice(i1+1, i2) : row.slice(i1+1);
+    }
+
+    const join  = arr => arr.map(i=>i.s).join('');
+    const first = arr => arr[0]?.s || '';
+
+    // "2017年10月24日" → "2017-10-24"
+    const jpDate = str => {
+      const m = str.match(/(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/);
+      return m ? `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` : '';
+    };
+
+    // ====== Page 1: 施設諸元 ======
+    const mnRow   = findRow(r1,'管理番号');
+    const mn      = mnRow ? first(afterKw(mnRow,'管理番号')) : '';
+
+    const tpRow   = findRow(r1,'種別');
+    const tpRaw   = tpRow ? first(between(tpRow,'種別','管理者')) : '';
+
+    const rdRow   = findRow(r1,'道路種別');
+    const rdtypeRaw = rdRow ? first(between(rdRow,'道路種別','路線名')) : '';
+    const routeRow  = rdRow || findRow(r1,'路線名');
+    const routeRaw  = routeRow ? first(between(routeRow,'路線名','上')) || first(afterKw(routeRow,'路線名')) : '';
+    const udRaw     = routeRow ? first(afterKw(routeRow,'上・下別')) : '';
+
+    const locRow    = findRow(r1,'所在地');
+    const locItems  = locRow ? afterKw(locRow,'所在地').filter(i=>!i.s.match(/距離標|（km）/)) : [];
+    const prefTxt   = locItems[0]?.s || '';
+    const cityTxt   = locItems[1]?.s || '';
+    const detailTxt = locItems.slice(2).map(i=>i.s).join('');
+
+    const kmRow   = findRow(r1,'距離標');
+    const kmRaw   = kmRow ? first(afterKw(kmRow,'距離標').filter(i=>i.s.match(/[\d.]/))) : '';
+
+    const latRow  = findRow(r1,'緯度');
+    let latStr='', lngStr='';
+    if(latRow){
+      latStr = join(between(latRow,'緯度','経度'));
+      lngStr = join(afterKw(latRow,'経度').filter(i=>!i.s.includes('備考')));
+    }
+
+    const pilRow  = findRow(r1,'支柱形式');
+    const pilRaw  = pilRow ? first(between(pilRow,'支柱形式','表面処理')) : '';
+    const surfRaw = pilRow ? first(between(pilRow,'表面処理','基礎形式')) : '';
+    const baseRaw = pilRow ? first(afterKw(pilRow,'基礎形式')) : '';
+
+    const ribRow  = findRow(r1,'リブ形状');
+    const ribRaw  = ribRow ? first(between(ribRow,'リブ形状','路面境界')) || first(afterKw(ribRow,'リブ形状')) : '';
+    const glRaw   = ribRow ? first(afterKw(ribRow,'路面境界').filter(i=>!i.s.includes('灯具'))) : '';
+
+    const sgnRow     = findRow(r1,'構識設置枚数') || findRow(r1,'標識設置枚数');
+    const signnumRaw = sgnRow ? first(between(sgnRow,'枚数','番号')) : '';
+    const signnoRaw  = sgnRow ? first(between(sgnRow,'番号','取付')) : '';
+    const signattRaw = sgnRow ? first(between(sgnRow,'取付形式','落下')) : '';
+    const fallRaw    = sgnRow ? first(afterKw(sgnRow,'落下防止')) : '';
+
+    const losenRow = findRow(r1,'ゆるみ止め');
+    const losenRaw = losenRow ? first(between(losenRow,'ゆるみ止め','合いマーク')) : '';
+    const markRaw  = losenRow ? first(between(losenRow,'合いマーク','制振')) : '';
+    const dampRaw  = losenRow ? first(afterKw(losenRow,'制振装置')) : '';
+
+    const drainRow = findRow(r1,'排水性');
+    const drainRaw = drainRow ? first(between(drainRow,'排水性','設置年月')) : '';
+    const instRow  = drainRow || findRow(r1,'設置年月');
+    const instRaw  = instRow  ? first(afterKw(instRow,'設置年月')) : '';
+
+    const envRow  = findRow(r1,'設置環境');
+    const envRaw  = envRow ? first(between(envRow,'設置環境','海岸')) : '';
+    const seaRaw  = envRow ? join(between(envRow,'海岸','融雪')).trim() : '';
+    const snowRow = findRow(r1,'融雪剤');
+    const snowRaw = snowRow ? first(afterKw(snowRow,'融雪剤').filter(i=>i.s.match(/該当/))) : '';
+    const windRow = findRow(r1,'風規制');
+    const windRaw = windRow ? first(afterKw(windRow,'風規制').filter(i=>i.s.match(/該当/))) : '';
+    const snow2Row = findRow(r1,'防害対策') || findRow(r1,'防雪');
+    const snow2Raw = snow2Row ? first(afterKw(snow2Row, snow2Row.find(i=>i.s.includes('防害対策'))?'防害対策実施区間':'防雪').filter(i=>i.s.match(/該当/))) : '';
+
+    const censRow  = findRow(r1,'センサス');
+    const censRaw  = censRow ? first(between(censRow,'センサス','区間番号')) : '';
+    const censnoRaw= censRow ? first(between(censRow,'区間番号','交通量')) : '';
+    const trfRaw   = censRow ? first(afterKw(censRow,'交通量').filter(i=>!i.s.includes('台'))) : '';
+
+    const emgRow = findRow(r1,'緊急輸送');
+    const emgRaw = emgRow ? first(between(emgRow,'緊急輸送','通学路')) || first(afterKw(emgRow,'緊急輸送').filter(i=>i.s.match(/一次|二次|三次|無/))) : '';
+    const schRaw = emgRow ? first(afterKw(emgRow,'通学路').filter(i=>i.s.match(/有|無/))) : '';
+
+    const insDateRow  = findRow(r1,'点検年月日');
+    let insDateStr='', prevInsDateStr='', insTypRaw='';
+    if(insDateRow){
+      insTypRaw    = first(between(insDateRow,'点検種別','点検方法'));
+      insDateStr   = join(between(insDateRow,'点検年月日','前回'));
+      prevInsDateStr = join(afterKw(insDateRow,'前回点検年月日').filter(i=>!i.s.includes('備考')));
+    }
+
+    const insPersonRow = findRow(r1,'点検員');
+    let ins1o='', ins1='';
+    if(insPersonRow){
+      const vals = afterKw(insPersonRow,'点検員').filter(i=>!i.s.match(/備考|更新|氏名/));
+      ins1o = vals[0]?.s || '';
+      ins1  = vals.slice(1).map(i=>i.s).join(' ').trim();
+    }
+
+    // ====== Page 2: 点検結果票 ======
+    const diagRow2 = findRow(r2,'施設の健全性');
+    const diagRaw = diagRow2
+      ? first(afterKw(diagRow2,'施設の健全性').filter(i=>['Ⅰ','Ⅱ','Ⅲ','Ⅳ'].includes(i.s)))
+      : (p2.filter(it=>['Ⅰ','Ⅱ','Ⅲ','Ⅳ'].includes(it.s)).pop()?.s || '');
+
+    const opRowIdx = r2.findIndex(r=>r.some(it=>it.s.includes('所見')));
+    let opinion='';
+    for(let i=opRowIdx+1; i<Math.min(opRowIdx+8, r2.length); i++){
+      const txt = join(r2[i]).trim();
+      if(txt.length>10 && !txt.startsWith('■') && !txt.startsWith('※') && !txt.startsWith('点検')){ opinion=txt; break; }
+    }
+
+    // ====== コード変換（parseExcelと同一マップ） ======
+    const TXT2CD_FTP  = {'道路標識':'1','道路情報提供装置':'2','道路情報提供装置（添架物有）':'3','道路照明施設':'4','その他':'5'};
+    const TXT2CD_PIL  = {'路側式':'01','片持式（逆Ｌ型）':'02','片持式（F型）':'03','片持式（Ｆ型）':'03','片持式（テーパーポール型）':'04','片持式（Ｔ型）':'05','門形式（オーバーヘッド型）':'06','門型':'06','添架式':'07','その他':'08','ポール照明方式（テーパーポール型）':'09','ポール照明方式（直線型）':'10','ポール照明方式（Ｙ型）':'11','添架式（照明）':'12','トンネル照明':'13'};
+    const TXT2CD_SURF = {'塗装式':'1','亜鉛めっき式':'2','塗装式＋亜鉛めっき式':'3','その他':'4','塗装式(溶剤塗装)':'5','塗装式(静電粉体塗装)':'6','塗装式(浸漬塗装)':'7'};
+    const TXT2CD_BASE = {'埋め込み型':'1','ベースプレート型':'2','添架型':'3','その他':'4'};
+    const TXT2CD_RIB  = {'三角リブ':'1','Ｕ字リブ':'2','U字リブ':'2','その他':'3','無':'4'};
+    const TXT2CD_GL   = {'コンクリート':'1','アスファルト':'2','土砂':'3','ベースプレート露出':'4','露出':'4','インターロッキング':'5','その他':'6'};
+    const TXT2CD_SATT = {'固定式':'1','吊下式':'2','その他':'3'};
+    const TXT2CD_15   = {'有（全部）':'1','有（一部）':'2','今回実施（全部）':'3','今回実施（一部）':'4','無':'5','有':'1'};
+    const TXT2CD_DAMP = {'有':'1','今回実施':'2','無':'3'};
+    const TXT2CD_DRAIN= {'有':'1','今回実施':'2','無':'3','該当無し':'4','該当なし':'4'};
+    const TXT2CD_ENV  = {'一般部':'1','橋梁部':'2','トンネル':'3','横断歩道橋':'4','その他':'5'};
+    const TXT2CD_SEA  = {'100m未満':'1','100m〜1km未満':'2','100m～1km未満':'2','1km〜5km未満':'3','1km～5km未満':'3','5km〜20km未満':'4','5km～20km未満':'4','20km以上':'5'};
+    const TXT2CD_12   = {'該当する':'1','該当しない':'2'};
+    const TXT2CD_EMG  = {'一次':'1','二次':'2','三次':'3','無':'4','市町村指定':'6'};
+    const TXT2CD_SCH  = {'有':'1','無':'2'};
+    const TXT2CD_RDT  = {'高速自動車国道':'1','一般国道（指定区間内　高規格）':'2','一般国道（指定区間内 高規格）':'2','一般国道（指定区間内　高規格以外）':'3','一般国道（指定区間内 高規格以外）':'3','一般国道（指定区間外）':'4','都道府県道':'5','市町村道':'6','その他':'7','一般国道(指定区間内　高規格以外)':'3','一般国道(指定区間内 高規格以外)':'3'};
+    const TXT2CD_UD   = {'上り':'1','下り':'2','上・下':'3','下':'2','上':'1'};
+    const c2 = (map,val) => map[val]||val||'';
+
+    const _prefEntry = PREF_MAP.find(([n])=>(prefTxt||'').includes(n));
+    const _prefCode  = _prefEntry ? _prefEntry[1] : '';
+    const _cityEntry = (CITY_MASTER[_prefCode]||[]).find(([,name])=>cityTxt.includes(name));
+    const _cityCode  = _cityEntry ? _cityEntry[0] : '';
+    const tp_cd = c2(TXT2CD_FTP, tpRaw);
+
+    const fac = {
+      srcFile: fname,
+      mn, nm: tp_cd==='4'?'7':'', tp: tp_cd,
+      rdtype: c2(TXT2CD_RDT, rdtypeRaw), route: routeRaw, ud: c2(TXT2CD_UD, udRaw),
+      pref: _prefCode, city: _cityCode, loc: detailTxt, km: kmRaw,
+      lt: dms2dec(latStr), lg: dms2dec(lngStr),
+      pil: c2(TXT2CD_PIL, pilRaw), surf: c2(TXT2CD_SURF, surfRaw), base: c2(TXT2CD_BASE, baseRaw),
+      rib: c2(TXT2CD_RIB, ribRaw), gl: c2(TXT2CD_GL, glRaw),
+      signnum: signnumRaw, signno: signnoRaw,
+      signatt: c2(TXT2CD_SATT, signattRaw), fall: c2(TXT2CD_15, fallRaw),
+      losen: c2(TXT2CD_15, losenRaw), losen2: '', mark: c2(TXT2CD_15, markRaw), mark2: '',
+      damp: c2(TXT2CD_DAMP, dampRaw), drain: c2(TXT2CD_DRAIN, drainRaw),
+      inst: instRaw,
+      env: c2(TXT2CD_ENV, envRaw), sea: c2(TXT2CD_SEA, seaRaw),
+      snow: c2(TXT2CD_12, snowRaw), wind: c2(TXT2CD_12, windRaw), snow2: c2(TXT2CD_12, snow2Raw),
+      cens: censRaw, censno: censnoRaw, trf: trfRaw,
+      rdw: '', sdw: '', emg: c2(TXT2CD_EMG, emgRaw), sch: c2(TXT2CD_SCH, schRaw),
+      prevInsType: insTypRaw,
+      prevInsDate: jpDate(prevInsDateStr),
+      prevInspector: [ins1o, ins1].filter(x=>x).join(' '),
+    };
+
+    return { fac, prevDmg:{}, prevDiag: diagRaw, prevOpinion: opinion };
+  } catch(e){
+    console.error('PDF parse error:', e);
+    return null;
+  }
 }
 
 function showPreview(){
