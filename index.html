@@ -3209,7 +3209,7 @@ function autoGenPhotos(dmgData){
 
     const memo = worstW <= 1
       ? `${r.name}に目立った変状は認められない。`
-      : '';
+      : `${r.name}に${dmgType}が認められる。`;
 
     // ファイル名は連番.jpg（テンプレート準拠）
     photos.push({ no:String(seq), file:`${seq}.jpg`, part:r.name,
