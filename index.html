@@ -1201,6 +1201,10 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       </div>
     </div>
     <div class="fgrp mt12"><label class="flbl">備考</label><textarea class="ftxt" id="biz-nt" rows="2"></textarea></div>
+    <div style="margin-top:12px;padding:10px 12px;background:var(--g1);border-radius:6px;display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="biz-noauto" style="width:15px;height:15px;cursor:pointer;accent-color:var(--pr)">
+      <label for="biz-noauto" style="font-size:12px;cursor:pointer;user-select:none"><strong>損傷評価からのオート診断をしない</strong><span style="color:var(--tx2);margin-left:6px">（診断区分を手動で設定する）</span></label>
+    </div>
     <div class="mod-ft"><button class="btn" onclick="closeMod('mod-biz')">キャンセル</button><button class="btn btn-pr" onclick="saveBiz()">保存</button></div>
   </div>
 </div>
@@ -1942,6 +1946,9 @@ function openBizMod(id){
     if(cl) cl.value = b.cl||'';
   }
 
+  // オート診断無効フラグ
+  document.getElementById('biz-noauto').checked = !!(b.noauto);
+
   document.getElementById('mod-biz').classList.remove('hid');
 }
 
@@ -1968,6 +1975,7 @@ function saveBiz(){
     shuccho: rdmgr==='1' ? v('biz-shuccho') : '',
     pref:    ['2','4','5'].includes(rdmgr) ? v('biz-pref') : '',
     city:    ['2','4','5'].includes(rdmgr) ? v('biz-city') : '',
+    noauto:  document.getElementById('biz-noauto').checked ? true : false,
   };
 
   if(S.editBiz){ const b=S.biz.find(b=>b.id===S.editBiz); Object.assign(b,bizData); _sbBiz(b); }
@@ -2883,6 +2891,9 @@ const STRUCT_BODY = new Set(['Pph','Cbh']);
 
 function autoSuggestDiag(){
   if(_loadingDmg) return; // ロード中は既存保存値を保護するため実行しない
+  // 業務設定で「オート診断しない」が有効な場合はスキップ
+  const _curBiz = S.biz.find(b => b.id === (S.fac.find(f=>f.id===S.curFac)?.bid));
+  if(_curBiz?.noauto) return;
   const dmg = collectDmg();
   let hasIV = false, hasE = false, hasC = false;
 
