@@ -2658,23 +2658,34 @@ function syncPhotoMemo(code){
 }
 // ============================================================
 // 損傷評価から健全性の診断区分を自動推定（リアルタイム）
-// 要領 表-7.2 準拠：a/c/eの分布と重要部材のe評価から判定
 // ============================================================
-// 構造安全性に直結する重要部材コード（これにeがあればⅣ候補）
-const DIAG_CRITICAL = new Set([
-  'Pph',    // 支柱本体
-  'Ppj',    // 支柱継手部
-  'Ppd',    // 支柱分岐部
-  'Cbh',    // 横梁本体
-  'Cbw',    // 横梁仕口溶接部
-  'Ppb',    // 柱・基礎境界部
-  'Pgl-0',  // 路面境界部（GL-0mm）
-  'Pgl-40', // 路面境界部（GL-40mm）
-  'Bab',    // アンカーボルト・ナット
+// 診断区分自動提案ロジック（要領 2.2 措置の必要性の検討・表-2.2.1準拠）
+// ============================================================
+// ① 主要構造部材（き裂eでⅣ確定）：本体・溶接部・継手部
+//    支柱本体にき裂→早急撤去、横梁仕口溶接部にき裂→早急撤去（PDF p.54 表-2.2.1）
+const STRUCT_MAIN = new Set([
+  'Pph',  // 支柱本体
+  'Ppj',  // 支柱継手部
+  'Ppd',  // 支柱分岐部
+  'Pbr',  // リブ・取付溶接部
+  'Pbp',  // 柱・ベースプレート溶接部
+  'Cbh',  // 横梁本体
+  'Cbw',  // 横梁仕口溶接部
+  'Cth',  // 横梁トラス本体
+  'Ctw',  // 横梁トラス溶接部
+  'Cbj',  // 横梁継手部
+  'Cbi',  // 横梁取付部
 ]);
+// ② 路面境界部・基礎境界部（腐食e/変形欠損eでⅣ確定）
+//    「路面境界部の腐食は倒壊の要因となりやすい」（PDF p.55）
+const COLLAPSE_ZONE = new Set(['Pgl-0','Pgl-40','Ppb']);
+// ③ 支柱・横梁本体（腐食e/変形欠損eでⅣ確定）
+//    「断面欠損を伴う腐食→早急撤去」「著しい変形・欠損→早急撤去」（PDF p.54 表-2.2.1）
+const STRUCT_BODY = new Set(['Pph','Cbh']);
+
 function autoSuggestDiag(){
   const dmg = collectDmg();
-  let eCount = 0, hasCriticalE = false, hasC = false;
+  let hasIV = false, hasE = false, hasC = false;
 
   DMG_ROWS.forEach(r => {
     const d = dmg[r.code] || {};
@@ -2682,24 +2693,27 @@ function autoSuggestDiag(){
     DMG_TYPES.forEach((t, ti) => {
       if(!r.app[ti]) return;
       const val = d[t] || '';
-      if(val === 'e'){
-        eCount++;
-        if(DIAG_CRITICAL.has(r.code)) hasCriticalE = true;
-      }
-      if(val === 'c') hasC = true;
+      if(val === 'c'){ hasC = true; return; }
+      if(val !== 'e') return;
+      hasE = true;
+
+      // Ⅳ確定判定：損傷種類×部材の組み合わせ（PDF 2.2 表-2.2.1・p.55）
+      // ① き裂(e)：構造主要部材（本体・溶接部・継手部）→ 早急撤去
+      if(t === 'き裂' && STRUCT_MAIN.has(r.code)){ hasIV = true; return; }
+      // ② 破断(e)：場所問わず → ボルト・継手等の破断は早急対応
+      if(t === '破断'){ hasIV = true; return; }
+      // ③ 腐食(e)/変形欠損(e)：路面境界部・基礎境界部 → 倒壊の直接要因
+      if((t === '腐食' || t === '変形・欠損') && COLLAPSE_ZONE.has(r.code)){ hasIV = true; return; }
+      // ④ 腐食(e)/変形欠損(e)：支柱・横梁本体 → 断面欠損・著しい変形は早急撤去
+      if((t === '腐食' || t === '変形・欠損') && STRUCT_BODY.has(r.code)){ hasIV = true; return; }
     });
   });
 
   let newDiag;
-  if(eCount === 0 && !hasC){
-    newDiag = 'Ⅰ';                          // 全a→健全
-  } else if(eCount === 0){
-    newDiag = 'Ⅱ';                          // cあり・eなし→予防保全
-  } else if(eCount >= 2 || hasCriticalE){
-    newDiag = 'Ⅳ';                          // e複数 or 重要部材e→緊急措置
-  } else {
-    newDiag = 'Ⅲ';                          // e1件（非重要）→早期措置
-  }
+  if(!hasE && !hasC)  newDiag = 'Ⅰ';  // 全a/未評価 → 健全
+  else if(!hasE)      newDiag = 'Ⅱ';  // cあり・eなし → 予防保全段階
+  else if(hasIV)      newDiag = 'Ⅳ';  // 重大損傷e → 緊急措置段階
+  else                newDiag = 'Ⅲ';  // その他e → 早期措置段階
 
   document.querySelectorAll('input[name="diag"]').forEach(r => {
     r.checked = r.value === newDiag;
