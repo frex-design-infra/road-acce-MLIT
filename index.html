@@ -185,15 +185,31 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .cal-day:disabled{opacity:.25;cursor:default}
 .cal-today-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;padding:5px;background:var(--g1);border:1px solid var(--bd);border-radius:6px;font-size:11px;cursor:pointer;color:var(--tx2)}
 .cal-today-btn:hover{background:var(--prp);color:var(--pr);border-color:var(--pr)}
+/* スプラッシュスクリーン */
+#splash{position:fixed;inset:0;background:var(--pr);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
+.splash-spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#f54e00;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
+<!-- スプラッシュスクリーン（データロード完了まで表示） -->
+<div id="splash">
+  <div style="text-align:center">
+    <div style="color:rgba(255,255,255,.45);font-size:11px;font-weight:600;letter-spacing:.18em;margin-bottom:20px">株式会社フレックスデザイン</div>
+    <div style="color:#fff;font-size:22px;font-weight:700;margin-bottom:6px">附属物点検管理システム</div>
+    <div style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:40px">道路標識・照明施設 定期点検記録</div>
+    <div style="display:flex;justify-content:center;margin-bottom:28px"><div class="splash-spinner"></div></div>
+    <div style="color:rgba(255,255,255,.3);font-size:11px">データを読み込んでいます...</div>
+  </div>
+</div>
+
 <header class="hdr">
   <h1><i data-lucide="clipboard-list" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v3</span></h1>
   <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
+    <button onclick="document.getElementById('mod-spec').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="file-text" class="lci"></i> 仕様書</button>
     <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
   </div>
 </header>
@@ -869,9 +885,23 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <li>「← 前 / 次 →」で施設間を移動（自動保存あり）</li>
         <li>「<i data-lucide="save" class="lci"></i> 保存」ボタンで保存（画面はそのまま維持）</li>
         <li>定期点検員（氏名・所属）は業務設定から自動反映・変更不可</li>
-        <li>タブ切り替えで基本情報・点検結果・損傷記録・写真管理などを入力</li>
         <li>保存データはSupabaseへ即時自動同期</li>
       </ul>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
+        <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:4px">② 損傷評価タブ</div>
+        <ul style="font-size:12px;line-height:1.9;padding-left:16px;color:var(--tx2)">
+          <li>スクロール時にヘッダー行（部材名・損傷種類）が常に固定表示</li>
+          <li>過年度評価値を初期値として反映。変更箇所のみ a/c/e を押す</li>
+        </ul>
+        <div style="font-size:12px;font-weight:600;color:var(--pr);margin-top:6px;margin-bottom:4px">③ 診断・所見タブ</div>
+        <ul style="font-size:12px;line-height:1.9;padding-left:16px;color:var(--tx2)">
+          <li>損傷評価を変更すると診断区分を<strong>リアルタイム自動提案</strong>（要領2.2準拠）</li>
+          <li>「<i data-lucide="bar-chart-2" class="lci"></i> 判定ロジック」で区分Ⅰ〜Ⅳの判定基準を確認可能</li>
+          <li>診断区分を再クリックすると選択解除できる</li>
+          <li>「<i data-lucide="clipboard-list" class="lci"></i> 診断・所見を一括生成」で措置の有無・特定事象・所見を自動入力</li>
+          <li>過年度と同じ診断区分が初期値として自動セット</li>
+        </ul>
+      </div>
     </div>
 
     <div class="card">
@@ -909,6 +939,125 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 </div>
 
 </main>
+</div>
+
+<!-- モーダル: 仕様書 -->
+<div id="mod-spec" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
+  <div class="mod" style="max-width:900px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700"><i data-lucide="file-text" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> システム仕様書</div>
+      <button onclick="document.getElementById('mod-spec').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
+    </div>
+    <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム — 技術仕様 v3</div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <!-- 概要 -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="info" class="lci"></i> システム概要</div></div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr><td style="padding:5px 10px;color:var(--tx2);width:130px;white-space:nowrap">システム名</td><td style="padding:5px 10px">道路附属施設点検管理システム</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">バージョン</td><td style="padding:5px 10px">v3</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">対象施設</td><td style="padding:5px 10px">道路標識・道路照明施設（附属物）</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">準拠要領</td><td style="padding:5px 10px">道路附属物（標識・照明）点検要領 令和6年9月版（国土交通省）</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">本番URL</td><td style="padding:5px 10px"><a href="https://road-acce-mlit.vercel.app/" target="_blank" style="color:var(--ac)">https://road-acce-mlit.vercel.app/</a></td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">構成</td><td style="padding:5px 10px">シングルページアプリ（index.html 単体）／ Vercel 自動デプロイ</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">DB</td><td style="padding:5px 10px">Supabase（PostgreSQL）— 認証なし RLS 公開設定</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">ストレージ</td><td style="padding:5px 10px">Supabase Storage（photosバケット Public）／ Free 1GB</td></tr>
+        </table>
+      </div>
+
+      <!-- データ構造 -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="database" class="lci"></i> データ構造</div></div>
+        <div style="font-size:12px;line-height:1.8;padding:4px 0">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:var(--prp);border-radius:8px;padding:10px 12px">
+              <div style="font-weight:700;color:var(--pr);margin-bottom:4px">biz（業務）</div>
+              <div style="color:var(--tx2);font-size:11px">id / nm（業務名）/ yr（点検年度）/ rd（道路管理者）/ cl（発注者）/ ins1・ins1o（定期点検員）</div>
+            </div>
+            <div style="background:var(--acp);border-radius:8px;padding:10px 12px">
+              <div style="font-weight:700;color:var(--ac);margin-bottom:4px">fac（施設）</div>
+              <div style="color:var(--tx2);font-size:11px">id / bid / nm（施設名）/ tp（種別）/ mn（管理番号）/ lt・lg（緯度経度）/ prevDiag / prevDmg / prevOpinion</div>
+            </div>
+            <div style="background:#f0f4ff;border-radius:8px;padding:10px 12px">
+              <div style="font-weight:700;color:#3b5bdb;margin-bottom:4px">ins（点検記録）</div>
+              <div style="color:var(--tx2);font-size:11px">fid / bid / dt（現地確認日）/ diag（診断区分）/ dmg（損傷評価）/ meas（措置）/ opinion（所見）/ photos / zenei など</div>
+            </div>
+          </div>
+          <div style="color:var(--tx2);font-size:11px">Supabase保存形式: <code style="background:var(--g2);padding:1px 5px;border-radius:3px">{id, bid, data: &lt;オブジェクト全体&gt;, updated_at}</code>　各操作で即時 upsert</div>
+        </div>
+      </div>
+
+      <!-- タブ仕様 -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="layout-panel-top" class="lci"></i> 点検記録入力 — タブ仕様</div></div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="background:var(--prp)">
+            <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--bd);width:130px">タブ</th>
+            <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--bd)">主な入力項目・機能</th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">① 施設諸元</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">点検情報（日付・工種・方法）/ 施設基本情報 / 構造情報（支柱形式・基礎・表面処理等）/ 環境情報 / 位置情報</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">② 損傷評価</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">部材ごと損傷種類（き裂/腐食/変形欠損/破断 等11種）を a/c/e で評価。過年度初期値反映。スクロール固定ヘッダー</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">③ 診断・所見</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">健全性診断区分（Ⅰ〜Ⅳ）自動提案 / 機能安全性評価 / 特定事象有無 / 措置の有無 / 所見 — 一括生成機能あり</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">④ 措置の必要性</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">基板部 / 基板・支柱接続部 / 支柱部 / その他 — 部位ごとに措置有無・理由を記録</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">⑤ 写真管理</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">位置図（国土地理院タイル自動生成）/ 全景・基部写真スロット / 損傷写真（損傷評価から行自動生成）/ Supabase Storage保存</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600">⑥ 板厚調査</td><td style="padding:6px 10px;color:var(--tx2)">超音波測定記録（測定日・機器・部位別板厚）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 診断区分ロジック -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="bar-chart-2" class="lci"></i> 診断区分 自動判定ロジック（要領 2.2 表-2.2.1準拠）</div></div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="background:var(--prp)">
+            <th style="padding:6px 10px;text-align:center;border:1px solid var(--bd);width:70px">区分</th>
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--bd);width:100px">状態</th>
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--bd)">判定条件</th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="padding:6px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b1">Ⅰ</span></td><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">健全</td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">全部材 a（損傷なし）のみ、または未評価</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b2">Ⅱ</span></td><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">予防保全</td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">e なし・c が1箇所以上</td></tr>
+            <tr><td style="padding:6px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b3">Ⅲ</span></td><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">早期措置</td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">e あり、ただし下記Ⅳ条件非該当</td></tr>
+            <tr style="background:#fff8f8"><td style="padding:6px 10px;text-align:center;border:1px solid var(--bd);vertical-align:top"><span class="bdg b4">Ⅳ</span></td><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600;vertical-align:top;color:var(--dg)">緊急措置</td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">① き裂(e)：支柱本体・継手・分岐・溶接部 / 横梁本体・溶接・継手<br>② 破断(e)：部材問わず<br>③ 腐食/変形欠損(e)：路面境界部(GL±0/−40) / 柱基礎境界部<br>④ 腐食/変形欠損(e)：支柱本体・横梁本体（断面欠損・著しい変形）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- インポート仕様 -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="download" class="lci"></i> インポート対応形式</div></div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="background:var(--prp)">
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--bd);width:100px">形式</th>
+            <th style="padding:6px 10px;text-align:left;border:1px solid var(--bd)">仕様</th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">Excel 旧形式<br><span style="font-weight:400;color:var(--tx2)">001〜003系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">列A空白・空行あり。緯度経度はDMS形式（度分秒）→ 10進数自動変換</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">Excel 新形式<br><span style="font-weight:400;color:var(--tx2)">004系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">列Aにデータあり・空行なし。緯度経度は10進数形式</td></tr>
+            <tr><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">PDF<br><span style="font-weight:400;color:var(--tx2)">005系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">点検表（施設諸元）＋点検結果票を含むPDF。PDF.js 3.11でテキスト抽出。施設諸元・健全性診断・所見のみ取込（部材評価値は引継不可）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 外部サービス -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="cloud" class="lci"></i> 使用外部サービス・ライブラリ</div></div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <tr><td style="padding:5px 10px;color:var(--tx2);width:160px">Supabase</td><td style="padding:5px 10px">DB・Storage・Realtime　<span style="color:var(--tx2)">twolywmokxggjnugzuig.supabase.co</span></td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">Vercel</td><td style="padding:5px 10px">ホスティング・自動デプロイ（mainブランチ push で即反映）</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">国土地理院タイル</td><td style="padding:5px 10px">位置図自動生成　zoom15 / 3×3タイル / 768×768px / 約2,800m範囲</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">SheetJS（xlsx）</td><td style="padding:5px 10px">Excelファイル読取　v0.18.5</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">PDF.js</td><td style="padding:5px 10px">PDFテキスト抽出　v3.11.174</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">JSZip</td><td style="padding:5px 10px">CSV＋写真のZIP出力　v3.10.1</td></tr>
+          <tr><td style="padding:5px 10px;color:var(--tx2)">Lucide Icons</td><td style="padding:5px 10px">SVGアイコンセット（latest）</td></tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <!-- モーダル: 業務 -->
@@ -1256,6 +1405,9 @@ function updMichiKey(){
 // ==================== INIT ====================
 window.addEventListener('DOMContentLoaded', async ()=>{
   await load();
+  // スプラッシュをフェードアウト（データロード完了後）
+  const splash = document.getElementById('splash');
+  if(splash){ splash.style.opacity='0'; setTimeout(()=>{ splash.style.display='none'; },500); }
   setupRealtime();
   document.getElementById('dash-dt').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   buildDmgTable();
