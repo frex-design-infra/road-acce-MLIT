@@ -231,11 +231,6 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="sb-biz-tag" id="sb-biz" onclick="showPage('biz')">業務を選択してください</div>
   </div>
   <div class="sb-div"></div>
-  <div style="padding:0 8px 4px">
-    <button onclick="syncToSupabase()" style="width:100%;padding:7px 4px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="全データをSupabaseに一括再同期（初回移行・障害復旧用）">
-      <i data-lucide="cloud" class="lci"></i> 全データ再同期
-    </button>
-  </div>
   <div style="padding:4px 8px 12px">
     <button onclick="resetAllData()" style="width:100%;padding:7px 4px;background:#4b4b47;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="全データを削除してリセット">
       <i data-lucide="trash-2" class="lci"></i> データをリセット
@@ -919,7 +914,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>全操作は<strong>Supabaseに自動保存</strong>（手動操作不要）</li>
         <li>複数端末でリアルタイム同期</li>
-        <li>「全データ再同期」ボタンは障害復旧・初回移行時のみ使用</li>
+        <li>「全データ再同期」は仕様書（ヘッダーボタン）内からのみ実行可能。障害復旧・初回移行時のみ使用</li>
         <li>ブラウザを閉じてもデータは保持される</li>
       </ul>
     </div>
@@ -1073,6 +1068,11 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
             </tbody>
           </table>
           <p style="margin:10px 0 0;color:var(--tx2);font-size:11px">⚠️ 通常の操作は各保存ボタンで即時 upsert されるため、この機能は不要です。誤って押してもデータが消えることはありませんが、不必要な全件再取得が発生するため、上記の場面以外での使用は避けてください。</p>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
+            <button onclick="syncToSupabase()" style="padding:8px 20px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px" title="全データをSupabaseに一括再同期（初回移行・障害復旧用）">
+              <i data-lucide="refresh-cw" class="lci"></i> 全データ再同期を実行
+            </button>
+          </div>
         </div>
       </div>
 
