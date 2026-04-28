@@ -1456,6 +1456,22 @@ function swTab(id,el){
   el.classList.add('active');
   ['t1','t2','t3','t4','t5','t6'].forEach(t=>document.getElementById(t).classList.add('hid'));
   document.getElementById(id).classList.remove('hid');
+  if(id==='t2') requestAnimationFrame(initStickyDmgHeader);
+}
+// 損傷評価テーブルのヘッダー行を縦方向にも固定（TAB2が表示されてから高さを計測）
+function initStickyDmgHeader(){
+  const thead = document.querySelector('#dmg-tbl thead');
+  if(!thead) return;
+  let cumTop = 0;
+  Array.from(thead.querySelectorAll('tr')).forEach(row => {
+    Array.from(row.querySelectorAll('th')).forEach(th => {
+      th.style.position = 'sticky';
+      th.style.top = cumTop + 'px';
+      // 左固定列（left:0, left:110px）は既存のz-index:3を維持、他は2
+      if(parseInt(th.style.zIndex||'0') < 2) th.style.zIndex = '2';
+    });
+    cumTop += row.offsetHeight;
+  });
 }
 function fillSelects(){
   const _defTxt={'fac-biz':'業務を選択してください','dash-biz':'業務を選択してください'};
