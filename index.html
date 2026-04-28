@@ -568,16 +568,16 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <div id="prev-diag-box" class="alrt ai" style="display:none"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
           <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-I">
-            <input type="radio" name="diag" value="Ⅰ" onchange="onDiagChg()"> <span class="bdg b1">区分Ⅰ</span><span style="font-size:12px">健全</span>
+            <input type="radio" name="diag" value="Ⅰ" onclick="clkDiag(this)"> <span class="bdg b1">区分Ⅰ</span><span style="font-size:12px">健全</span>
           </label>
           <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-II">
-            <input type="radio" name="diag" value="Ⅱ" onchange="onDiagChg()"> <span class="bdg b2">区分Ⅱ</span><span style="font-size:12px">予防保全段階</span>
+            <input type="radio" name="diag" value="Ⅱ" onclick="clkDiag(this)"> <span class="bdg b2">区分Ⅱ</span><span style="font-size:12px">予防保全段階</span>
           </label>
           <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-III">
-            <input type="radio" name="diag" value="Ⅲ" onchange="onDiagChg()"> <span class="bdg b3">区分Ⅲ</span><span style="font-size:12px">早期措置段階</span>
+            <input type="radio" name="diag" value="Ⅲ" onclick="clkDiag(this)"> <span class="bdg b3">区分Ⅲ</span><span style="font-size:12px">早期措置段階</span>
           </label>
           <label style="flex:1;min-width:120px;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--bd);border-radius:8px;transition:all .15s" id="lbl-IV">
-            <input type="radio" name="diag" value="Ⅳ" onchange="onDiagChg()"> <span class="bdg b4">区分Ⅳ</span><span style="font-size:12px">緊急措置段階</span>
+            <input type="radio" name="diag" value="Ⅳ" onclick="clkDiag(this)"> <span class="bdg b4">区分Ⅳ</span><span style="font-size:12px">緊急措置段階</span>
           </label>
         </div>
         <div class="fgrp"><label class="flbl">健全性の診断の結果に関する補足</label><textarea class="ftxt" id="f-diagnote" rows="3" placeholder="次回点検時期、措置の優先性、申し送り事項等"></textarea></div>
@@ -2261,8 +2261,10 @@ function loadInsp(fid){
   sv('f-spcevt', _c(_12b,  i.spcevt||''));
   sv('f-measyn', _c(_12b,  i.measyn||''));
   sv('f-cens',i.cens||f.cens||''); sv('f-censno',i.censno||f.censno||''); sv('f-trf',i.trf||f.trf||'');
-  // 診断
-  document.querySelectorAll('input[name="diag"]').forEach(r=>{ r.checked=r.value===(i.diag||''); });
+  // 診断（未入力の場合は過年度診断をデフォルト）
+  const _defDiag = i.diag || f.prevDiag || '';
+  document.querySelectorAll('input[name="diag"]').forEach(r=>{ r.checked=r.value===_defDiag; });
+  _diagSel = _defDiag || null;
   onDiagChg();
   sv('f-diagnote',i.diagnote||''); sv('f-opinion',i.opinion||''); sv('f-nocant',i.nocant||'');
   // 過年度データ表示
@@ -2323,6 +2325,18 @@ function loadInsp(fid){
   });
   document.getElementById('insp-body').classList.remove('hid');
 }
+// 診断区分の選択状態を追跡（再クリックで解除するため）
+let _diagSel = null;
+function clkDiag(radio){
+  if(_diagSel === radio.value){
+    // 同じ区分を再クリック → 選択解除
+    radio.checked = false;
+    _diagSel = null;
+  } else {
+    _diagSel = radio.value;
+  }
+  onDiagChg();
+}
 function onDiagChg(){
   const d=document.querySelector('input[name="diag"]:checked')?.value;
   ['I','II','III','IV'].forEach(k=>{
@@ -2332,6 +2346,14 @@ function onDiagChg(){
     el.style.borderColor=sel?({'I':'var(--ac)','II':'var(--pr)','III':'var(--wn)','IV':'var(--dg)'}[k]):'var(--bd)';
     el.style.background=sel?({'I':'var(--acp)','II':'var(--prp)','III':'var(--wnp)','IV':'var(--dgp)'}[k]):'';
   });
+  // 診断区分に応じた機能及び構造安全性の評価を自動選択（要領2.2.1準拠）
+  // Ⅰ→A（変状の可能性低い）, Ⅱ→B（致命的でないが変状の可能性）
+  // Ⅲ→C（致命的な状態の可能性あり）, Ⅳ→C（緊急措置段階）
+  if(d){
+    const safetyMap={'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'3'};
+    const safetyEl=document.getElementById('f-safety');
+    if(safetyEl && safetyMap[d]) safetyEl.value=safetyMap[d];
+  }
 }
 function saveInsp(silent=false){
   const fid=S.curFac; if(!fid){ if(!silent) alert('施設を選択してください'); return; }
