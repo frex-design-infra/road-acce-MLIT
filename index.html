@@ -251,69 +251,6 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div id="missing-popup" style="display:none;position:fixed;z-index:500;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.16);min-width:280px;max-width:360px;max-height:320px;overflow-y:auto;padding:6px 0">
     <div id="missing-popup-inner"></div>
   </div>
-  <!-- 診断区分 自動判定ロジック モーダル -->
-  <div id="diag-logic-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000" onclick="if(event.target===this)closeDiagLogic()"></div>
-  <div id="diag-logic-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);width:min(720px,96vw);max-height:88vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd)">
-      <div style="font-size:15px;font-weight:700;color:var(--tx)">📊 診断区分 自動判定ロジック</div>
-      <button onclick="closeDiagLogic()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
-    </div>
-    <div style="padding:16px 20px 20px">
-      <p style="font-size:12px;color:var(--tx2);margin:0 0 12px">損傷評価（TAB2）を変更すると以下のロジックで診断区分をリアルタイム提案します。<br>提案はあくまで参考値です。最終的な診断区分は点検員が判断してください。</p>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="background:var(--prp)">
-            <th style="padding:8px 10px;text-align:center;border:1px solid var(--bd);width:80px">区分</th>
-            <th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);width:110px">状態</th>
-            <th style="padding:8px 10px;text-align:left;border:1px solid var(--bd)">自動判定条件</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b1">区分Ⅰ</span></td>
-            <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">健全</td>
-            <td style="padding:8px 10px;border:1px solid var(--bd)">全部材の損傷評価が <strong>a（損傷なし）のみ</strong>、または未評価</td>
-          </tr>
-          <tr style="background:#fafafa">
-            <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b2">区分Ⅱ</span></td>
-            <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">予防保全段階</td>
-            <td style="padding:8px 10px;border:1px solid var(--bd)"><strong>e（損傷が大きい）なし</strong>、かつ <strong>c（損傷あり）が1箇所以上</strong></td>
-          </tr>
-          <tr>
-            <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b3">区分Ⅲ</span></td>
-            <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">早期措置段階</td>
-            <td style="padding:8px 10px;border:1px solid var(--bd)"><strong>e あり</strong>、ただし区分Ⅳの条件①〜④のいずれにも該当しない場合</td>
-          </tr>
-          <tr style="background:#fff8f8">
-            <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd);vertical-align:top"><span class="bdg b4">区分Ⅳ</span></td>
-            <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600;vertical-align:top;color:var(--dg)">緊急措置段階</td>
-            <td style="padding:8px 10px;border:1px solid var(--bd)">
-              以下のいずれかに該当（要領 2.2 表-2.2.1準拠 / PDF p.54〜55）：<br>
-              <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-                <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
-                  <strong>① き裂（e）</strong>：構造主要部材（本体・溶接部・継手部）<br>
-                  <span style="color:var(--tx2);font-size:11px">支柱本体・支柱継手部・支柱分岐部・リブ溶接部・ベースプレート溶接部<br>横梁本体・横梁仕口溶接部・横梁トラス本体・トラス溶接部・横梁継手部・横梁取付部</span>
-                </div>
-                <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
-                  <strong>② 破断（e）</strong>：部材問わず<br>
-                  <span style="color:var(--tx2);font-size:11px">ボルト・継手等の破断 → 早急に新設が必要（PDF p.54）</span>
-                </div>
-                <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
-                  <strong>③ 腐食（e）または 変形・欠損（e）</strong>：路面境界部・基礎境界部<br>
-                  <span style="color:var(--tx2);font-size:11px">路面境界部（GL±0mm）・路面境界部（GL−40mm）・柱・基礎境界部<br>「路面境界部の腐食は倒壊の要因となりやすい」（PDF p.55）</span>
-                </div>
-                <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
-                  <strong>④ 腐食（e）または 変形・欠損（e）</strong>：支柱本体・横梁本体<br>
-                  <span style="color:var(--tx2);font-size:11px">断面欠損を伴う腐食・著しい変形 → 早急撤去（PDF p.54 表-2.2.1）</span>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p style="font-size:11px;color:var(--tx2);margin:10px 0 0">※ 防食機能の劣化（e）・滞水（e）等は単独ではⅢ判定（早期措置）となります。</p>
-    </div>
-  </div>
   <div class="card">
     <div class="card-hdr"><div class="card-ttl">健全性診断区分サマリー</div></div>
     <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -5137,5 +5074,69 @@ function v(id){ const el=document.getElementById(id); return el?el.value:''; }
 function sv(id,val){ const el=document.getElementById(id); if(el) el.value=val??''; }
 function closeMod(id){ document.getElementById(id).classList.add('hid'); }
 </script>
+
+<!-- 診断区分 自動判定ロジック モーダル（body直下に置くことでどのページからも表示可） -->
+<div id="diag-logic-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000" onclick="if(event.target===this)closeDiagLogic()"></div>
+<div id="diag-logic-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);width:min(720px,96vw);max-height:88vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd)">
+    <div style="font-size:15px;font-weight:700;color:var(--tx)">📊 診断区分 自動判定ロジック</div>
+    <button onclick="closeDiagLogic()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
+  </div>
+  <div style="padding:16px 20px 20px">
+    <p style="font-size:12px;color:var(--tx2);margin:0 0 12px">損傷評価（TAB2）を変更すると以下のロジックで診断区分をリアルタイム提案します。<br>提案はあくまで参考値です。最終的な診断区分は点検員が判断してください。</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--prp)">
+          <th style="padding:8px 10px;text-align:center;border:1px solid var(--bd);width:80px">区分</th>
+          <th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);width:110px">状態</th>
+          <th style="padding:8px 10px;text-align:left;border:1px solid var(--bd)">自動判定条件</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b1">区分Ⅰ</span></td>
+          <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">健全</td>
+          <td style="padding:8px 10px;border:1px solid var(--bd)">全部材の損傷評価が <strong>a（損傷なし）のみ</strong>、または未評価</td>
+        </tr>
+        <tr style="background:#fafafa">
+          <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b2">区分Ⅱ</span></td>
+          <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">予防保全段階</td>
+          <td style="padding:8px 10px;border:1px solid var(--bd)"><strong>e（損傷が大きい）なし</strong>、かつ <strong>c（損傷あり）が1箇所以上</strong></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd)"><span class="bdg b3">区分Ⅲ</span></td>
+          <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600">早期措置段階</td>
+          <td style="padding:8px 10px;border:1px solid var(--bd)"><strong>e あり</strong>、ただし区分Ⅳの条件①〜④のいずれにも該当しない場合</td>
+        </tr>
+        <tr style="background:#fff8f8">
+          <td style="padding:8px 10px;text-align:center;border:1px solid var(--bd);vertical-align:top"><span class="bdg b4">区分Ⅳ</span></td>
+          <td style="padding:8px 10px;border:1px solid var(--bd);font-weight:600;vertical-align:top;color:var(--dg)">緊急措置段階</td>
+          <td style="padding:8px 10px;border:1px solid var(--bd)">
+            以下のいずれかに該当（要領 2.2 表-2.2.1準拠 / PDF p.54〜55）：<br>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+              <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
+                <strong>① き裂（e）</strong>：構造主要部材（本体・溶接部・継手部）<br>
+                <span style="color:var(--tx2);font-size:11px">支柱本体・支柱継手部・支柱分岐部・リブ溶接部・ベースプレート溶接部<br>横梁本体・横梁仕口溶接部・横梁トラス本体・トラス溶接部・横梁継手部・横梁取付部</span>
+              </div>
+              <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
+                <strong>② 破断（e）</strong>：部材問わず<br>
+                <span style="color:var(--tx2);font-size:11px">ボルト・継手等の破断 → 早急に新設が必要（PDF p.54）</span>
+              </div>
+              <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
+                <strong>③ 腐食（e）または 変形・欠損（e）</strong>：路面境界部・基礎境界部<br>
+                <span style="color:var(--tx2);font-size:11px">路面境界部（GL±0mm）・路面境界部（GL−40mm）・柱・基礎境界部<br>「路面境界部の腐食は倒壊の要因となりやすい」（PDF p.55）</span>
+              </div>
+              <div style="padding:6px 10px;background:#fff0f0;border-left:3px solid var(--dg);border-radius:0 4px 4px 0">
+                <strong>④ 腐食（e）または 変形・欠損（e）</strong>：支柱本体・横梁本体<br>
+                <span style="color:var(--tx2);font-size:11px">断面欠損を伴う腐食・著しい変形 → 早急撤去（PDF p.54 表-2.2.1）</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--tx2);margin:10px 0 0">※ 防食機能の劣化（e）・滞水（e）等は単独ではⅢ判定（早期措置）となります。</p>
+  </div>
+</div>
 </body>
 </html>
