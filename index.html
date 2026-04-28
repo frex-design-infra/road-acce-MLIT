@@ -2464,6 +2464,41 @@ function setDmg(code,ti,val,el){
     }
   });
   updateReq(code);
+  syncPhotoMemo(code);
+}
+// 損傷評価変更時に損傷写真テーブルのメモをリアルタイム更新
+function syncPhotoMemo(code){
+  const r = DMG_ROWS.find(r => r.code === code);
+  if(!r) return;
+  const PHOTO_EXCLUDE = new Set(['Pbr','Pbp']);
+  if(PHOTO_EXCLUDE.has(code)) return;
+  const naEl = document.getElementById(`na_${code}`);
+  if(naEl && naEl.checked) return;
+
+  const W = {e:3, c:2, a:1, '':0};
+  let worstW = 0, worstType = '';
+  DMG_TYPES.forEach((t, ti) => {
+    if(!r.app[ti]) return;
+    const val = getDmgVal(code, ti);
+    if(W[val] > worstW){ worstW = W[val]; worstType = t; }
+  });
+
+  const memo = worstW <= 1
+    ? `${r.name}に目立った変状は認められない。`
+    : `${r.name}に${worstType}が認められる。`;
+
+  // 部材名が一致する損傷写真行を探して更新
+  const rows = Array.from(document.getElementById('photo-tb')?.rows || []);
+  const matchRow = rows.find(tr => tr.querySelectorAll('input')[2]?.value === r.name);
+  if(!matchRow) return;
+
+  const hidden  = matchRow.querySelector('.memo-val');
+  const preview = matchRow.querySelector('.memo-preview');
+  if(hidden)  hidden.value = memo;
+  if(preview){
+    preview.textContent = memo;
+    preview.style.color = 'var(--tx)';
+  }
 }
 function updateReq(code){
   const r=DMG_ROWS.find(r=>r.code===code);
