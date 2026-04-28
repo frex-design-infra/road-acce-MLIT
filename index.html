@@ -4185,6 +4185,12 @@ function doImport(){
   document.getElementById('sb-biz').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
   document.getElementById('hdr-biz-lbl').textContent=S.biz.find(b=>b.id===bid)?.nm||'';
   alert(`✅ インポート完了\n追加: ${added}件 / 更新: ${updated}件\n\n施設諸元は自動保存済みです。点検結果を入力後にCSV出力してください。`);
+  // インポート完了後にプレビュー・ファイル選択をリセット
+  S._imp = [];
+  document.getElementById('imp-preview').classList.add('hid');
+  document.getElementById('imp-status').classList.add('hid');
+  const fi = document.getElementById('fi');
+  if(fi) fi.value = '';
   showPage('fac');
 }
 
