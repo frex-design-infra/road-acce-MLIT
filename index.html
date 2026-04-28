@@ -120,6 +120,10 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .chk-na input{cursor:pointer}
 .lci{width:14px;height:14px;display:inline-block;vertical-align:-2px;stroke-width:2;flex-shrink:0}
 .tab-icon.lci{width:16px;height:16px;vertical-align:-3px}
+.tip-btn{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--g3);color:#fff;font-size:10px;font-weight:700;cursor:default;margin-left:4px;vertical-align:middle;position:relative;flex-shrink:0}
+.tip-btn .tip-body{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#26251e;color:#fff;font-size:11px;line-height:1.6;padding:8px 10px;border-radius:6px;white-space:nowrap;z-index:999;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25);min-width:220px;max-width:300px;white-space:normal}
+.tip-btn .tip-body::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#26251e}
+.tip-btn:hover .tip-body{display:block}
 .sticky-col{position:sticky;left:0;background:#fff;z-index:1}
 .sticky-col2{position:sticky;left:80px;background:#fff;z-index:1}
 .sticky-col3{position:sticky;left:160px;background:#fff;z-index:1}
@@ -597,10 +601,10 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         </div>
         <div class="fgrp"><label class="flbl">健全性の診断の結果に関する補足</label><textarea class="ftxt" id="f-diagnote" rows="3" placeholder="次回点検時期、措置の優先性、申し送り事項等"></textarea></div>
         <div class="fg mt12">
-          <div class="fgrp"><label class="flbl">機能及び構造安全性の評価</label>
+          <div class="fgrp"><label class="flbl">機能及び構造安全性の評価<span class="tip-btn">?<span class="tip-body">施設全体の機能・構造上の安全性を総合評価します。<br>Ａ：変状が生じる可能性は低い<br>Ｂ：致命的にはならないが変状の可能性あり<br>Ｃ：致命的な状態となる可能性がある<br>診断区分Ⅰ→A、Ⅱ→A、Ⅲ→B、Ⅳ→C が目安</span></span></label>
             <select class="fsel" id="f-safety"><option value="">選択</option><option value="1">Ａ：変状が生じる可能性は低い</option><option value="2">Ｂ：致命的な状態となる可能性は低いが変状が生じる可能性がある</option><option value="3">Ｃ：致命的な状態となる可能性がある</option></select>
           </div>
-          <div class="fgrp"><label class="flbl">特定事象の有無</label>
+          <div class="fgrp"><label class="flbl">特定事象の有無<span class="tip-btn">?<span class="tip-body">点検要領で定める特定事象（防食機能の劣化等）が確認された場合に「有」を選択します。<br>損傷評価で防食機能の劣化（c/e）が1箇所以上ある場合は「有」が目安です。</span></span></label>
             <select class="fsel" id="f-spcevt"><option value="">選択</option><option value="1">有</option><option value="2">無</option></select>
           </div>
           <div class="fgrp"><label class="flbl">措置の有無</label>
