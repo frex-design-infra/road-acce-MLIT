@@ -2620,6 +2620,7 @@ function setDmg(code,ti,val,el){
   });
   updateReq(code);
   syncPhotoMemo(code);
+  autoSuggestDiag();
 }
 // 損傷評価変更時に損傷写真テーブルのメモをリアルタイム更新
 function syncPhotoMemo(code){
@@ -2655,6 +2656,57 @@ function syncPhotoMemo(code){
     preview.style.color = 'var(--tx)';
   }
 }
+// ============================================================
+// 損傷評価から健全性の診断区分を自動推定（リアルタイム）
+// 要領 表-7.2 準拠：a/c/eの分布と重要部材のe評価から判定
+// ============================================================
+// 構造安全性に直結する重要部材コード（これにeがあればⅣ候補）
+const DIAG_CRITICAL = new Set([
+  'Pph',    // 支柱本体
+  'Ppj',    // 支柱継手部
+  'Ppd',    // 支柱分岐部
+  'Cbh',    // 横梁本体
+  'Cbw',    // 横梁仕口溶接部
+  'Ppb',    // 柱・基礎境界部
+  'Pgl-0',  // 路面境界部（GL-0mm）
+  'Pgl-40', // 路面境界部（GL-40mm）
+  'Bab',    // アンカーボルト・ナット
+]);
+function autoSuggestDiag(){
+  const dmg = collectDmg();
+  let eCount = 0, hasCriticalE = false, hasC = false;
+
+  DMG_ROWS.forEach(r => {
+    const d = dmg[r.code] || {};
+    if(d.na) return;
+    DMG_TYPES.forEach((t, ti) => {
+      if(!r.app[ti]) return;
+      const val = d[t] || '';
+      if(val === 'e'){
+        eCount++;
+        if(DIAG_CRITICAL.has(r.code)) hasCriticalE = true;
+      }
+      if(val === 'c') hasC = true;
+    });
+  });
+
+  let newDiag;
+  if(eCount === 0 && !hasC){
+    newDiag = 'Ⅰ';                          // 全a→健全
+  } else if(eCount === 0){
+    newDiag = 'Ⅱ';                          // cあり・eなし→予防保全
+  } else if(eCount >= 2 || hasCriticalE){
+    newDiag = 'Ⅳ';                          // e複数 or 重要部材e→緊急措置
+  } else {
+    newDiag = 'Ⅲ';                          // e1件（非重要）→早期措置
+  }
+
+  document.querySelectorAll('input[name="diag"]').forEach(r => {
+    r.checked = r.value === newDiag;
+  });
+  _diagSel = newDiag;
+  onDiagChg();
+}
 function updateReq(code){
   const r=DMG_ROWS.find(r=>r.code===code);
   if(!r) return;
@@ -2685,6 +2737,7 @@ function tglNA(code,isNA){
   // 行全体の透明度
   const row=document.getElementById(`row_${code}`);
   if(row) row.style.opacity=isNA?'0.35':'1';
+  autoSuggestDiag();
 }
 function loadDmgTable(cur, prev){
   // 施設種別を取得（種別連動チェック用）
