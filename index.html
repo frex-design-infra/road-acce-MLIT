@@ -118,6 +118,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .dbtn-sm.sc{background:var(--wnp);border-color:var(--wn);color:var(--wn)}
 .dbtn-sm.se{background:var(--dgp);border-color:var(--dg);color:var(--dg)}
 .chk-na input{cursor:pointer}
+.lci{width:14px;height:14px;display:inline-block;vertical-align:-2px;stroke-width:2;flex-shrink:0}
+.tab-icon.lci{width:16px;height:16px;vertical-align:-3px}
 .sticky-col{position:sticky;left:0;background:#fff;z-index:1}
 .sticky-col2{position:sticky;left:80px;background:#fff;z-index:1}
 .sticky-col3{position:sticky;left:160px;background:#fff;z-index:1}
@@ -184,28 +186,29 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .cal-today-btn{display:block;width:calc(100% - 20px);margin:0 10px 10px;padding:5px;background:var(--g1);border:1px solid var(--bd);border-radius:6px;font-size:11px;cursor:pointer;color:var(--tx2)}
 .cal-today-btn:hover{background:var(--prp);color:var(--pr);border-color:var(--pr)}
 </style>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
 <header class="hdr">
-  <h1>📋 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v3</span></h1>
+  <h1><i data-lucide="clipboard-list" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 附属物点検管理システム <span style="font-size:11px;opacity:.7;font-weight:400">v3</span></h1>
   <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
-    <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap">📖 操作ガイド</button>
+    <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
   </div>
 </header>
 
 <div class="body">
 <nav class="sb">
   <div class="sb-lbl">メニュー</div>
-  <div class="sb-item active" id="nav-dash" onclick="showPage('dash')"><span>🏠</span> ダッシュボード</div>
-  <div class="sb-item" id="nav-biz" onclick="showPage('biz')"><span>📁</span> 業務管理</div>
-  <div class="sb-item" id="nav-fac" onclick="showPage('fac')"><span>🏗️</span> 施設一覧</div>
-  <div class="sb-item" id="nav-insp" onclick="showPage('insp')"><span>📝</span> 点検記録入力</div>
+  <div class="sb-item active" id="nav-dash" onclick="showPage('dash')"><i data-lucide="home" class="lci"></i> ダッシュボード</div>
+  <div class="sb-item" id="nav-biz" onclick="showPage('biz')"><i data-lucide="folder" class="lci"></i> 業務管理</div>
+  <div class="sb-item" id="nav-fac" onclick="showPage('fac')"><i data-lucide="building-2" class="lci"></i> 施設一覧</div>
+  <div class="sb-item" id="nav-insp" onclick="showPage('insp')"><i data-lucide="file-pen-line" class="lci"></i> 点検記録入力</div>
   <div class="sb-div"></div>
   <div class="sb-lbl">データ</div>
-  <div class="sb-item" id="nav-imp" onclick="showPage('imp')"><span>📥</span> インポート</div>
-  <div class="sb-item" id="nav-exp" onclick="showPage('exp')"><span>📤</span> CSV出力（xROAD）</div>
+  <div class="sb-item" id="nav-imp" onclick="showPage('imp')"><i data-lucide="download" class="lci"></i> インポート</div>
+  <div class="sb-item" id="nav-exp" onclick="showPage('exp')"><i data-lucide="upload" class="lci"></i> CSV出力（xROAD）</div>
   <div class="sb-div"></div>
   <div class="sb-biz">
     <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:6px">選択中の業務</div>
@@ -214,12 +217,12 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div class="sb-div"></div>
   <div style="padding:0 8px 4px">
     <button onclick="syncToSupabase()" style="width:100%;padding:7px 4px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="全データをSupabaseに一括再同期（初回移行・障害復旧用）">
-      ☁️ 全データ再同期
+      <i data-lucide="cloud" class="lci"></i> 全データ再同期
     </button>
   </div>
   <div style="padding:4px 8px 12px">
     <button onclick="resetAllData()" style="width:100%;padding:7px 4px;background:#4b4b47;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;" title="全データを削除してリセット">
-      🗑️ データをリセット
+      <i data-lucide="trash-2" class="lci"></i> データをリセット
     </button>
   </div>
 </nav>
@@ -286,7 +289,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       <div id="fac-lbl" style="font-size:13px;color:var(--tx2)"></div>
     </div>
     <div class="btn-grp">
-      <button class="btn btn-sm" onclick="showPage('imp')">📥 Excelインポート</button>
+      <button class="btn btn-sm" onclick="showPage('imp')"><i data-lucide="download" class="lci"></i> Excelインポート</button>
       <button class="btn btn-pr" onclick="openFacMod()">＋ 施設追加</button>
     </div>
   </div>
@@ -303,7 +306,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="btn-grp">
       <button class="btn btn-sm" onclick="navFac(-1)">← 前</button>
       <button class="btn btn-sm" onclick="navFac(1)">次 →</button>
-      <button class="btn btn-ac" onclick="saveInsp()">💾 保存</button>
+      <button class="btn btn-ac" onclick="saveInsp()"><i data-lucide="save" class="lci"></i> 保存</button>
     </div>
   </div>
 
@@ -317,32 +320,32 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div id="insp-body" class="hid">
     <div class="tabs">
       <div class="tab active" onclick="swTab('t1',this)">
-        <span class="tab-icon">🏗️</span>
+        <i data-lucide="building-2" class="lci tab-icon"></i>
         <span>施設諸元</span>
         <span class="tab-num">① 基本情報・構造</span>
       </div>
       <div class="tab" onclick="swTab('t2',this)">
-        <span class="tab-icon">🔍</span>
+        <i data-lucide="scan-search" class="lci tab-icon"></i>
         <span>損傷評価</span>
         <span class="tab-num">② 各部材の点検</span>
       </div>
       <div class="tab" onclick="swTab('t3',this)">
-        <span class="tab-icon">📊</span>
+        <i data-lucide="bar-chart-2" class="lci tab-icon"></i>
         <span>診断・所見</span>
         <span class="tab-num">③ 健全性・意見</span>
       </div>
       <div class="tab" onclick="swTab('t4',this)">
-        <span class="tab-icon">🔧</span>
+        <i data-lucide="wrench" class="lci tab-icon"></i>
         <span>措置の必要性</span>
         <span class="tab-num">④ 対策・応急処置</span>
       </div>
       <div class="tab" onclick="swTab('t5',this)">
-        <span class="tab-icon">📷</span>
+        <i data-lucide="camera" class="lci tab-icon"></i>
         <span>写真管理</span>
         <span class="tab-num">⑤ 撮影・アップロード</span>
       </div>
       <div class="tab" onclick="swTab('t6',this)">
-        <span class="tab-icon">📏</span>
+        <i data-lucide="ruler" class="lci tab-icon"></i>
         <span>板厚調査</span>
         <span class="tab-num">⑥ 超音波測定</span>
       </div>
@@ -564,12 +567,12 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <!-- TAB3: 健全性診断・所見 -->
     <div id="t3" class="hid">
       <div style="display:flex;justify-content:flex-start;margin-bottom:8px">
-        <button class="btn btn-pr" onclick="applyTemplate()" style="font-size:12px;padding:6px 14px">📋 診断・所見を一括生成</button>
+        <button class="btn btn-pr" onclick="applyTemplate()" style="font-size:12px;padding:6px 14px"><i data-lucide="clipboard-list" class="lci"></i> 診断・所見を一括生成</button>
       </div>
       <div class="card">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
           <div class="fsec-ttl" style="margin-bottom:0">■ 施設の健全性の診断</div>
-          <button onclick="showDiagLogic()" style="font-size:11px;padding:2px 8px;border:1px solid var(--ac2);background:var(--acp);color:var(--ac);border-radius:4px;cursor:pointer;white-space:nowrap;line-height:1.6">📊 判定ロジック</button>
+          <button onclick="showDiagLogic()" style="font-size:11px;padding:2px 8px;border:1px solid var(--ac2);background:var(--acp);color:var(--ac);border-radius:4px;cursor:pointer;white-space:nowrap;line-height:1.6"><i data-lucide="bar-chart-2" class="lci"></i> 判定ロジック</button>
         </div>
         <div id="prev-diag-box" class="alrt ai" style="display:none"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
@@ -627,7 +630,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <!-- TAB5: 写真管理 -->
     <div id="t5" class="hid">
       <div class="alrt ai" style="margin-bottom:12px">
-        <strong>📸 写真をドロップまたはクリックして選択</strong> → 自動でリネーム・2MB超は自動圧縮 → ZIP出力時にImageフォルダへ自動梱包<br>
+        <strong><i data-lucide="image-plus" class="lci"></i> 写真をドロップまたはクリックして選択</strong> → 自動でリネーム・2MB超は自動圧縮 → ZIP出力時にImageフォルダへ自動梱包<br>
         <span style="font-size:11px">対応形式：jpg / jpeg / png　上限：1ファイル2MB以下（超過時は自動圧縮）</span>
       </div>
 
@@ -658,7 +661,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
             <div class="card-sub">損傷写真/ フォルダ内　1.jpg, 2.jpg… と連番で自動命名</div>
           </div>
           <div class="btn-grp">
-            <button class="btn btn-sm" onclick="autoFillPhotos()">🔄 損傷評価から行生成</button>
+            <button class="btn btn-sm" onclick="autoFillPhotos()"><i data-lucide="refresh-cw" class="lci"></i> 損傷評価から行生成</button>
             <button class="btn btn-sm btn-pr" onclick="addPhoto()">＋ 行を追加</button>
           </div>
         </div>
@@ -679,7 +682,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
           <tbody id="photo-tb"></tbody>
         </table></div>
         <div style="font-size:11px;color:var(--tx2);margin-top:8px;padding:6px 8px;background:var(--g1);border-radius:4px">
-          💡 写真スロットに画像をドロップ → テーブル行のファイル名と自動リンク。行を先に作ってからスロットに画像を入れてください。
+          <i data-lucide="lightbulb" class="lci"></i> 写真スロットに画像をドロップ → テーブル行のファイル名と自動リンク。行を先に作ってからスロットに画像を入れてください。
         </div>
       </div>
     </div>
@@ -746,7 +749,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div class="pg-sub">xROAD一括登録用の5種類CSV＋ZIP（付録03仕様）をダウンロードします</div>
 
   <div class="alrt ai" style="margin-bottom:16px">
-    <strong>📋 xROAD一括登録の手順</strong><br>
+    <strong><i data-lucide="clipboard-list" class="lci"></i> xROAD一括登録の手順</strong><br>
     ①「ZIP一括出力」で登録用ZIPを作成 → ②ZIP内の各施設フォルダに実際の写真を配置 → ③完成ZIPを全国道路施設点検DBにアップロード<br>
     <span style="font-size:11px">ZIP制限: 全体1GB以下・画像100枚以下・1枚2MB以下（付録03準拠）</span>
   </div>
@@ -795,13 +798,13 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <div id="mod-guide" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
   <div class="mod" style="max-width:860px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:18px;font-weight:700">📖 操作ガイド</div>
+      <div style="font-size:18px;font-weight:700"><i data-lucide="book-open" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 操作ガイド</div>
       <button onclick="document.getElementById('mod-guide').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
     </div>
     <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム の使い方</div>
 
   <div class="card" style="margin-bottom:12px">
-    <div class="card-hdr"><div class="card-ttl">📋 基本フロー</div></div>
+    <div class="card-hdr"><div class="card-ttl"><i data-lucide="clipboard-list" class="lci"></i> 基本フロー</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;padding:4px 0">
       <span style="background:var(--prp);color:var(--pr);padding:6px 12px;border-radius:20px;font-weight:600">①業務登録</span>
       <span style="color:var(--tx2)">→</span>
@@ -816,7 +819,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">🏠 ダッシュボード</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="home" class="lci"></i> ダッシュボード</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>上部の業務セレクタで表示する業務を選択</li>
         <li>施設数・点検完了数・要措置件数を確認</li>
@@ -827,7 +830,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">📁 業務管理</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="folder" class="lci"></i> 業務管理</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>「＋ 新規業務登録」で案件を作成</li>
         <li><strong>定期点検員（氏名・所属）は必須</strong>。点検フォームに自動反映される</li>
@@ -838,7 +841,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">🏗️ 施設一覧</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="building-2" class="lci"></i> 施設一覧</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>上部セレクタで業務を選択すると施設が表示される</li>
         <li><strong>行をクリック</strong>で点検記録入力画面に遷移</li>
@@ -849,7 +852,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">📥 Excelインポート</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="download" class="lci"></i> Excelインポート</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>国交省様式の点検Excelファイル（.xlsx）に対応</li>
         <li>複数ファイルを一括でドラッグ＆ドロップ可能</li>
@@ -860,11 +863,11 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">📝 点検記録入力</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="file-pen-line" class="lci"></i> 点検記録入力</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>業務・施設を選択、または施設一覧の行クリックで開く</li>
         <li>「← 前 / 次 →」で施設間を移動（自動保存あり）</li>
-        <li>「💾 保存」ボタンで保存（画面はそのまま維持）</li>
+        <li>「<i data-lucide="save" class="lci"></i> 保存」ボタンで保存（画面はそのまま維持）</li>
         <li>定期点検員（氏名・所属）は業務設定から自動反映・変更不可</li>
         <li>タブ切り替えで基本情報・点検結果・損傷記録・写真管理などを入力</li>
         <li>保存データはSupabaseへ即時自動同期</li>
@@ -872,7 +875,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">📤 CSV出力（xROAD）</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="upload" class="lci"></i> CSV出力（xROAD）</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>業務を選択してCSVを出力</li>
         <li>xROAD付録04フォーマット準拠</li>
@@ -882,7 +885,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">☁️ データ保存について</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="cloud" class="lci"></i> データ保存について</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>全操作は<strong>Supabaseに自動保存</strong>（手動操作不要）</li>
         <li>複数端末でリアルタイム同期</li>
@@ -892,7 +895,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-ttl">⭐ ポイント</div></div>
+      <div class="card-hdr"><div class="card-ttl"><i data-lucide="star" class="lci"></i> ポイント</div></div>
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>赤い <span style="color:var(--dg)">＊</span> マークは必須項目</li>
         <li>Michi施設キーは緯度経度から自動生成（10進数6桁）</li>
@@ -914,7 +917,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="mod-hdr"><div class="mod-ttl" id="mod-biz-ttl">新規業務登録</div><button class="mod-x" onclick="closeMod('mod-biz')">×</button></div>
 
     <!-- 基本情報 -->
-    <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">📋 業務基本情報</div>
+    <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px"><i data-lucide="clipboard-list" class="lci"></i> 業務基本情報</div>
     <div class="fg">
       <div class="fgrp"><label class="flbl req">業務名</label><input type="text" class="finp" id="biz-nm" placeholder="例：R7 秋田河川国道事務所 附属物定期点検業務"></div>
       <div class="fgrp"><label class="flbl req">点検年度</label><input type="text" class="finp" id="biz-yr" placeholder="例：2025"></div>
@@ -925,7 +928,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 
     <!-- 道路管理者情報 -->
     <div style="border-top:1px solid var(--bd);margin:14px 0 10px;padding-top:12px">
-      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">🏢 道路管理者情報（CSV出力用・必須）</div>
+      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px"><i data-lucide="building" class="lci"></i> 道路管理者情報（CSV出力用・必須）</div>
       <div class="fg">
 
         <!-- ① 管理者区分 -->
@@ -1027,7 +1030,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 
     <!-- 定期点検員 -->
     <div style="border-top:1px solid var(--bd);margin:12px 0;padding-top:12px">
-      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px">🧑‍💼 定期点検員（業務共通・CSV出力用）</div>
+      <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:8px"><i data-lucide="user-check" class="lci"></i> 定期点検員（業務共通・CSV出力用）</div>
       <div class="fg">
         <div class="fgrp"><label class="flbl req">氏名</label><input type="text" class="finp" id="biz-ins1" placeholder="例：山田 太郎"></div>
         <div class="fgrp"><label class="flbl req">所属</label><input type="text" class="finp" id="biz-ins1o" placeholder="例：株式会社フレックスデザイン" value="株式会社フレックスデザイン"></div>
@@ -1042,7 +1045,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <div class="mov hid" id="mod-memo" onclick="if(event.target===this)closeMemoPopup()">
   <div class="mod" style="width:min(520px,95vw)">
     <div class="mod-hdr">
-      <div class="mod-ttl">📝 メモ編集</div>
+      <div class="mod-ttl"><i data-lucide="file-pen-line" class="lci"></i> メモ編集</div>
       <button class="mod-x" onclick="closeMemoPopup()">×</button>
     </div>
     <textarea id="memo-textarea" class="ftxt" rows="6"
@@ -1257,6 +1260,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('dash-dt').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   buildDmgTable();
   buildMeasTable();
+  if(window.lucide) lucide.createIcons();
   buildZenei();
   refresh();
   // メモテキストエリア：Ctrl+Enter or Cmd+Enter で保存
@@ -4871,16 +4875,16 @@ async function expZip(){
 // 必須項目チェック定義
 // ============================================================
 const REQUIRED_CHECKS = [
-  { key:'dt',      label:'現地確認年月日', icon:'📅', check: i=> !!i.dt },
-  { key:'lat',     label:'緯度・経度',     icon:'📍', check: i=> !!i.lat && !!i.lng },
-  { key:'diag',    label:'健全性診断区分', icon:'📊', check: i=> !!i.diag },
-  { key:'opinion', label:'定期点検員所見', icon:'📝', check: i=> !!(i.opinion||'').trim() },
-  { key:'ins1',    label:'点検員氏名',     icon:'🧑', check: i=> !!(i.ins1||'').trim() },
-  { key:'locimg',  label:'位置図ファイル名', icon:'🗺️', check: i=> !!(i.locimg||'').trim() },
-  { key:'zenei',   label:'全景写真ファイル名', icon:'📷', check: i=> (i.zenei||[]).some(v=>v) },
-  { key:'pref',    label:'都道府県',       icon:'🏔️', check: i=> !!i.pref },
-  { key:'mn',      label:'管理番号',       icon:'🔢', check: i=> !!(i.mn||'').trim() },
-  { key:'nm',      label:'施設名（種別）', icon:'🏗️', check: i=> !!(i.nm||'').trim() },
+  { key:'dt',      label:'現地確認年月日', icon:'calendar',    check: i=> !!i.dt },
+  { key:'lat',     label:'緯度・経度',     icon:'map-pin',     check: i=> !!i.lat && !!i.lng },
+  { key:'diag',    label:'健全性診断区分', icon:'bar-chart-2', check: i=> !!i.diag },
+  { key:'opinion', label:'定期点検員所見', icon:'file-text',   check: i=> !!(i.opinion||'').trim() },
+  { key:'ins1',    label:'点検員氏名',     icon:'user',        check: i=> !!(i.ins1||'').trim() },
+  { key:'locimg',  label:'位置図ファイル名', icon:'map',       check: i=> !!(i.locimg||'').trim() },
+  { key:'zenei',   label:'全景写真ファイル名', icon:'camera',  check: i=> (i.zenei||[]).some(v=>v) },
+  { key:'pref',    label:'都道府県',       icon:'map-pinned',  check: i=> !!i.pref },
+  { key:'mn',      label:'管理番号',       icon:'hash',        check: i=> !!(i.mn||'').trim() },
+  { key:'nm',      label:'施設名（種別）', icon:'building-2',  check: i=> !!(i.nm||'').trim() },
 ];
 
 function updDash(){
@@ -4946,7 +4950,7 @@ function updDash(){
       const cardHtml = (r,idx,done) => `
           <div class="miss-card" data-idx="${idx}"
             style="background:${done?'var(--acp)':'var(--wnp)'};border:1px solid ${done?'rgba(34,197,94,.3)':'rgba(186,117,23,.25)'};border-radius:10px;padding:12px 14px;${done?'':'cursor:pointer;'}transition:all .15s;user-select:none">
-            <div style="font-size:22px;margin-bottom:4px">${r.icon}</div>
+            <div style="margin-bottom:6px"><i data-lucide="${r.icon}" style="width:20px;height:20px;stroke-width:1.5;display:inline-block;vertical-align:middle"></i></div>
             <div style="font-size:22px;font-weight:700;color:${done?'var(--ac)':'var(--wn)'}">${r.count}</div>
             <div style="font-size:11px;font-weight:600;color:${done?'var(--ac)':'var(--wn)'};margin-top:2px">${r.label}</div>
             <div style="font-size:10px;color:var(--tx2);margin-top:2px">${done?'✅ 完了':'未入力 ▾'}</div>
@@ -4956,6 +4960,7 @@ function updDash(){
       mc.innerHTML =
         (missing.length ? groupHdr('⚠ 未入力あり','var(--wn)') + missing.map(r=>cardHtml(r, checkResults.indexOf(r), false)).join('') : '') +
         (done_.length   ? groupHdr('✅ 入力済み', 'var(--ac)') + done_.map(r=>cardHtml(r, checkResults.indexOf(r), true)).join('')  : '');
+      if(window.lucide) lucide.createIcons({rootElement: mc});
 
         mc.querySelectorAll('.miss-card').forEach(card=>{
           card.addEventListener('mouseenter', ()=>{
@@ -5094,7 +5099,7 @@ function closeMod(id){ document.getElementById(id).classList.add('hid'); }
 <div id="diag-logic-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000" onclick="if(event.target===this)closeDiagLogic()"></div>
 <div id="diag-logic-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9001;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.22);width:min(720px,96vw);max-height:88vh;overflow-y:auto">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bd)">
-    <div style="font-size:15px;font-weight:700;color:var(--tx)">📊 診断区分 自動判定ロジック</div>
+    <div style="font-size:15px;font-weight:700;color:var(--tx)"><i data-lucide="bar-chart-2" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 診断区分 自動判定ロジック</div>
     <button onclick="closeDiagLogic()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
   </div>
   <div style="padding:16px 20px 20px">
