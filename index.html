@@ -563,6 +563,9 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 
     <!-- TAB3: 健全性診断・所見 -->
     <div id="t3" class="hid">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+        <button class="btn btn-pr" onclick="applyTemplate()" style="font-size:12px;padding:6px 14px">📋 診断・所見を一括生成</button>
+      </div>
       <div class="card">
         <div class="fsec-ttl">■ 施設の健全性の診断</div>
         <div id="prev-diag-box" class="alrt ai" style="display:none"></div>
@@ -2332,7 +2335,7 @@ function loadInsp(fid){
 // ============================================================
 // 所見 自動生成（要領2.3 措置の必要性の検討 準拠）
 // ============================================================
-function genOpinion(){
+function _buildOpinionText(){
   const dmg   = collectDmg();
   const diag  = document.querySelector('input[name="diag"]:checked')?.value || '';
   const safety= document.getElementById('f-safety')?.value || '';
@@ -2351,8 +2354,8 @@ function genOpinion(){
   };
 
   const W = {e:3,c:2,a:1,'':0};
-  const dmgLines = []; // 損傷ありの部材ごとの記述
-  const eParts   = []; // e評価部材名リスト
+  const dmgLines = [];
+  const eParts   = [];
 
   DMG_ROWS.forEach(r => {
     const d = dmg[r.code] || {};
@@ -2371,7 +2374,6 @@ function genOpinion(){
 
   const lines = [];
 
-  // ① 損傷状況
   if(dmgLines.length === 0){
     lines.push('本施設の定期点検を実施した結果，点検対象の全部材に目立った変状は認められなかった。');
   } else {
@@ -2379,29 +2381,79 @@ function genOpinion(){
     dmgLines.forEach(l => lines.push(l));
   }
 
-  // ② 機能及び構造安全性の評価
   if(safety && SAFETY_LBL[safety]){
     lines.push('');
-    lines.push(`【機能及び構造安全性の評価】`);
+    lines.push('【機能及び構造安全性の評価】');
     lines.push(`機能及び構造安全性の評価は${SAFETY_LBL[safety]}と推定される。`);
   }
 
-  // ③ 健全性の診断と措置の方針
   if(diag && DIAG_LBL[diag]){
     lines.push('');
-    lines.push(`【健全性の診断】`);
+    lines.push('【健全性の診断】');
     lines.push(`健全性の診断区分は区分${diag}（${DIAG_LBL[diag]}）と診断した。${DIAG_DESC[diag]||''}`);
   }
 
-  // ④ e評価部材の第三者被害リスク（要領2.3準拠）
   if(eParts.length){
     lines.push('');
     lines.push(`なお，${eParts.join('，')}については損傷程度がeランク（損傷が著しい状態）であり，部材片・腐食片の落下による道路利用者及び第三者への被害が生じるおそれがあるため，特に注意を要する。`);
   }
 
+  return lines.join('\n');
+}
+
+function genOpinion(){
   const existing = document.getElementById('f-opinion').value;
   if(existing && !confirm('所見に既入力の内容があります。上書きしますか？')) return;
-  document.getElementById('f-opinion').value = lines.join('\n');
+  document.getElementById('f-opinion').value = _buildOpinionText();
+}
+
+// ============================================================
+// テンプレ一括適用（TAB3の全フィールドをまとめて自動入力）
+// ============================================================
+function applyTemplate(){
+  const dmg  = collectDmg();
+  const diag = document.querySelector('input[name="diag"]:checked')?.value || '';
+  const W    = {e:3,c:2,a:1,'':0};
+
+  // 診断区分未選択の場合は警告
+  if(!diag){ alert('先に健全性の診断区分を選択してください。'); return; }
+
+  // 所見に既入力があれば確認
+  if(document.getElementById('f-opinion')?.value){
+    if(!confirm('所見に既入力があります。全フィールドを一括上書きしますか？')) return;
+  }
+
+  // ① 措置の有無（Ⅰ→無, Ⅱ/Ⅲ/Ⅳ→有）
+  const measynEl = document.getElementById('f-measyn');
+  if(measynEl) measynEl.value = (diag==='Ⅰ') ? '2' : '1';
+
+  // ② 特定事象の有無（防食機能の劣化 c/e → 有, それ以外→無）
+  const boIdx = DMG_TYPES.indexOf('防食機能の劣化');
+  const hasBo = boIdx >= 0 && DMG_ROWS.some(r => {
+    const d = dmg[r.code] || {};
+    return !d.na && r.app[boIdx] && W[d['防食機能の劣化']||''] >= 2;
+  });
+  const spcevtEl = document.getElementById('f-spcevt');
+  if(spcevtEl) spcevtEl.value = hasBo ? '1' : '2';
+
+  // ③ 健全性の診断の補足（診断区分に応じたテンプレ）
+  const DIAGNOTE = {
+    'Ⅰ': '',
+    'Ⅱ': '上記損傷部位の経過を観察し，次回定期点検に向けて適切な時期に補修等の予防保全措置の実施を検討する。',
+    'Ⅲ': '上記損傷部位について速やかに措置内容を検討し，早期に補修等の措置を実施する。次回定期点検まで経過を定期的に監視すること。',
+    'Ⅳ': '緊急措置を実施し，施設の安全を確保する。措置後の状態について速やかに確認すること。'
+  };
+  const diagnoteEl = document.getElementById('f-diagnote');
+  if(diagnoteEl) diagnoteEl.value = DIAGNOTE[diag] ?? '';
+
+  // ④ 点検ができなかった部位（空なら「無」）
+  const nocantEl = document.getElementById('f-nocant');
+  if(nocantEl && !nocantEl.value) nocantEl.value = '無';
+
+  // ⑤ 所見（_buildOpinionText で生成）
+  document.getElementById('f-opinion').value = _buildOpinionText();
+
+  toast('診断・所見のテンプレートを一括適用しました ✓');
 }
 
 // 診断区分の選択状態を追跡（再クリックで解除するため）
@@ -2426,12 +2478,14 @@ function onDiagChg(){
     el.style.background=sel?({'I':'var(--acp)','II':'var(--prp)','III':'var(--wnp)','IV':'var(--dgp)'}[k]):'';
   });
   // 診断区分に応じた機能及び構造安全性の評価を自動選択（要領2.2.1準拠）
-  // Ⅰ→A（変状の可能性低い）, Ⅱ→B（致命的でないが変状の可能性）
-  // Ⅲ→C（致命的な状態の可能性あり）, Ⅳ→C（緊急措置段階）
+  // Ⅰ→A, Ⅱ→B, Ⅲ/Ⅳ→C
   if(d){
     const safetyMap={'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'3'};
     const safetyEl=document.getElementById('f-safety');
     if(safetyEl && safetyMap[d]) safetyEl.value=safetyMap[d];
+    // 措置の有無（Ⅰ→無, Ⅱ/Ⅲ/Ⅳ→有）
+    const measynEl=document.getElementById('f-measyn');
+    if(measynEl) measynEl.value=(d==='Ⅰ')?'2':'1';
   }
 }
 function saveInsp(silent=false){
