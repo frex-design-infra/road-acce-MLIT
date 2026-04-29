@@ -5212,16 +5212,20 @@ async function expZip(){
 // 必須項目チェック定義
 // ============================================================
 const REQUIRED_CHECKS = [
-  { key:'dt',      label:'現地確認年月日', icon:'calendar',    check: i=> !!i.dt },
-  { key:'lat',     label:'緯度・経度',     icon:'map-pin',     check: i=> !!i.lat && !!i.lng },
-  { key:'diag',    label:'健全性診断区分', icon:'bar-chart-2', check: i=> !!i.diag },
-  { key:'opinion', label:'定期点検員所見', icon:'file-text',   check: i=> !!(i.opinion||'').trim() },
-  { key:'ins1',    label:'点検員氏名',     icon:'user',        check: i=> !!(i.ins1||'').trim() },
-  { key:'locimg',  label:'位置図ファイル名', icon:'map',       check: i=> !!(i.locimg||'').trim() },
-  { key:'zenei',   label:'全景写真ファイル名', icon:'camera',  check: i=> (i.zenei||[]).some(v=>v) },
-  { key:'pref',    label:'都道府県',       icon:'map-pinned',  check: i=> !!i.pref },
-  { key:'mn',      label:'管理番号',       icon:'hash',        check: i=> !!(i.mn||'').trim() },
-  { key:'nm',      label:'施設名（種別）', icon:'building-2',  check: i=> !!(i.nm||'').trim() },
+  { key:'dt',       label:'現地確認年月日',     icon:'calendar',        check: i=> !!i.dt },
+  { key:'lat',      label:'緯度・経度',          icon:'map-pin',         check: i=> !!i.lat && !!i.lng },
+  { key:'michiKey', label:'Michi施設キー',       icon:'key',             check: i=> !!(i.michiKey||'').trim() },
+  { key:'mn',       label:'管理番号',            icon:'hash',            check: i=> !!(i.mn||'').trim() },
+  { key:'nm',       label:'施設名（種別）',       icon:'building-2',      check: i=> !!(i.nm||'').trim() },
+  { key:'ftp',      label:'施設種別',            icon:'tag',             check: i=> !!(i.ftp||i.tp||'').trim() },
+  { key:'pil',      label:'支柱形式',            icon:'ruler',           check: i=> !!(i.pil||'').trim() },
+  { key:'pref',     label:'都道府県',            icon:'map-pinned',      check: i=> !!i.pref },
+  { key:'diag',     label:'健全性診断区分',       icon:'bar-chart-2',     check: i=> !!i.diag },
+  { key:'opinion',  label:'定期点検員所見',       icon:'file-text',       check: i=> !!(i.opinion||'').trim() },
+  { key:'ins1',     label:'点検員氏名',           icon:'user',            check: i=> !!(i.ins1||'').trim() },
+  { key:'ins1o',    label:'点検員所属',           icon:'briefcase',       check: i=> !!(i.ins1o||'').trim() },
+  { key:'locimg',   label:'位置図ファイル名',     icon:'map',             check: i=> !!(i.locimg||'').trim() },
+  { key:'zenei',    label:'全景写真ファイル名',   icon:'camera',          check: i=> (i.zenei||[]).some(v=>v) },
 ];
 
 function updDash(){
