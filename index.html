@@ -2335,6 +2335,33 @@ function openInsp(fid){
   document.getElementById('sel-fac').value=fid;
   loadInsp(fid);
 }
+
+// 未入力チェックポップアップ用：指定フィールドのタブを開いてフォーカス
+function openInspToField(fid, tabId, fieldId){
+  S.curFac=fid;
+  showPage('insp');
+  fillSelects();
+  document.getElementById('sel-fac').value=fid;
+  loadInsp(fid);
+  // タブ切り替え
+  if(tabId){
+    const tabEls = document.querySelectorAll('#page-insp .tab');
+    const tabIdx = {t1:0,t2:1,t3:2,t4:3,t5:4,t6:5}[tabId];
+    if(tabEls[tabIdx]) swTab(tabId, tabEls[tabIdx]);
+  }
+  // フィールドにスクロール＆ハイライト
+  if(fieldId){
+    requestAnimationFrame(()=>{
+      const el = document.getElementById(fieldId);
+      if(!el) return;
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+      el.style.transition='outline .1s';
+      el.style.outline='2.5px solid var(--wn)';
+      el.style.borderRadius='4px';
+      setTimeout(()=>{ el.style.outline=''; }, 1800);
+    });
+  }
+}
 function loadInsp(fid){
   const f=S.fac.find(f=>f.id===fid)||{};
   const i=S.ins.find(i=>i.fid===fid)||{};
@@ -5212,15 +5239,15 @@ async function expZip(){
 // 必須項目チェック定義
 // ============================================================
 const REQUIRED_CHECKS = [
-  { key:'dt',      label:'現地確認年月日',     icon:'calendar',   check: i=> !!i.dt },
-  { key:'lat',     label:'緯度・経度',         icon:'map-pin',    check: i=> !!i.lat && !!i.lng },
-  { key:'mn',      label:'管理番号',           icon:'hash',       check: i=> !!(i.mn||'').trim() },
-  { key:'nm',      label:'施設名（種別）',     icon:'building-2', check: i=> !!(i.nm||'').trim() },
-  { key:'ftp',     label:'施設種別',           icon:'tag',        check: i=> !!(i.ftp||i.tp||'').trim() },
-  { key:'pil',     label:'支柱形式',           icon:'ruler',      check: i=> !!(i.pil||'').trim() },
-  { key:'pref',    label:'都道府県',           icon:'map-pinned', check: i=> !!i.pref },
-  { key:'opinion', label:'定期点検員所見',     icon:'file-text',  check: i=> !!(i.opinion||'').trim() },
-  { key:'zenei',   label:'全景写真ファイル名', icon:'camera',     check: i=> (i.zenei||[]).some(v=>v) },
+  { key:'dt',      label:'現地確認年月日',     icon:'calendar',   tab:'t1', field:'f-date',    note:'施設一覧でも直接入力が可能です',  check: i=> !!i.dt },
+  { key:'lat',     label:'緯度・経度',         icon:'map-pin',    tab:'t1', field:'f-lat',                                             check: i=> !!i.lat && !!i.lng },
+  { key:'mn',      label:'管理番号',           icon:'hash',       tab:'t1', field:'f-mgmt',                                            check: i=> !!(i.mn||'').trim() },
+  { key:'nm',      label:'施設名（種別）',     icon:'building-2', tab:'t1', field:'f-name',                                            check: i=> !!(i.nm||'').trim() },
+  { key:'ftp',     label:'施設種別',           icon:'tag',        tab:'t1', field:'f-type',                                            check: i=> !!(i.ftp||i.tp||'').trim() },
+  { key:'pil',     label:'支柱形式',           icon:'ruler',      tab:'t1', field:'f-pil',                                             check: i=> !!(i.pil||'').trim() },
+  { key:'pref',    label:'都道府県',           icon:'map-pinned', tab:'t1', field:'f-pref',                                            check: i=> !!i.pref },
+  { key:'opinion', label:'定期点検員所見',     icon:'file-text',  tab:'t3', field:'f-opinion',                                         check: i=> !!(i.opinion||'').trim() },
+  { key:'zenei',   label:'全景写真ファイル名', icon:'camera',     tab:'t5', field:null,                                                check: i=> (i.zenei||[]).some(v=>v) },
 ];
 
 function updDash(){
@@ -5339,12 +5366,16 @@ function showMissingPopup(cardEl, result){
 
   const facList = result.missing;
   const label   = result.label;
+  const tabId   = result.tab   || 't1';
+  const fieldId = result.field || null;
+  const note    = result.note  || null;
 
   // 施設リストをHTMLで生成（JSでclickイベントを後付け）
   inner.innerHTML = `
     <div style="padding:8px 14px 6px;font-size:12px;font-weight:600;color:var(--wn);border-bottom:1px solid var(--bd)">
       ⚠ ${escHtml(label)}が未入力の施設（${facList.length}件）
     </div>
+    ${note ? `<div style="padding:5px 14px;font-size:11px;color:var(--ac);background:var(--acp);border-bottom:1px solid var(--bd)">💡 ${escHtml(note)}</div>` : ''}
     ${facList.map((f,i)=>`
       <div class="miss-fac-item" data-fid="${escHtml(f.id)}"
         style="padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g2);display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -5352,7 +5383,7 @@ function showMissingPopup(cardEl, result){
           <span style="font-weight:600">${escHtml(f.mn)}</span>
           <span style="color:var(--tx2);font-size:11px;margin-left:6px">${escHtml(LBL_FNM[f.nm]||f.nm||'')}</span>
         </span>
-        <span style="font-size:11px;color:var(--pr);white-space:nowrap">点検入力 →</span>
+        <span style="font-size:11px;color:var(--pr);white-space:nowrap">入力欄へ →</span>
       </div>`).join('')}`;
 
   // 施設行のイベントをJSで登録
@@ -5361,7 +5392,7 @@ function showMissingPopup(cardEl, result){
     row.addEventListener('mouseleave', ()=>{ row.style.background=''; scheduleHidePopup(); });
     row.addEventListener('click', ()=>{
       hideMissingPopup();
-      openInsp(row.dataset.fid);
+      openInspToField(row.dataset.fid, tabId, fieldId);
     });
   });
 
