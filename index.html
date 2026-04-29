@@ -300,6 +300,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
     <div class="btn-grp">
       <button class="btn btn-sm" onclick="showPage('imp')"><i data-lucide="download" class="lci"></i> Excelインポート</button>
+      <button class="btn btn-sm btn-ac" onclick="bulkGenBiz()"><i data-lucide="clipboard-list" class="lci"></i> 診断・所見一括生成</button>
       <button class="btn btn-pr" onclick="openFacMod()">＋ 施設追加</button>
     </div>
   </div>
@@ -2654,7 +2655,155 @@ function applyTemplate(){
   // ⑤ 所見（_buildOpinionText で生成）
   document.getElementById('f-opinion').value = _buildOpinionText();
 
-  toast('診断・所見のテンプレートを一括適用しました ✓');
+  showSaveToast('診断・所見のテンプレートを一括適用しました ✓');
+}
+
+// ============================================================
+// データオンリー版 所見生成（DOM不使用 / 一括生成用）
+// ============================================================
+function _buildOpinionTextFromData(ins){
+  const dmg    = ins.dmg    || {};
+  const diag   = ins.diag   || '';
+  const safety = ins.safety || '';
+
+  const SAFETY_LBL = {
+    '1':'Ａ（変状が生じる可能性は低い）',
+    '2':'Ｂ（致命的な状態となる可能性は低いが，変状が生じる可能性がある）',
+    '3':'Ｃ（致命的な状態となる可能性がある）'
+  };
+  const DIAG_LBL  = {'Ⅰ':'健全','Ⅱ':'予防保全段階','Ⅲ':'早期措置段階','Ⅳ':'緊急措置段階'};
+  const DIAG_DESC = {
+    'Ⅰ': '次回定期点検までの間，特段の監視や対策は不要である。',
+    'Ⅱ': '構造物の機能に支障は生じていないが，予防保全の観点から次回定期点検までに補修等の措置を講じることが望ましい。',
+    'Ⅲ': '構造安全性の確保及び第三者被害防止の観点から，次回定期点検までに補修等の措置を早期に実施する必要がある。',
+    'Ⅳ': '構造物の機能に支障が生じている，又は生じる可能性が著しく高いため，緊急に措置を講じる必要がある。'
+  };
+  const W = {e:3,c:2,a:1,'':0};
+  const dmgLines = [];
+  const eParts   = [];
+
+  DMG_ROWS.forEach(r => {
+    const d = dmg[r.code] || {};
+    if(d.na) return;
+    const issues = [];
+    let worstW = 0;
+    DMG_TYPES.forEach((t, ti) => {
+      if(!r.app[ti]) return;
+      const val = d[t] || '';
+      if(W[val] > 0) issues.push(`${t}（${val}）`);
+      if(W[val] > worstW) worstW = W[val];
+    });
+    if(issues.length) dmgLines.push(`・${r.name}：${issues.join('，')}`);
+    if(worstW >= 3)   eParts.push(r.name);
+  });
+
+  const lines = [];
+  if(dmgLines.length === 0){
+    lines.push('本施設の定期点検を実施した結果，点検対象の全部材に目立った変状は認められなかった。');
+  } else {
+    lines.push('本施設の定期点検を実施した結果，以下の変状が確認された。');
+    dmgLines.forEach(l => lines.push(l));
+  }
+  if(safety && SAFETY_LBL[safety]){
+    lines.push('');
+    lines.push('【機能及び構造安全性の評価】');
+    lines.push(`機能及び構造安全性の評価は${SAFETY_LBL[safety]}と推定される。`);
+  }
+  if(diag && DIAG_LBL[diag]){
+    lines.push('');
+    lines.push('【健全性の診断】');
+    lines.push(`健全性の診断区分は区分${diag}（${DIAG_LBL[diag]}）と診断した。${DIAG_DESC[diag]||''}`);
+  }
+  if(eParts.length){
+    lines.push('');
+    lines.push(`なお，${eParts.join('，')}については損傷程度がeランク（損傷が著しい状態）であり，部材片・腐食片の落下による道路利用者及び第三者への被害が生じるおそれがあるため，特に注意を要する。`);
+  }
+  return lines.join('\n');
+}
+
+// ============================================================
+// 業務内全施設 診断・所見一括生成（施設一覧ページ）
+// ============================================================
+function bulkGenBiz(){
+  const bid = document.getElementById('fac-biz').value;
+  if(!bid){ alert('業務を選択してください'); return; }
+  const biz  = S.biz.find(b => b.id === bid);
+  const facs = S.fac.filter(f => f.bid === bid);
+  if(!facs.length){ alert('この業務に施設が登録されていません'); return; }
+
+  // 診断区分が設定済みの施設のみ対象
+  const targets = facs.filter(f => {
+    const ins = S.ins.find(i => i.fid === f.id);
+    return ins && ins.diag;
+  });
+  const skipCnt = facs.length - targets.length;
+
+  let msg = `「${biz?.name || bid}」の全施設 ${facs.length}件に対して診断・所見を一括生成します。\n`;
+  if(skipCnt > 0) msg += `※診断区分が未選択の ${skipCnt}件はスキップします。\n`;
+  msg += `\n措置の有無・特定事象の有無・所見・診断補足を自動入力します。\n続行しますか？`;
+  if(!confirm(msg)) return;
+
+  // 既入力がある施設があれば追加確認
+  const hasExisting = targets.some(f => {
+    const ins = S.ins.find(i => i.fid === f.id);
+    return ins && ins.opinion;
+  });
+  if(hasExisting && !confirm('既に所見が入力されている施設があります。上書きして続行しますか？')) return;
+
+  const W = {e:3,c:2,a:1,'':0};
+  const boIdx = DMG_TYPES.indexOf('防食機能の劣化');
+  const DIAGNOTE = {
+    'Ⅰ': '',
+    'Ⅱ': '上記損傷部位の経過を観察し，次回定期点検に向けて適切な時期に補修等の予防保全措置の実施を検討する。',
+    'Ⅲ': '上記損傷部位について速やかに措置内容を検討し，早期に補修等の措置を実施する。次回定期点検まで経過を定期的に監視すること。',
+    'Ⅳ': '緊急措置を実施し，施設の安全を確保する。措置後の状態について速やかに確認すること。'
+  };
+
+  let processed = 0;
+  const updatedIns = [];
+
+  targets.forEach(f => {
+    const insIdx = S.ins.findIndex(i => i.fid === f.id);
+    if(insIdx < 0) return;
+    const ins  = {...S.ins[insIdx]};
+    const dmg  = ins.dmg || {};
+    const diag = ins.diag || '';
+    if(!diag) return;
+
+    // ① 措置の有無
+    ins.measyn = (diag === 'Ⅰ') ? '2' : '1';
+
+    // ② 特定事象の有無（防食機能の劣化 c/e → 有）
+    const hasBo = boIdx >= 0 && DMG_ROWS.some(r => {
+      const d = dmg[r.code] || {};
+      return !d.na && r.app[boIdx] && W[d['防食機能の劣化'] || ''] >= 2;
+    });
+    ins.spcevt = hasBo ? '1' : '2';
+
+    // ③ 健全性の診断の補足
+    ins.diagnote = DIAGNOTE[diag] ?? '';
+
+    // ④ 点検ができなかった部位（空なら「無」）
+    if(!ins.nocant) ins.nocant = '無';
+
+    // ⑤ 所見
+    ins.opinion = _buildOpinionTextFromData(ins);
+
+    ins.upd = new Date().toISOString();
+    S.ins[insIdx] = ins;
+    updatedIns.push(ins);
+    processed++;
+  });
+
+  if(updatedIns.length){
+    _sbBulkIns(updatedIns);
+    save();
+    updDash();
+    renderFac();
+  }
+
+  const msg2 = `✅ ${processed}件の診断・所見を生成しました${skipCnt > 0 ? `（${skipCnt}件は診断区分未選択のためスキップ）` : ''}`;
+  showSaveToast(msg2);
 }
 
 // 診断区分の選択状態を追跡（再クリックで解除するため）
