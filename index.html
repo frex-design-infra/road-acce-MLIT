@@ -834,8 +834,9 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       <ul style="font-size:13px;line-height:2;padding-left:18px;color:var(--tx1)">
         <li>上部の業務セレクタで表示する業務を選択</li>
         <li>施設数・点検完了数・要措置件数を確認</li>
-        <li>未入力チェックカード：オレンジ＝未入力あり、グリーン＝完了</li>
+        <li>未入力チェックカード（9項目）：オレンジ＝未入力あり、グリーン＝完了</li>
         <li>未入力カードにマウスオーバーで対象施設一覧を表示</li>
+        <li><strong>施設名をクリック</strong>すると調書の該当フィールドに直接ジャンプ（オレンジ枠でハイライト）</li>
         <li>健全性診断区分サマリーで区分Ⅰ〜Ⅳの件数を確認</li>
       </ul>
     </div>
@@ -848,6 +849,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <li>業務名・点検年度・道路管理者・発注者を登録</li>
         <li>業務行の「施設を開く」で施設一覧に遷移</li>
         <li>定期点検員を変更すると点検フォームにもリアルタイム反映</li>
+        <li>「<strong>損傷評価からのオート診断をしない</strong>」チェックで診断区分を手動運用に切替可能</li>
       </ul>
     </div>
 
@@ -859,6 +861,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <li>現地確認年月日は一覧上でも直接クリック入力可能</li>
         <li>「＋ 施設追加」で手動登録、「Excelインポート」でまとめて登録</li>
         <li>「編集」ボタンで施設基本情報を修正</li>
+        <li>「<strong><i data-lucide="clipboard-list" class="lci"></i> 診断・所見一括生成</strong>」で選択業務の全施設に診断区分・所見・措置の有無を一括自動入力</li>
       </ul>
     </div>
 
@@ -995,7 +998,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
           <tbody>
             <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">① 施設諸元</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">点検情報（日付・工種・方法）/ 施設基本情報 / 構造情報（支柱形式・基礎・表面処理等）/ 環境情報 / 位置情報</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">② 損傷評価</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">部材ごと損傷種類（き裂/腐食/変形欠損/破断 等11種）を a/c/e で評価。過年度初期値反映。スクロール固定ヘッダー</td></tr>
-            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">③ 診断・所見</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">健全性診断区分（Ⅰ〜Ⅳ）自動提案 / 機能安全性評価 / 特定事象有無 / 措置の有無 / 所見 — 一括生成機能あり</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">③ 診断・所見</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">健全性診断区分（Ⅰ〜Ⅳ）自動提案 / 機能安全性評価 / 特定事象有無 / 措置の有無 / 所見 — 一括生成機能あり（施設一覧からは業務内全施設への一括生成も可能）</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">④ 措置の必要性</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">基板部 / 基板・支柱接続部 / 支柱部 / その他 — 部位ごとに措置有無・理由を記録</td></tr>
             <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">⑤ 写真管理</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">位置図（国土地理院タイル自動生成）/ 全景・基部写真スロット / 損傷写真（損傷評価から行自動生成）/ Supabase Storage保存</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600">⑥ 板厚調査</td><td style="padding:6px 10px;color:var(--tx2)">超音波測定記録（測定日・機器・部位別板厚）</td></tr>
