@@ -2749,6 +2749,36 @@ function _buildOpinionTextFromData(ins){
 }
 
 // ============================================================
+// データから診断区分を自動計算（autoSuggestDiag のデータ版）
+// ============================================================
+function _computeDiagFromData(ins){
+  const dmg = ins.dmg || {};
+  const W = {e:3,c:2,a:1,'':0};
+  let hasIV = false, hasE = false, hasC = false;
+
+  DMG_ROWS.forEach(r => {
+    const d = dmg[r.code] || {};
+    if(d.na) return;
+    DMG_TYPES.forEach((t, ti) => {
+      if(!r.app[ti]) return;
+      const val = d[t] || '';
+      if(val === 'c'){ hasC = true; return; }
+      if(val !== 'e') return;
+      hasE = true;
+      if(t === 'き裂' && STRUCT_MAIN.has(r.code))                               { hasIV = true; return; }
+      if(t === '破断')                                                            { hasIV = true; return; }
+      if((t === '腐食' || t === '変形・欠損') && COLLAPSE_ZONE.has(r.code))     { hasIV = true; return; }
+      if((t === '腐食' || t === '変形・欠損') && STRUCT_BODY.has(r.code))       { hasIV = true; return; }
+    });
+  });
+
+  if(!hasE && !hasC) return 'Ⅰ';
+  if(!hasE)          return 'Ⅱ';
+  if(hasIV)          return 'Ⅳ';
+  return 'Ⅲ';
+}
+
+// ============================================================
 // 業務内全施設 診断・所見一括生成（施設一覧ページ）
 // ============================================================
 function bulkGenBiz(){
@@ -2758,16 +2788,14 @@ function bulkGenBiz(){
   const facs = S.fac.filter(f => f.bid === bid);
   if(!facs.length){ alert('この業務に施設が登録されていません'); return; }
 
-  // 診断区分が設定済みの施設のみ対象
-  const targets = facs.filter(f => {
-    const ins = S.ins.find(i => i.fid === f.id);
-    return ins && ins.diag;
-  });
+  // ins が存在する施設のみ対象（損傷データの有無は問わない）
+  const targets = facs.filter(f => !!S.ins.find(i => i.fid === f.id));
   const skipCnt = facs.length - targets.length;
 
-  let msg = `「${biz?.name || bid}」の全施設 ${facs.length}件に対して診断・所見を一括生成します。\n`;
-  if(skipCnt > 0) msg += `※診断区分が未選択の ${skipCnt}件はスキップします。\n`;
-  msg += `\n措置の有無・特定事象の有無・所見・診断補足を自動入力します。\n続行しますか？`;
+  const bizName = biz?.nm || bid;
+  let msg = `「${bizName}」の全施設 ${facs.length}件に対して診断・所見を一括生成します。\n`;
+  if(skipCnt > 0) msg += `※点検記録が未作成の ${skipCnt}件はスキップします。\n`;
+  msg += `\n診断区分・措置の有無・特定事象・所見・診断補足を自動入力します。\n続行しますか？`;
   if(!confirm(msg)) return;
 
   // 既入力がある施設があれば追加確認
@@ -2792,10 +2820,13 @@ function bulkGenBiz(){
   targets.forEach(f => {
     const insIdx = S.ins.findIndex(i => i.fid === f.id);
     if(insIdx < 0) return;
-    const ins  = {...S.ins[insIdx]};
-    const dmg  = ins.dmg || {};
-    const diag = ins.diag || '';
+    const ins = {...S.ins[insIdx]};
+    const dmg = ins.dmg || {};
+
+    // diag が未保存の場合は損傷データから自動計算
+    const diag = ins.diag || _computeDiagFromData(ins);
     if(!diag) return;
+    ins.diag = diag; // 計算結果も保存に含める
 
     // ① 措置の有無
     ins.measyn = (diag === 'Ⅰ') ? '2' : '1';
@@ -2829,8 +2860,8 @@ function bulkGenBiz(){
     renderFac();
   }
 
-  const msg2 = `✅ ${processed}件の診断・所見を生成しました${skipCnt > 0 ? `（${skipCnt}件は診断区分未選択のためスキップ）` : ''}`;
-  showSaveToast(msg2);
+  const skipMsg = skipCnt > 0 ? `（点検記録未作成 ${skipCnt}件はスキップ）` : '';
+  showSaveToast(`✅ ${processed}件の診断・所見を生成しました${skipMsg}`);
 }
 
 // 診断区分の選択状態を追跡（再クリックで解除するため）
