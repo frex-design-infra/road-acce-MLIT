@@ -1,5 +1,5 @@
 // 附属物点検管理システム — Service Worker v1
-const CACHE = 'futtendo-v3-2';
+const CACHE = 'futtendo-v3-3';
 const ASSETS = [
   '/',
   '/index.html'

@@ -3917,14 +3917,17 @@ function refreshSlots(){
 function slotClick(type, key){
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/jpeg,image/png,image/jpg,image/heic,image/heif';
+  // image/* で iOS の全画像フォーマット（HEIC含む）を確実にカバー
+  input.accept = 'image/*';
   // iOS Safari はDOMに追加されていない input を無視するため body に一時追加
   input.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none';
   document.body.appendChild(input);
   const cleanup = () => { try{ document.body.removeChild(input); }catch(_){} };
   input.onchange = async e => {
+    // ★ DOMから削除する前にファイル参照を取得（iOS: 削除後はfiles[]が空になる）
+    const file = e.target.files?.[0];
     cleanup();
-    if(e.target.files[0]) await processSlotFile(type, key, e.target.files[0]);
+    if(file) await processSlotFile(type, key, file);
   };
   input.addEventListener('cancel', cleanup);
   // Safari では setTimeout を挟まないと click() が無視されることがある
