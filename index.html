@@ -224,6 +224,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <h1><i data-lucide="clipboard-list" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 附属物点検管理システム for <span style="color:#38bdf8">x</span>ROAD対応 <span style="font-size:11px;opacity:.75;font-weight:400">| 株式会社フレックスデザイン</span></h1>
   <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
+    <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" style="padding:5px 12px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
     <button onclick="document.getElementById('mod-spec').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="file-text" class="lci"></i> 仕様書</button>
     <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
   </div>
@@ -1092,10 +1093,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <div id="mod-spec" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
   <div class="mod" style="max-width:900px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:18px;font-weight:700"><i data-lucide="file-text" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> システム仕様書</div>
-        <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" style="padding:4px 10px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
-      </div>
+      <div style="font-size:18px;font-weight:700"><i data-lucide="file-text" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> システム仕様書</div>
       <button onclick="document.getElementById('mod-spec').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
     </div>
     <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム — 技術仕様 v3-2</div>
