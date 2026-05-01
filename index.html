@@ -2475,7 +2475,7 @@ function loadInsp(fid){
       }
     }
   } else {
-    sv('f-michi', _storedMichi);
+    sv('f-michi', _storedMichi || '0');
   }
   // 構造情報
   sv('f-pil',    _c(_PIL,  i.pil||f.pil||''));
@@ -2511,7 +2511,7 @@ function loadInsp(fid){
   sv('f-alt',    _c(_ALT,  i.alt||f.alt||''));
   sv('f-rdknd',  _c(_RDKND,i.rdknd||f.rdknd||''));
   sv('f-lamp',   _c(_LAMP, i.lamp||f.lamp||''));
-  sv('f-wkdiv',  _c(_WKDIV,i.wkdiv||f.wkdiv||''));
+  sv('f-wkdiv',  _c(_WKDIV,i.wkdiv||f.wkdiv||'追加'));
   sv('f-wkdet',  i.wkdet||f.wkdet||'');
   // 機能安全性・特定事象・措置の有無
   const _SAFETY = {'Ａ':'1','A':'1','Ｂ':'2','B':'2','Ｃ':'3','C':'3'};
@@ -4012,25 +4012,30 @@ function autoGenPhotos(dmgData){
     if(d.na) return;
     if(PHOTO_EXCLUDE.has(r.code)) return;
 
-    let worstW = 0, worstType = '';
+    // a以外（c / e）の損傷種類を収集
+    const nonATypes = [];
     DMG_TYPES.forEach((t,ti)=>{
       if(!r.app[ti]) return;
       const val = d[t] || '';
-      if(W[val] > worstW){ worstW = W[val]; worstType = t; }
+      if(W[val] > 1) nonATypes.push(t);  // c or e
     });
 
-    const dmgType = worstW <= 1
-      ? (ALL_A_SPECIAL.has(r.code) ? '変形・欠損' : '腐食')
-      : worstType;
-
-    const memo = worstW <= 1
-      ? `${r.name}に目立った変状は認められない。`
-      : `${r.name}に${dmgType}が認められる。`;
-
-    // ファイル名は連番.jpg（テンプレート準拠）
-    photos.push({ no:String(seq), file:`${seq}.jpg`, part:r.name,
-                  type:dmgType, dt:inspDate, memo });
-    seq++;
+    if(nonATypes.length === 0){
+      // 全てa（または未入力）→ 1行のみ（変状なし）
+      const dmgType = ALL_A_SPECIAL.has(r.code) ? '変形・欠損' : '腐食';
+      const memo = `${r.name}に目立った変状は認められない。`;
+      photos.push({ no:String(seq), file:`${seq}.jpg`, part:r.name,
+                    type:dmgType, dt:inspDate, memo });
+      seq++;
+    } else {
+      // a以外の損傷種類ごとに1行ずつ写真行を生成
+      nonATypes.forEach(type=>{
+        const memo = `${r.name}に${type}が認められる。`;
+        photos.push({ no:String(seq), file:`${seq}.jpg`, part:r.name,
+                      type, dt:inspDate, memo });
+        seq++;
+      });
+    }
   });
   return photos;
 }
