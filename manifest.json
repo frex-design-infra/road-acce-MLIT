@@ -1,0 +1,24 @@
+{
+  "name": "附属物点検管理システム",
+  "short_name": "附属物点検",
+  "description": "道路附属施設点検管理システム for xROAD対応 | 株式会社フレックスデザイン",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#26251e",
+  "theme_color": "#26251e",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

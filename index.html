@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>附属物点検管理システム | 株式会社フレックスデザイン</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#26251e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="附属物点検">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -6322,6 +6330,17 @@ function parseCsvRow(line){
     <p style="font-size:11px;color:var(--tx2);margin:10px 0 0">※ 防食機能の劣化（e）・滞水（e）等は単独ではⅢ判定（早期措置）となります。</p>
   </div>
 </div>
+
+<!-- Service Worker 登録 -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(r=>console.log('SW registered:', r.scope))
+      .catch(e=>console.warn('SW error:', e));
+  });
+}
+</script>
 
 <!-- スマホ用ボトムナビ -->
 <nav id="sp-nav">
