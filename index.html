@@ -4950,16 +4950,20 @@ function genCSV1(ins){
     const lngFmt = i.lng ? parseFloat(i.lng).toFixed(6) : '';
     // Michi施設キー：施設IDと同値（緯度,経度形式）- 複数ある場合はセミコロン区切り
     const michiKey = i.michiKey || facIdVal;
-    // 設置年月：yyyy.mm 形式に正規化
+    // 設置年月：yyyy.mm 形式に正規化（DBマニュアル付録04 No.58 半角7文字）
     const instFmt = (()=>{
       const v = i.inst||'';
       if(!v) return '';
-      // 「2025年4月」→「2025.04」
+      // 「2025年4月」「2025年04月」→「2025.04」
       const m1 = v.match(/(\d{4})年(\d{1,2})月?/);
       if(m1) return `${m1[1]}.${String(m1[2]).padStart(2,'0')}`;
       // 「2025.04」形式はそのまま
       if(/^\d{4}\.\d{2}$/.test(v)) return v;
-      return v;
+      // 「2025.4」（ゼロパディング不足）→「2025.04」
+      const m2 = v.match(/^(\d{4})\.(\d)$/);
+      if(m2) return `${m2[1]}.0${m2[2]}`;
+      // 「不明」「1992年」「1992」など月不明・非準拠 → 空欄
+      return '';
     })();
 
     return [
