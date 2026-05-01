@@ -151,6 +151,15 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .dmg-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
 .prog-bar{height:4px;background:var(--g2);border-radius:2px;overflow:hidden;margin-top:6px}
 .prog-bar-inner{height:100%;background:var(--ac);border-radius:2px;transition:width .3s}
+/* 方向ラベルモーダル */
+#dir-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9490}
+#dir-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9491;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);width:min(900px,96vw);max-height:94vh;overflow:auto}
+.dir-corner-btn{width:42px;height:42px;border:2px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.dir-corner-btn.active{border-color:var(--pr);background:var(--prp);color:var(--pr)}
+.dir-type-btn{padding:7px 10px;border:2px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-family:'MS Gothic','MS ゴシック',monospace;white-space:pre-line;text-align:center;line-height:1.3;transition:all .15s;min-height:38px;display:flex;align-items:center;justify-content:center}
+.dir-type-btn.active{border-color:var(--pr);background:var(--prp)}
+.dir-color-btn{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;outline:2px solid transparent}
+.dir-color-btn.active{outline:3px solid var(--tx);outline-offset:2px}
 
 @media(max-width:768px){.sb{display:none}.mets{grid-template-columns:repeat(2,1fr)}.fg,.fg3{grid-template-columns:1fr}}
 
@@ -1279,6 +1288,17 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 let S = { biz:[], fac:[], ins:[], curBiz:null, curFac:null, editBiz:null, _imp:null };
 // センサスCSV lookup map: 交通調査基本区間番号 → 24h交通量
 let _censusMap = (()=>{ try{ const c=localStorage.getItem('fd2_census'); return c?JSON.parse(c):{}; }catch(e){ return {}; } })();
+// 方向ラベルモーダル状態
+let _dirState = null;
+// 方向タイプ定義（TYPE1〜6）
+const DIR_TYPES = [
+  { label:'←起　終→', lines:['←起　終→'] },
+  { label:'←終　起→', lines:['←終　起→'] },
+  { label:'↓起　終↑', lines:['↓起　終↑'] },
+  { label:'↑起　終↓', lines:['↑起　終↓'] },
+  { label:'↑\n起\n\n終\n↓',  lines:['↑','起','','終','↓'] },
+  { label:'↑\n終\n\n起\n↓',  lines:['↑','終','','起','↓'] },
+];
 
 // 点検結果テーブル定義（過年度調書の行構成に完全対応）
 // ============================================================
@@ -3739,39 +3759,190 @@ function clearSlot(type, key){
 }
 
 async function processSlotFile(type, key, file){
+  if(type === 'dmg'){
+    // 損傷写真 → 方向ラベルモーダルを表示
+    await openDirModal(type, key, file);
+    return;
+  }
+  await _doProcessSlotFile(type, key, file);
+}
+
+// 固定スロット用・注釈なし保存用の実処理
+async function _doProcessSlotFile(type, key, file){
   const fid = S.curFac; if(!fid){ alert('施設を先に選択してください'); return; }
   const store = getImgStore(fid);
 
-  // 対象ファイル名の決定
   let targetFname;
   if(type==='fixed'){
     const sl = FIXED_SLOTS.find(s=>s.id===key);
     targetFname = sl?.fname || file.name;
   } else {
-    // 損傷写真：テーブルのファイル名列から取得
     const row = Array.from(document.getElementById('photo-tb')?.rows||[])
       .find(tr=>tr.querySelectorAll('input')[0]?.value===key);
     targetFname = row ? (row.querySelectorAll('input')[1]?.value || `${key}.jpg`) : `${key}.jpg`;
   }
 
-  // 処理表示
   showProg(true, `処理中: ${file.name}…`);
-
   const result = await resizeToBlob(file, targetFname);
   if(!result){ showProg(false); alert('画像の読み込みに失敗しました'); return; }
 
   if(type==='fixed') store.fixed[key] = result;
   else               store.dmg[key]   = result;
 
-  // Supabase Storage にアップロード（Free プランでは無操作）
   const _uf = S.fac.find(f=>f.id===fid);
   if(_uf){
     showProg(true, `アップロード中: ${result.fname}…`);
     await _sbUploadPhoto(_uf.bid, fid, type, key, result.blob);
   }
-
   showProg(false);
   refreshSlots();
+}
+
+// ============================================================
+// 方向ラベルモーダル
+// ============================================================
+async function openDirModal(type, key, file){
+  _dirState = { type, key, file, corner:'TL', typeIdx:0, color:'#ffff00', colorKey:'yellow', previewImg:null };
+  // UI初期化
+  ['TL','TR','BL','BR'].forEach(c=>document.getElementById(`dc-${c}`)?.classList.toggle('active',c==='TL'));
+  for(let i=0;i<6;i++) document.getElementById(`dt-${i}`)?.classList.toggle('active',i===0);
+  ['yellow','white','black','red'].forEach(c=>document.getElementById(`dclr-${c}`)?.classList.toggle('active',c==='yellow'));
+  document.getElementById('dir-overlay').style.display='';
+  document.getElementById('dir-modal').style.display='';
+  // 画像ロード
+  const url = URL.createObjectURL(file);
+  await new Promise(resolve=>{
+    const img = new Image();
+    img.onload=()=>{ URL.revokeObjectURL(url); _dirState.previewImg=img; resolve(); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(); };
+    img.src=url;
+  });
+  renderDirPreview();
+}
+
+function renderDirPreview(){
+  const { previewImg, corner, typeIdx, color } = _dirState||{};
+  const canvas = document.getElementById('dir-canvas');
+  if(!canvas) return;
+  if(!previewImg){ canvas.width=400; canvas.height=300; return; }
+  const MAX=500;
+  let w=previewImg.naturalWidth, h=previewImg.naturalHeight;
+  if(w>MAX||h>MAX){ const r=Math.min(MAX/w,MAX/h); w=Math.round(w*r); h=Math.round(h*r); }
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(previewImg,0,0,w,h);
+  drawDirAnnotation(ctx,w,h,corner,typeIdx,color);
+}
+
+function setDirCorner(c){
+  if(!_dirState) return;
+  _dirState.corner=c;
+  ['TL','TR','BL','BR'].forEach(cc=>document.getElementById(`dc-${cc}`)?.classList.toggle('active',cc===c));
+  renderDirPreview();
+}
+function setDirType(idx){
+  if(!_dirState) return;
+  _dirState.typeIdx=idx;
+  for(let i=0;i<6;i++) document.getElementById(`dt-${i}`)?.classList.toggle('active',i===idx);
+  renderDirPreview();
+}
+function setDirColor(hex,key){
+  if(!_dirState) return;
+  _dirState.color=hex; _dirState.colorKey=key;
+  ['yellow','white','black','red'].forEach(c=>document.getElementById(`dclr-${c}`)?.classList.toggle('active',c===key));
+  renderDirPreview();
+}
+
+function drawDirAnnotation(ctx,w,h,corner,typeIdx,color){
+  const dt=DIR_TYPES[typeIdx]; if(!dt) return;
+  const fsize=Math.max(18,Math.min(Math.round(Math.min(w,h)*0.07),54));
+  const pad=Math.round(fsize*0.5);
+  const lineH=Math.round(fsize*1.45);
+  ctx.save();
+  ctx.font=`bold ${fsize}px 'MS Gothic','MS ゴシック',monospace`;
+  ctx.textBaseline='top';
+  const visLines=dt.lines.filter(l=>l);
+  const maxTW=Math.max(...visLines.map(l=>ctx.measureText(l).width),fsize);
+  const totalLines=dt.lines.length;
+  const boxW=maxTW+pad*2, boxH=totalLines*lineH+pad*2;
+  let bx,by,tx,textAlign;
+  if(corner==='TL'){      bx=pad;         by=pad;           tx=pad+pad;         textAlign='left'; }
+  else if(corner==='TR'){ bx=w-boxW-pad;  by=pad;           tx=w-pad-pad;       textAlign='right'; }
+  else if(corner==='BL'){ bx=pad;         by=h-boxH-pad;    tx=pad+pad;         textAlign='left'; }
+  else{                   bx=w-boxW-pad;  by=h-boxH-pad;    tx=w-pad-pad;       textAlign='right'; }
+  // 背景（角丸）
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  _dirRoundRect(ctx,bx,by,boxW,boxH,5); ctx.fill();
+  // テキスト
+  ctx.fillStyle=color; ctx.textAlign=textAlign; ctx.textBaseline='top';
+  let ty=by+pad;
+  dt.lines.forEach(line=>{ if(line) ctx.fillText(line,tx,ty); ty+=lineH; });
+  ctx.restore();
+}
+function _dirRoundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+}
+
+async function applyAndSaveDir(){
+  if(!_dirState) return;
+  const { type, key, file, corner, typeIdx, color } = _dirState;
+  closeDirModal();
+  const fid=S.curFac; if(!fid){ alert('施設を先に選択してください'); return; }
+  const store=getImgStore(fid);
+  const row=Array.from(document.getElementById('photo-tb')?.rows||[])
+    .find(tr=>tr.querySelectorAll('input')[0]?.value===key);
+  const targetFname=row?(row.querySelectorAll('input')[1]?.value||`${key}.jpg`):`${key}.jpg`;
+  showProg(true,`処理中: ${file.name}…`);
+  const result=await resizeToBlob(file,targetFname);
+  if(!result){ showProg(false); alert('画像の読み込みに失敗しました'); return; }
+  const annotated=await _addDirAnnotation(result.blob,corner,typeIdx,color,targetFname);
+  const final=annotated||result;
+  store.dmg[key]=final;
+  const _uf=S.fac.find(f=>f.id===fid);
+  if(_uf){ showProg(true,`アップロード中: ${final.fname}…`); await _sbUploadPhoto(_uf.bid,fid,type,key,final.blob); }
+  showProg(false); refreshSlots();
+}
+
+async function _addDirAnnotation(blob,corner,typeIdx,color,fname){
+  const url=URL.createObjectURL(blob);
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const canvas=document.createElement('canvas');
+      canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      drawDirAnnotation(ctx,canvas.width,canvas.height,corner,typeIdx,color);
+      canvas.toBlob(nb=>{
+        if(!nb){ resolve(null); return; }
+        const r2=new FileReader();
+        r2.onload=e=>resolve({blob:nb,dataUrl:e.target.result,size:nb.size,origName:fname,fname});
+        r2.readAsDataURL(nb);
+      },'image/jpeg',0.92);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); resolve(null); };
+    img.src=url;
+  });
+}
+
+async function skipDirSave(){
+  if(!_dirState) return;
+  const { type, key, file } = _dirState;
+  closeDirModal();
+  await _doProcessSlotFile(type, key, file);
+}
+function cancelDirMod(){
+  closeDirModal();
+}
+function closeDirModal(){
+  document.getElementById('dir-overlay').style.display='none';
+  document.getElementById('dir-modal').style.display='none';
+  _dirState=null;
 }
 
 function showProg(show, label=''){
@@ -5730,6 +5901,62 @@ function parseCsvRow(line){
   return result;
 }
 </script>
+
+<!-- 方向ラベルモーダル -->
+<div id="dir-overlay" onclick="cancelDirMod()"></div>
+<div id="dir-modal">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;border-bottom:1px solid var(--bd)">
+    <div style="font-size:15px;font-weight:700">📐 方向ラベルの追加</div>
+    <button onclick="cancelDirMod()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
+  </div>
+  <div style="display:flex;gap:20px;padding:16px 20px;flex-wrap:wrap">
+    <!-- プレビューキャンバス -->
+    <div style="flex:1 1 300px;min-width:260px">
+      <canvas id="dir-canvas" style="border:1px solid var(--bd);border-radius:8px;max-width:100%;display:block;background:#f5f5f5"></canvas>
+    </div>
+    <!-- コントロールパネル -->
+    <div style="flex:0 0 220px;display:flex;flex-direction:column;gap:16px">
+      <!-- 貼付位置 -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">貼付位置</div>
+        <div style="display:inline-grid;grid-template-columns:1fr 1fr;gap:6px;border:2px solid var(--bd);border-radius:8px;padding:8px;background:var(--g1)">
+          <button class="dir-corner-btn active" id="dc-TL" onclick="setDirCorner('TL')" title="左上">↖</button>
+          <button class="dir-corner-btn"        id="dc-TR" onclick="setDirCorner('TR')" title="右上">↗</button>
+          <button class="dir-corner-btn"        id="dc-BL" onclick="setDirCorner('BL')" title="左下">↙</button>
+          <button class="dir-corner-btn"        id="dc-BR" onclick="setDirCorner('BR')" title="右下">↘</button>
+        </div>
+      </div>
+      <!-- 方向タイプ -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">方向タイプ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button class="dir-type-btn active" id="dt-0" onclick="setDirType(0)">←起　終→</button>
+          <button class="dir-type-btn"        id="dt-1" onclick="setDirType(1)">←終　起→</button>
+          <button class="dir-type-btn"        id="dt-2" onclick="setDirType(2)">↓起　終↑</button>
+          <button class="dir-type-btn"        id="dt-3" onclick="setDirType(3)">↑起　終↓</button>
+          <button class="dir-type-btn"        id="dt-4" onclick="setDirType(4)" style="line-height:1.2">↑起<br>…<br>終↓</button>
+          <button class="dir-type-btn"        id="dt-5" onclick="setDirType(5)" style="line-height:1.2">↑終<br>…<br>起↓</button>
+        </div>
+      </div>
+      <!-- カラーパレット -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px">文字色</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="dir-color-btn active" id="dclr-yellow" style="background:#ffff00" onclick="setDirColor('#ffff00','yellow')" title="イエロー"></button>
+          <button class="dir-color-btn"        id="dclr-white"  style="background:#ffffff;border:2px solid #ccc" onclick="setDirColor('#ffffff','white')" title="ホワイト"></button>
+          <button class="dir-color-btn"        id="dclr-black"  style="background:#000000" onclick="setDirColor('#000000','black')" title="ブラック"></button>
+          <button class="dir-color-btn"        id="dclr-red"    style="background:#ff0000" onclick="setDirColor('#ff0000','red')" title="レッド"></button>
+        </div>
+      </div>
+      <!-- アクションボタン -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto">
+        <button class="btn btn-pr" onclick="applyAndSaveDir()">✓ ラベルを付けて保存</button>
+        <button class="btn" onclick="skipDirSave()">注釈なしで保存</button>
+        <button class="btn" style="color:var(--tx2)" onclick="cancelDirMod()">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- 診断区分 自動判定ロジック モーダル（body直下に置くことでどのページからも表示可） -->
 <div id="diag-logic-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000" onclick="if(event.target===this)closeDiagLogic()"></div>
