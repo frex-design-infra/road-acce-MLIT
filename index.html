@@ -3872,27 +3872,25 @@ function setDirColor(hex,key){
 
 function drawDirAnnotation(ctx,w,h,corner,typeIdx,color){
   const dt=DIR_TYPES[typeIdx]; if(!dt) return;
-  const fsize=Math.max(18,Math.min(Math.round(Math.min(w,h)*0.07),54));
-  const pad=Math.round(fsize*0.5);
-  const lineH=Math.round(fsize*1.45);
+  const fsize=Math.max(10,Math.min(Math.round(Math.min(w,h)*0.04),32));
+  const pad=6;
+  const lineH=Math.round(fsize*1.4);
   ctx.save();
   ctx.font=`bold ${fsize}px 'MS Gothic','MS ゴシック',monospace`;
-  ctx.textBaseline='top';
+  // テキスト影（背景なしでも読めるように）
+  ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=3; ctx.shadowOffsetX=1; ctx.shadowOffsetY=1;
+  // 位置計算
   const visLines=dt.lines.filter(l=>l);
   const maxTW=Math.max(...visLines.map(l=>ctx.measureText(l).width),fsize);
   const totalLines=dt.lines.length;
-  const boxW=maxTW+pad*2, boxH=totalLines*lineH+pad*2;
-  let bx,by,tx,textAlign;
-  if(corner==='TL'){      bx=pad;         by=pad;           tx=pad+pad;         textAlign='left'; }
-  else if(corner==='TR'){ bx=w-boxW-pad;  by=pad;           tx=w-pad-pad;       textAlign='right'; }
-  else if(corner==='BL'){ bx=pad;         by=h-boxH-pad;    tx=pad+pad;         textAlign='left'; }
-  else{                   bx=w-boxW-pad;  by=h-boxH-pad;    tx=w-pad-pad;       textAlign='right'; }
-  // 背景（角丸）
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  _dirRoundRect(ctx,bx,by,boxW,boxH,5); ctx.fill();
-  // テキスト
+  let tx,ty0,textAlign;
+  if(corner==='TL'){      tx=pad;       ty0=pad;                          textAlign='left'; }
+  else if(corner==='TR'){ tx=w-pad;     ty0=pad;                          textAlign='right'; }
+  else if(corner==='BL'){ tx=pad;       ty0=h-totalLines*lineH-pad;       textAlign='left'; }
+  else{                   tx=w-pad;     ty0=h-totalLines*lineH-pad;       textAlign='right'; }
+  // テキスト描画（背景なし・完全透過）
   ctx.fillStyle=color; ctx.textAlign=textAlign; ctx.textBaseline='top';
-  let ty=by+pad;
+  let ty=ty0;
   dt.lines.forEach(line=>{ if(line) ctx.fillText(line,tx,ty); ty+=lineH; });
   ctx.restore();
 }
