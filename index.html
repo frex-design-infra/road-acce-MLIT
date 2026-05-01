@@ -940,6 +940,20 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <li>都道府県・市区町村を所在地テキストから自動判定</li>
         <li>インポート後にプレビュー確認してから確定</li>
       </ul>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
+        <div style="font-size:12px;font-weight:600;color:var(--pr);margin-bottom:4px">道路交通センサス CSV</div>
+        <ul style="font-size:12px;line-height:1.9;padding-left:16px;color:var(--tx2)">
+          <li>R3東北6県（10,710区間）が<strong>組み込み済み</strong>。CSV読み込み不要で即時使用可能</li>
+          <li>センサス区間番号を入力すると<strong>交通量（台/24h）を自動補完</strong></li>
+          <li>R4等に更新する場合はCSVを選択またはカードにドロップ</li>
+        </ul>
+        <div style="font-size:12px;font-weight:600;color:var(--pr);margin-top:6px;margin-bottom:4px">位置図(国土地理院)座標一覧 CSV</div>
+        <ul style="font-size:12px;line-height:1.9;padding-left:16px;color:var(--tx2)">
+          <li>管理番号・緯度・経度が入ったCSVを読み込むと、<strong>位置図の地図位置のみ</strong>上書き</li>
+          <li>点検記録の緯度・経度欄には影響なし</li>
+          <li>列分離型・1セル結合型・自動検出の3方式対応。カードにドロップでも読み込み可能</li>
+        </ul>
+      </div>
     </div>
 
     <div class="card">
@@ -964,6 +978,13 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
           <li>診断区分を再クリックすると選択解除できる</li>
           <li>「<i data-lucide="clipboard-list" class="lci"></i> 診断・所見を一括生成」で措置の有無・特定事象・所見を自動入力</li>
           <li>過年度と同じ診断区分が初期値として自動セット</li>
+        </ul>
+        <div style="font-size:12px;font-weight:600;color:var(--pr);margin-top:6px;margin-bottom:4px">⑤ 写真管理タブ</div>
+        <ul style="font-size:12px;line-height:1.9;padding-left:16px;color:var(--tx2)">
+          <li>位置図は国土地理院タイルから自動生成。右下に「出典：国土地理院」を自動表記</li>
+          <li>座標一覧CSVを読み込むと、管理番号で紐づけた座標を位置図に使用可能</li>
+          <li>損傷写真スロットに画像をドロップすると<strong>方向ラベル選択モーダル</strong>が表示される（TYPE1〜6・コーナー・カラー選択）</li>
+          <li>a以外の損傷評価がある種別ごとに写真行が<strong>自動生成</strong>される</li>
         </ul>
       </div>
     </div>
@@ -1005,14 +1026,79 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 </main>
 </div>
 
+<!-- モーダル: v3-2 新機能一覧 -->
+<div id="mod-changelog" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
+  <div class="mod" style="max-width:680px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-size:18px;font-weight:700">🆕 v3-2 新機能一覧</div>
+      <button onclick="document.getElementById('mod-changelog').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:16px">2026-05-01 リリース</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="map" class="lci"></i> 道路交通センサス CSV</div></div>
+        <ul style="font-size:13px;line-height:2;padding-left:18px;margin:0">
+          <li>センサス区間番号 → <strong>交通量（台/24h）自動補完</strong>機能を追加</li>
+          <li>令和3年度（R3）東北6県・<strong>10,710区間</strong>のデータをシステムに内蔵（CSV読み込み不要）</li>
+          <li>R4以降更新時はCSVを読み込むことでデータを上書き可能（localStorage保存）</li>
+          <li>カード上への<strong>ドラッグ＆ドロップ</strong>にも対応</li>
+          <li>センサス年度のデフォルト値を <code>R3</code> に設定</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="map-pin" class="lci"></i> 位置図(国土地理院)座標一覧 CSV</div></div>
+        <ul style="font-size:13px;line-height:2;padding-left:18px;margin:0">
+          <li>管理番号・緯度・経度が入力されたCSVを読み込むと、<strong>位置図の座標として使用</strong></li>
+          <li>点検記録の緯度・経度欄には一切影響しない（位置図の地図位置のみ変更）</li>
+          <li>フォーマット自動判別：<strong>分離型</strong>（緯度列・経度列）／<strong>結合型</strong>（座標列に「緯度,経度」）／<strong>自動検出</strong></li>
+          <li>Shift-JIS・UTF-8 両対応 / localStorage永続化 / クリアボタン付き</li>
+          <li>カード上への<strong>ドラッグ＆ドロップ</strong>にも対応</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="image" class="lci"></i> 損傷写真 — 方向ラベル</div></div>
+        <ul style="font-size:13px;line-height:2;padding-left:18px;margin:0">
+          <li>損傷写真スロットに画像をドロップすると<strong>方向ラベル選択モーダル</strong>が表示される</li>
+          <li>TYPE1〜6（←起終→ / 縦書き等）・コーナー（左上/右上/左下/右下）・カラー（白/黄/赤）を選択</li>
+          <li>ラベルは完全透過背景・影付き文字でCanvas上に描画</li>
+          <li>a以外の評価が付いた損傷種別ごとに写真行を<strong>自動生成</strong></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="navigation" class="lci"></i> 位置図（国土地理院）</div></div>
+        <ul style="font-size:13px;line-height:2;padding-left:18px;margin:0">
+          <li>生成した位置図の右下に「<strong>出典：国土地理院</strong>」を自動追記</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><div class="card-ttl"><i data-lucide="settings-2" class="lci"></i> デフォルト値・CSV出力</div></div>
+        <ul style="font-size:13px;line-height:2;padding-left:18px;margin:0">
+          <li>Michi施設キーのデフォルトを <code>0</code> 固定（xROAD仕様準拠）</li>
+          <li>作業内容フラグ（区分）のデフォルトを「追加」に設定</li>
+          <li>CSV02「その他（門）」13項目ブロックを付録04仕様に準拠して追加</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- モーダル: 仕様書 -->
 <div id="mod-spec" class="mov hid" onclick="if(event.target===this)this.classList.add('hid')">
   <div class="mod" style="max-width:900px;max-height:88vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:18px;font-weight:700"><i data-lucide="file-text" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> システム仕様書</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:18px;font-weight:700"><i data-lucide="file-text" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> システム仕様書</div>
+        <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" style="padding:4px 10px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
+      </div>
       <button onclick="document.getElementById('mod-spec').classList.add('hid')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);line-height:1">✕</button>
     </div>
-    <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム — 技術仕様 v3</div>
+    <div class="pg-sub" style="margin-bottom:16px">附属物点検管理システム — 技術仕様 v3-2</div>
 
     <div style="display:flex;flex-direction:column;gap:12px">
 
@@ -1021,7 +1107,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
         <div class="card-hdr"><div class="card-ttl"><i data-lucide="info" class="lci"></i> システム概要</div></div>
         <table style="width:100%;font-size:12px;border-collapse:collapse">
           <tr><td style="padding:5px 10px;color:var(--tx2);width:130px;white-space:nowrap">システム名</td><td style="padding:5px 10px">道路附属施設点検管理システム for xROAD対応</td></tr>
-          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">バージョン</td><td style="padding:5px 10px">v3</td></tr>
+          <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2)">バージョン</td><td style="padding:5px 10px">v3-2　<span style="font-size:11px;color:var(--tx2)">（2026-05-01 更新）</span></td></tr>
           <tr><td style="padding:5px 10px;color:var(--tx2)">対象施設</td><td style="padding:5px 10px">道路標識・道路照明施設（附属物）</td></tr>
           <tr style="background:var(--g1)"><td style="padding:5px 10px;color:var(--tx2);vertical-align:top">準拠要領</td><td style="padding:5px 10px">道路附属物（標識・照明）点検要領 令和6年9月版（国土交通省）<br>全国道路施設点検データベース（道路附属物）閲覧操作マニュアル Ver.2.0　令和7年12月版</td></tr>
           <tr><td style="padding:5px 10px;color:var(--tx2)">本番URL</td><td style="padding:5px 10px"><a href="https://road-acce-mlit.vercel.app/" target="_blank" style="color:var(--ac)">https://road-acce-mlit.vercel.app/</a></td></tr>
@@ -1066,7 +1152,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">② 損傷評価</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">部材ごと損傷種類（き裂/腐食/変形欠損/破断 等11種）を a/c/e で評価。過年度初期値反映。スクロール固定ヘッダー</td></tr>
             <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">③ 診断・所見</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">健全性診断区分（Ⅰ〜Ⅳ）自動提案 / 機能安全性評価 / 特定事象有無 / 措置の有無 / 所見 — 一括生成機能あり（施設一覧からは業務内全施設への一括生成も可能）</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">④ 措置の必要性</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">基板部 / 基板・支柱接続部 / 支柱部 / その他 — 部位ごとに措置有無・理由を記録</td></tr>
-            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">⑤ 写真管理</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">位置図（国土地理院タイル自動生成）/ 全景・基部写真スロット / 損傷写真（損傷評価から行自動生成）/ Supabase Storage保存</td></tr>
+            <tr><td style="padding:6px 10px;font-weight:600;border-bottom:1px solid var(--bd)">⑤ 写真管理</td><td style="padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)">位置図（国土地理院タイル自動生成・右下に出典表記・座標一覧CSVで座標上書き可）/ 全景・基部写真スロット / 損傷写真（a以外種別ごとに行自動生成・ドロップ時に方向ラベルモーダル表示）/ Supabase Storage保存</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;font-weight:600">⑥ 板厚調査</td><td style="padding:6px 10px;color:var(--tx2)">超音波測定記録（測定日・機器・部位別板厚）</td></tr>
           </tbody>
         </table>
@@ -1102,6 +1188,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
             <tr><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">Excel 旧形式<br><span style="font-weight:400;color:var(--tx2)">001〜003系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">列A空白・空行あり。緯度経度はDMS形式（度分秒）→ 10進数自動変換</td></tr>
             <tr style="background:var(--g1)"><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">Excel 新形式<br><span style="font-weight:400;color:var(--tx2)">004系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">列Aにデータあり・空行なし。緯度経度は10進数形式</td></tr>
             <tr><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">PDF<br><span style="font-weight:400;color:var(--tx2)">005系</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">点検表（施設諸元）＋点検結果票を含むPDF。PDF.js 3.11でテキスト抽出。施設諸元・健全性診断・所見のみ取込（部材評価値は引継不可）</td></tr>
+            <tr style="background:var(--g1)"><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">センサスCSV<br><span style="font-weight:400;color:var(--tx2)">国交省</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">道路交通センサスCSV。R3東北6県（10,710区間）は内蔵済み。対応列：<code>交通調査基本区間番号</code>・<code>２４時間自動車類交通量（上下合計）／合計（台）</code>。Shift-JIS/UTF-8対応・D&D対応</td></tr>
+            <tr><td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">座標一覧CSV<br><span style="font-weight:400;color:var(--tx2)">位置図専用</span></td><td style="padding:6px 10px;border:1px solid var(--bd);color:var(--tx2)">管理番号・緯度・経度を含むCSV。位置図（国土地理院タイル）生成の座標のみ上書き。点検記録の緯度経度欄は変更しない。列分離型・結合型・自動検出の3方式対応。D&D対応</td></tr>
           </tbody>
         </table>
       </div>
