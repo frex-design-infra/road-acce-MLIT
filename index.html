@@ -3332,50 +3332,163 @@ function getImgStore(fid){
 // ============================================================
 const MAX_BYTES = 2 * 1024 * 1024; // 2MB
 
-async function resizeToBlob(file, targetFname){
-  return new Promise((resolve)=>{
-    const url = URL.createObjectURL(file);
-    const img  = new Image();
-    img.onload = ()=>{
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      let w = img.naturalWidth, h = img.naturalHeight;
-      // 初期品質
-      let q = 0.90;
-      // 最大辺を3000pxに制限（過大な解像度を防ぐ）
-      const MAX_PX = 3000;
-      if(w > MAX_PX || h > MAX_PX){
-        const r = Math.min(MAX_PX/w, MAX_PX/h);
-        w = Math.round(w*r); h = Math.round(h*r);
-      }
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-
-      // サイズが収まるまで品質を下げる
-      const tryEncode = (quality)=>{
-        canvas.toBlob(blob=>{
-          if(!blob){ resolve(null); return; }
-          if(blob.size <= MAX_BYTES || quality <= 0.40){
-            // 最終的なDataURLも取得
-            const reader = new FileReader();
-            reader.onload = e => resolve({
-              blob,
-              dataUrl: e.target.result,
-              size: blob.size,
-              origName: file.name,
-              fname: targetFname
-            });
-            reader.readAsDataURL(blob);
-          } else {
-            tryEncode(Math.round((quality - 0.10)*100)/100);
+// ============================================================
+// EXIF Orientation を読み取る（ライブラリ不要・先頭64KB参照）
+// 返り値: 1〜8（1=正常, 6=90°CW, 3=180°, 8=90°CCW 等）
+// ============================================================
+async function readExifOrientation(file){
+  return new Promise(resolve=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try {
+        const buf  = e.target.result;
+        const view = new DataView(buf);
+        // JPEG 先頭マーカー確認
+        if(view.getUint16(0, false) !== 0xFFD8){ resolve(1); return; }
+        let offset = 2;
+        while(offset + 4 < buf.byteLength){
+          const marker = view.getUint16(offset, false);
+          const segLen = view.getUint16(offset + 2, false);
+          if(marker === 0xFFE1){ // APP1 (Exif/XMP)
+            // "Exif\0\0" チェック
+            if(view.getUint32(offset + 4, false) === 0x45786966 &&
+               view.getUint16(offset + 8, false) === 0x0000){
+              const tiff   = offset + 10;
+              const little = view.getUint16(tiff, false) === 0x4949;
+              const ifd0   = tiff + view.getUint32(tiff + 4, little);
+              const entries= view.getUint16(ifd0, little);
+              for(let i = 0; i < entries; i++){
+                const ep = ifd0 + 2 + i * 12;
+                if(view.getUint16(ep, little) === 0x0112){ // Orientation tag
+                  resolve(view.getUint16(ep + 8, little));
+                  return;
+                }
+              }
+            }
+            resolve(1); return;
           }
-        }, 'image/jpeg', quality);
-      };
-      tryEncode(q);
+          if((marker & 0xFF00) !== 0xFF00) break;
+          offset += 2 + segLen;
+        }
+      } catch(e2){ /* ignore */ }
+      resolve(1);
     };
-    img.onerror = ()=>{ URL.revokeObjectURL(url); resolve(null); };
-    img.src = url;
+    reader.onerror = ()=> resolve(1);
+    // 先頭64KBでEXIFは必ず見つかる
+    reader.readAsArrayBuffer(file.slice(0, 65536));
+  });
+}
+
+// ============================================================
+// EXIF Orientation に応じたキャンバス描画
+// （createImageBitmapが使える場合：raw pixels確定、手動補正）
+// orient 5-8 は90/270度回転→縦横を入れ替えてキャンバスを作る
+// ============================================================
+function _drawWithOrientation(ctx, source, orient, w, h){
+  // w, h はソース画像の raw サイズ（スケール後）
+  ctx.save();
+  switch(orient){
+    case 2: ctx.translate(w, 0);    ctx.scale(-1,  1); break;
+    case 3: ctx.translate(w, h);    ctx.rotate(Math.PI); break;
+    case 4: ctx.translate(0, h);    ctx.scale( 1, -1); break;
+    case 5: ctx.rotate( 0.5*Math.PI); ctx.scale(1, -1); break;
+    case 6: ctx.rotate( 0.5*Math.PI); ctx.translate(0, -h); break;
+    case 7: ctx.rotate(-0.5*Math.PI); ctx.translate(-w, 0); ctx.scale(-1, 1); break;
+    case 8: ctx.rotate(-0.5*Math.PI); ctx.translate(-w, 0); break;
+    // case 1: no transform
+  }
+  ctx.drawImage(source, 0, 0, w, h);
+  ctx.restore();
+}
+
+async function resizeToBlob(file, targetFname){
+  // ① EXIF Orientation を取得
+  const orient = await readExifOrientation(file);
+  // 5〜8 は90/270度回転（縦横入れ替えが必要）
+  const needsSwap = orient >= 5 && orient <= 8;
+
+  // ② ソース画像を取得
+  //    createImageBitmap が使える環境ではEXIF補正なし(raw)を保証
+  //    使えない環境は <img> フォールバック（iOS13.4+/Chrome81+で自動補正済み）
+  let source, rawW, rawH, useBitmap = false;
+
+  if(typeof createImageBitmap === 'function'){
+    try {
+      source   = await createImageBitmap(file);
+      rawW     = source.width;
+      rawH     = source.height;
+      useBitmap = true;
+    } catch(e){ source = null; }
+  }
+
+  if(!source){
+    // フォールバック: <img> 要素で読み込み
+    const url = URL.createObjectURL(file);
+    source = await new Promise((res, rej)=>{
+      const img = new Image();
+      img.onload  = ()=>{ URL.revokeObjectURL(url); res(img); };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error('img load failed')); };
+      img.src = url;
+    });
+    rawW = source.naturalWidth;
+    rawH = source.naturalHeight;
+  }
+
+  if(!rawW || !rawH){ return null; }
+
+  // ③ スケーリング（最大辺3000px制限）
+  const MAX_PX = 3000;
+  let drawW = rawW, drawH = rawH;
+  if(drawW > MAX_PX || drawH > MAX_PX){
+    const r = Math.min(MAX_PX / drawW, MAX_PX / drawH);
+    drawW = Math.round(drawW * r);
+    drawH = Math.round(drawH * r);
+  }
+
+  // ④ キャンバスサイズ（回転90/270度なら縦横を入れ替え）
+  const canvas = document.createElement('canvas');
+  if(useBitmap && needsSwap){
+    canvas.width  = drawH;  // raw の高さが出力の幅になる
+    canvas.height = drawW;
+  } else {
+    canvas.width  = drawW;
+    canvas.height = drawH;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  // ⑤ 描画（createImageBitmap使用時のみ手動EXIF補正を適用）
+  if(useBitmap && orient !== 1){
+    _drawWithOrientation(ctx, source, orient, drawW, drawH);
+    source.close();
+  } else {
+    ctx.drawImage(source, 0, 0, drawW, drawH);
+    // ImageBitmapの場合はclose()（imgの場合はGC任せ）
+    if(useBitmap && source.close) source.close();
+  }
+
+  // ⑥ JPEG圧縮（2MB以下になるまで品質を下げる）
+  let q = 0.90;
+  return new Promise(resolve=>{
+    const tryEncode = (quality)=>{
+      canvas.toBlob(blob=>{
+        if(!blob){ resolve(null); return; }
+        if(blob.size <= MAX_BYTES || quality <= 0.40){
+          const reader = new FileReader();
+          reader.onload = e => resolve({
+            blob,
+            dataUrl: e.target.result,
+            size: blob.size,
+            origName: file.name,
+            fname: targetFname
+          });
+          reader.readAsDataURL(blob);
+        } else {
+          tryEncode(Math.round((quality - 0.10) * 100) / 100);
+        }
+      }, 'image/jpeg', quality);
+    };
+    tryEncode(q);
   });
 }
 
