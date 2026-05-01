@@ -202,6 +202,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 #splash{position:fixed;inset:0;background:var(--pr);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease}
 .splash-spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.csv-drop-card{transition:box-shadow .15s,background .15s}
+.csv-drop-card.drag-over{box-shadow:0 0 0 2px var(--ac,#4a7eff) inset!important;background:rgba(74,126,255,.04)!important}
 </style>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
@@ -762,7 +764,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px">
+  <div class="card csv-drop-card" style="margin-top:16px"
+       ondragover="_csvDragOver(event)" ondragleave="_csvDragLeave(event)" ondrop="_csvDrop(event,'census')">
     <div class="card-hdr"><div class="card-ttl"><i data-lucide="map" class="lci"></i> 道路交通センサス CSV</div></div>
     <div class="alrt ai" style="margin-bottom:12px">
       センサス区間番号から<strong>交通量（台/24h）を自動入力</strong>するために、国交省の道路交通センサスCSVを読み込みます。<br>
@@ -783,8 +786,9 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <input type="file" id="census-fi" style="display:none" accept=".csv,.CSV" onchange="loadCensusCSV(event)">
   </div>
 
-  <div class="card" style="margin-top:16px">
-    <div class="card-hdr"><div class="card-ttl"><i data-lucide="map-pin" class="lci"></i> 座標一覧 CSV</div></div>
+  <div class="card csv-drop-card" style="margin-top:16px"
+       ondragover="_csvDragOver(event)" ondragleave="_csvDragLeave(event)" ondrop="_csvDrop(event,'coord')">
+    <div class="card-hdr"><div class="card-ttl"><i data-lucide="map-pin" class="lci"></i> 位置図(国土地理院)座標一覧 CSV</div></div>
     <div class="alrt ai" style="margin-bottom:12px">
       <strong>管理番号</strong>と<strong>緯度・経度</strong>が入力されたCSVを読み込むと、位置図（国土地理院タイル）を生成する際の座標として使用します。<br>
       <span style="color:var(--tx2)">点検記録の緯度・経度欄の値はそのまま変わりません。位置図の地図位置のみ反映されます。</span>
@@ -5948,6 +5952,28 @@ function loadCensusCSV(e){
   };
   rSjis.readAsText(file,'Shift-JIS');
 }
+// ============================================================
+// CSV カード ドラッグ＆ドロップ共通ハンドラ
+// ============================================================
+function _csvDragOver(e){
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function _csvDragLeave(e){
+  // 子要素への移動は無視
+  if(e.currentTarget.contains(e.relatedTarget)) return;
+  e.currentTarget.classList.remove('drag-over');
+}
+function _csvDrop(e, type){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const file = [...(e.dataTransfer.files||[])].find(f=>/\.csv$/i.test(f.name));
+  if(!file){ showSaveToast('⚠️ CSVファイルをドロップしてください'); return; }
+  const fakeEvt = { target:{ files:[file], value:'' } };
+  if(type==='census') loadCensusCSV(fakeEvt);
+  else               loadCoordCSV(fakeEvt);
+}
+
 // ============================================================
 // 座標一覧CSV（管理番号→緯度経度 / 位置図生成専用）
 // ============================================================
