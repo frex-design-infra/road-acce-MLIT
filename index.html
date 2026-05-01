@@ -5673,8 +5673,15 @@ function loadCensusCSV(e){
       }
     }
     if(hdrIdx<0) return null;
-    const noIdx=hdr.findIndex(h=>h.includes('交通調査基本区間番号'));
-    const trfIdx=hdr.findIndex(h=>h.includes('２４時間')&&h.includes('合計')&&h.includes('台'));
+    // 「交通調査基本区間番号」完全一致（起点側・終点側などを除外）
+    const noIdx=hdr.indexOf('交通調査基本区間番号');
+    // 「２４時間自動車類交通量（上下合計）／合計（台）」完全一致優先
+    // → フォールバック: 上下合計かつ合計（台）を含む列
+    const trfIdx=(()=>{
+      let i=hdr.indexOf('２４時間自動車類交通量（上下合計）／合計（台）');
+      if(i>=0) return i;
+      return hdr.findIndex(h=>h.includes('上下合計')&&h.includes('合計（台）'));
+    })();
     if(noIdx<0||trfIdx<0) return {err:`列が見つかりません（区間番号列:${noIdx} / 交通量列:${trfIdx}）`};
     const map={};
     for(let i=hdrIdx+1;i<lines.length;i++){
