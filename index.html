@@ -787,8 +787,17 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
     <div class="card-hdr"><div class="card-ttl"><i data-lucide="map-pin" class="lci"></i> 座標一覧 CSV</div></div>
     <div class="alrt ai" style="margin-bottom:12px">
       <strong>管理番号</strong>と<strong>緯度・経度</strong>が入力されたCSVを読み込むと、位置図（国土地理院タイル）を生成する際の座標として使用します。<br>
-      <span style="color:var(--tx2)">点検記録の緯度・経度欄の値はそのまま変わりません。位置図の地図位置のみ反映されます。</span><br>
-      <span style="font-size:11px">対応列：<code>管理番号</code>・<code>緯度</code>・<code>経度</code>（10進法）</span>
+      <span style="color:var(--tx2)">点検記録の緯度・経度欄の値はそのまま変わりません。位置図の地図位置のみ反映されます。</span>
+    </div>
+    <div class="alrt" style="margin-bottom:12px;background:var(--bg2,#f0f4ff);border-left:3px solid var(--ac,#4a7eff);font-size:12px;line-height:1.8">
+      <strong>対応フォーマット（どちらでも読み込み可）</strong><br>
+      <span style="display:inline-block;margin-top:4px">
+        ① <strong>列を分けるパターン</strong>：<code>管理番号</code>・<code>緯度</code>・<code>経度</code> を別々の列に入力<br>
+        　　例）<code>R7-001, 38.826700, 139.841510</code><br>
+        ② <strong>1セルにまとめるパターン</strong>：<code>管理番号</code>・<code>座標</code>（緯度,経度）を1列に入力<br>
+        　　例）<code>R7-001, "38.826700,139.841510"</code>
+      </span><br>
+      <span style="color:var(--tx2);font-size:11px">座標は10進法（小数点形式）で入力してください。列名が上記と異なっても自動判別を試みます。</span>
     </div>
     <div id="coord-status" style="margin-bottom:10px;font-size:13px">
       <span id="coord-count" style="color:var(--tx2)">未読み込み</span>
@@ -5961,30 +5970,63 @@ function loadCoordCSV(e){
   if(!file) return;
   const tryParse=(text)=>{
     const lines=text.split(/\r?\n/);
+    // ヘッダー行を探す（「管理番号」を含む行）
     let hdrIdx=-1, hdr=[];
     for(let i=0;i<Math.min(lines.length,10);i++){
       const row=parseCsvRow(lines[i]);
-      if(row.some(c=>c.includes('管理番号'))){
-        hdrIdx=i; hdr=row; break;
-      }
+      if(row.some(c=>c.includes('管理番号'))){ hdrIdx=i; hdr=row; break; }
     }
     if(hdrIdx<0) return null;
     const mnIdx=hdr.findIndex(h=>h.includes('管理番号'));
+    if(mnIdx<0) return {err:'「管理番号」列が見つかりません'};
+
+    // ① 分離型：緯度列・経度列が別々に存在するか
     const latIdx=hdr.findIndex(h=>h.includes('緯度')||h.toLowerCase().includes('lat'));
     const lngIdx=hdr.findIndex(h=>h.includes('経度')||h.toLowerCase().includes('lng')||h.toLowerCase().includes('lon'));
-    if(mnIdx<0||latIdx<0||lngIdx<0) return {err:`列が見つかりません（管理番号:${mnIdx} / 緯度:${latIdx} / 経度:${lngIdx}）`};
+    const isSeparate = latIdx>=0 && lngIdx>=0;
+
+    // ② 結合型：「座標」「緯度経度」「coord」等の列があるか
+    let coordIdx = isSeparate ? -1 :
+      hdr.findIndex(h=>h.includes('座標')||h.includes('緯度経度')||h.toLowerCase().includes('coord'));
+
+    // ③ 自動検出：ヘッダー名が不明でもデータ行から「数値,数値」パターンを探す
+    if(!isSeparate && coordIdx<0){
+      outer: for(let i=hdrIdx+1;i<Math.min(lines.length,hdrIdx+6);i++){
+        if(!lines[i].trim()) continue;
+        const cols=parseCsvRow(lines[i]);
+        for(let ci=0;ci<cols.length;ci++){
+          if(ci===mnIdx) continue;
+          const parts=(cols[ci]||'').trim().split(',');
+          if(parts.length===2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))){
+            coordIdx=ci; break outer;
+          }
+        }
+      }
+    }
+
+    if(!isSeparate && coordIdx<0) return {err:'緯度・経度の列が見つかりません。列名に「緯度」「経度」または「座標」を含めてください。'};
+
     const map={};
     for(let i=hdrIdx+1;i<lines.length;i++){
       if(!lines[i].trim()) continue;
       const cols=parseCsvRow(lines[i]);
       const mn=(cols[mnIdx]||'').trim();
-      const lat=(cols[latIdx]||'').trim().replace(/,/g,'');
-      const lng=(cols[lngIdx]||'').trim().replace(/,/g,'');
-      if(mn && lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))){
+      if(!mn) continue;
+      let lat='', lng='';
+      if(isSeparate){
+        // 列分離パターン（千の区切りカンマを除去）
+        lat=(cols[latIdx]||'').trim().replace(/(?<=\d),(?=\d{3})/g,'');
+        lng=(cols[lngIdx]||'').trim().replace(/(?<=\d),(?=\d{3})/g,'');
+      } else {
+        // 結合パターン（セル内の "緯度,経度" をカンマで分割）
+        const parts=(cols[coordIdx]||'').trim().split(',');
+        if(parts.length>=2){ lat=parts[0].trim(); lng=parts[1].trim(); }
+      }
+      if(lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))){
         map[mn]={lat,lng};
       }
     }
-    return {map,count:Object.keys(map).length};
+    return {map,count:Object.keys(map).length,mode:isSeparate?'分離型':'結合型'};
   };
   const applyResult=(result)=>{
     if(!result){ alert('座標CSVの読み込みに失敗しました。\n「管理番号」列が見つかりません。'); return; }
@@ -5992,7 +6034,7 @@ function loadCoordCSV(e){
     _coordMap=result.map;
     try{ localStorage.setItem('fd2_coords',JSON.stringify(_coordMap)); }catch(ex){}
     updCoordCount();
-    showSaveToast(`✅ 座標CSV読み込み完了 — ${result.count.toLocaleString()}件`);
+    showSaveToast(`✅ 座標CSV読み込み完了 — ${result.count.toLocaleString()}件（${result.mode||''}）`);
     e.target.value='';
   };
   const rSjis=new FileReader();
