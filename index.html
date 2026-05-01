@@ -3886,8 +3886,8 @@ function drawDirAnnotation(ctx,w,h,corner,typeIdx,color){
   let tx,ty0,textAlign;
   if(corner==='TL'){      tx=pad;       ty0=pad;                          textAlign='left'; }
   else if(corner==='TR'){ tx=w-pad;     ty0=pad;                          textAlign='right'; }
-  else if(corner==='BL'){ tx=pad;       ty0=h-totalLines*lineH-pad;       textAlign='left'; }
-  else{                   tx=w-pad;     ty0=h-totalLines*lineH-pad;       textAlign='right'; }
+  else if(corner==='BL'){ tx=pad;       ty0=h-totalLines*lineH+2;         textAlign='left'; }
+  else{                   tx=w-pad;     ty0=h-totalLines*lineH+2;         textAlign='right'; }
   // テキスト描画（背景なし・完全透過）
   ctx.fillStyle=color; ctx.textAlign=textAlign; ctx.textBaseline='top';
   let ty=ty0;
