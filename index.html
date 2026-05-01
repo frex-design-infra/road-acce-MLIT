@@ -168,6 +168,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   .hdr-sp-hide{display:none!important}
   .main{padding-bottom:72px!important}
   #sp-nav{display:flex!important}
+  .hdr{gap:8px;padding:0 12px}
+  .hdr h1{font-size:13px}
 }
 #sp-nav{
   display:none;position:fixed;bottom:0;left:0;right:0;height:60px;
@@ -241,10 +243,10 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 </div>
 
 <header class="hdr">
-  <h1><i data-lucide="clipboard-list" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 附属物点検管理システム for <span style="color:#38bdf8">x</span>ROAD対応 <span style="font-size:11px;opacity:.75;font-weight:400">| 株式会社フレックスデザイン</span></h1>
-  <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
+  <h1 style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1"><i data-lucide="clipboard-list" class="lci" style="width:18px;height:18px;vertical-align:-4px"></i> 附属物点検管理システム<span class="hdr-sp-hide"> for <span style="color:#38bdf8">x</span>ROAD対応</span><span class="hdr-sp-hide" style="font-size:11px;opacity:.75;font-weight:400"> | 株式会社フレックスデザイン</span></h1>
+  <div class="hdr-r" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
-    <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" style="padding:5px 12px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
+    <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" class="hdr-sp-hide" style="padding:5px 12px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
     <button onclick="document.getElementById('mod-spec').classList.remove('hid')" class="hdr-sp-hide" style="padding:5px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="file-text" class="lci"></i> 仕様書</button>
     <button onclick="document.getElementById('mod-guide').classList.remove('hid')" class="hdr-sp-hide" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
   </div>
