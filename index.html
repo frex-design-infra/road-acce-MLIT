@@ -161,7 +161,27 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 .dir-color-btn{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;outline:2px solid transparent}
 .dir-color-btn.active{outline:3px solid var(--tx);outline-offset:2px}
 
-@media(max-width:768px){.sb{display:none}.mets{grid-template-columns:repeat(2,1fr)}.fg,.fg3{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sb{display:none}
+  .mets{grid-template-columns:repeat(2,1fr)}
+  .fg,.fg3{grid-template-columns:1fr}
+  .hdr-sp-hide{display:none!important}
+  .main{padding-bottom:72px!important}
+  #sp-nav{display:flex!important}
+}
+#sp-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;height:60px;
+  background:#fff;border-top:1px solid var(--bd);z-index:400;
+  align-items:stretch;box-shadow:0 -2px 8px rgba(0,0,0,.08)
+}
+.sp-nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;font-size:10px;font-weight:500;color:var(--tx2);cursor:pointer;
+  border:none;background:none;padding:0;transition:color .15s;-webkit-tap-highlight-color:transparent
+}
+.sp-nav-item i{width:22px;height:22px;stroke-width:1.8}
+.sp-nav-item.active{color:#f54e00}
+.sp-nav-item.active i{stroke-width:2.4}
 
 /* ===== Cursor-inspired accent overrides ===== */
 .hdr{background:#26251e}
@@ -225,8 +245,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
   <div class="hdr-r" style="display:flex;align-items:center;gap:12px">
     <span id="hdr-biz-lbl" style="font-size:12px;opacity:.8"></span>
     <button onclick="document.getElementById('mod-changelog').classList.remove('hid')" style="padding:5px 12px;background:linear-gradient(135deg,var(--ac),#6366f1);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em">🆕 v3-2 新機能</button>
-    <button onclick="document.getElementById('mod-spec').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="file-text" class="lci"></i> 仕様書</button>
-    <button onclick="document.getElementById('mod-guide').classList.remove('hid')" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
+    <button onclick="document.getElementById('mod-spec').classList.remove('hid')" class="hdr-sp-hide" style="padding:5px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="file-text" class="lci"></i> 仕様書</button>
+    <button onclick="document.getElementById('mod-guide').classList.remove('hid')" class="hdr-sp-hide" style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap"><i data-lucide="book-open" class="lci"></i> 操作ガイド</button>
   </div>
 </header>
 
@@ -1778,6 +1798,9 @@ function showPage(p){
   document.getElementById('page-'+p).classList.remove('hid');
   document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('active'));
   const n=document.getElementById('nav-'+p); if(n) n.classList.add('active');
+  // ボトムナビ アクティブ切り替え
+  document.querySelectorAll('.sp-nav-item').forEach(el=>el.classList.remove('active'));
+  const sn=document.getElementById('sp-nav-'+p); if(sn) sn.classList.add('active');
   if(p==='biz') renderBiz();
   if(p==='fac'){
     // 業務未選択かつ1件のみの場合は自動選択
@@ -6297,5 +6320,21 @@ function parseCsvRow(line){
     <p style="font-size:11px;color:var(--tx2);margin:10px 0 0">※ 防食機能の劣化（e）・滞水（e）等は単独ではⅢ判定（早期措置）となります。</p>
   </div>
 </div>
+
+<!-- スマホ用ボトムナビ -->
+<nav id="sp-nav">
+  <button class="sp-nav-item active" id="sp-nav-dash" onclick="showPage('dash')">
+    <i data-lucide="home" class="lci"></i>
+    ダッシュボード
+  </button>
+  <button class="sp-nav-item" id="sp-nav-biz" onclick="showPage('biz')">
+    <i data-lucide="folder" class="lci"></i>
+    業務管理
+  </button>
+  <button class="sp-nav-item" id="sp-nav-fac" onclick="showPage('fac')">
+    <i data-lucide="building-2" class="lci"></i>
+    施設一覧
+  </button>
+</nav>
 </body>
 </html>
