@@ -1,7 +1,7 @@
 {
-  "name": "附属物点検管理システム",
-  "short_name": "附属物点検",
-  "description": "道路附属施設点検管理システム for xROAD対応 | 株式会社フレックスデザイン",
+  "name": "FRe:x 附属物点検",
+  "short_name": "FRe:x 附属物点検",
+  "description": "道路附属物点検管理システム for xROAD対応 | FRe:x Design inc.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
