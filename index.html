@@ -3602,6 +3602,15 @@ async function generateLocImg(){
     ctx.fillRect(bx,by-10,2,8); ctx.fillRect(bx+barPx-2,by-10,2,8);
     ctx.font='bold 11px sans-serif'; ctx.fillText('100m',bx+barPx+4,by);
 
+    // 出典表示（右下）
+    const _attr='出典：国土地理院';
+    ctx.font='11px sans-serif';
+    const _aw=ctx.measureText(_attr).width;
+    ctx.fillStyle='rgba(255,255,255,0.82)';
+    ctx.fillRect(canvas.width-_aw-14,canvas.height-20,_aw+8,18);
+    ctx.fillStyle='#222'; ctx.textAlign='right'; ctx.textBaseline='bottom';
+    ctx.fillText(_attr,canvas.width-7,canvas.height-4);
+
     canvas.toBlob(async blob=>{
       if(!blob){ showProg(false); alert('画像生成に失敗しました'); return; }
       const reader=new FileReader();
@@ -3657,6 +3666,14 @@ async function generateLocImgAll(){
       ctx.fillStyle='#111'; ctx.fillRect(bx,by-6,barPx,4);
       ctx.fillRect(bx,by-10,2,8); ctx.fillRect(bx+barPx-2,by-10,2,8);
       ctx.font='bold 11px sans-serif'; ctx.fillText('100m',bx+barPx+4,by);
+      // 出典表示（右下）
+      const _attr='出典：国土地理院';
+      ctx.font='11px sans-serif';
+      const _aw=ctx.measureText(_attr).width;
+      ctx.fillStyle='rgba(255,255,255,0.82)';
+      ctx.fillRect(canvas.width-_aw-14,canvas.height-20,_aw+8,18);
+      ctx.fillStyle='#222'; ctx.textAlign='right'; ctx.textBaseline='bottom';
+      ctx.fillText(_attr,canvas.width-7,canvas.height-4);
       await new Promise(res=>canvas.toBlob(async blob=>{
         if(!blob){ res(); return; }
         const reader=new FileReader();
