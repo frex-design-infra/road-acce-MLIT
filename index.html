@@ -1489,7 +1489,9 @@ let _storageOk = null; // null=未確認, true=利用可, false=利用不可
 async function _sbStorageCheck(){
   if(_storageOk !== null) return _storageOk;
   try {
-    const { data, error } = await _sb.storage.getBucket(_PHOTO_BUCKET);
+    // getBucket() は service_role 権限が必要なため anon key では 403 になる
+    // list() はパブリックバケットなら anon key で動作する
+    const { error } = await _sb.storage.from(_PHOTO_BUCKET).list('', { limit: 1 });
     _storageOk = !error;
   } catch(e){ _storageOk = false; }
   return _storageOk;
@@ -5574,7 +5576,15 @@ document.addEventListener('click', e=>{
     hideMissingPopup();
   }
 });
-function refresh(){ updDash(); fillSelects(); const b=S.biz.find(b=>b.id===S.curBiz); document.getElementById('sb-biz').textContent=b?.nm||'業務を選択してください'; document.getElementById('hdr-biz-lbl').textContent=b?.nm||''; }
+function refresh(){
+  updDash(); fillSelects();
+  const b = S.biz.find(b=>b.id===S.curBiz);
+  // Realtime コールバックがDOM準備前に走る場合があるため null チェック
+  const sbBiz  = document.getElementById('sb-biz');
+  const hdrBiz = document.getElementById('hdr-biz-lbl');
+  if(sbBiz)  sbBiz.textContent  = b?.nm || '業務を選択してください';
+  if(hdrBiz) hdrBiz.textContent = b?.nm || '';
+}
 
 // ==================== UTILS ====================
 async function syncToSupabase(){
