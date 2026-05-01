@@ -515,7 +515,7 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
           <div class="fgrp"><label class="flbl">道路幅員（m）</label><input type="text" class="finp" id="f-rdw" placeholder="例：8.5"></div>
           <div class="fgrp"><label class="flbl">歩道幅員（m）</label><input type="text" class="finp" id="f-sdw" placeholder="例：2.5 または 無"></div>
           <div class="fgrp"><label class="flbl">センサス年度</label><input type="text" class="finp" id="f-cens" placeholder="例：H27"></div>
-          <div class="fgrp"><label class="flbl">センサス区間番号</label><input type="text" class="finp" id="f-censno" placeholder="例：6300070280"></div>
+          <div class="fgrp"><label class="flbl">センサス区間番号</label><input type="text" class="finp" id="f-censno" placeholder="例：6300070280" oninput="lookupCensus(this.value)"></div>
           <div class="fgrp"><label class="flbl">交通量（台/24h）</label><input type="text" class="finp" id="f-trf" placeholder="例：18540"></div>
         </div>
       </div>
@@ -751,6 +751,22 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
       </div>
       <div class="tw"><table class="tbl" id="prev-tbl"><thead id="prev-th"></thead><tbody id="prev-tb"></tbody></table></div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-hdr"><div class="card-ttl"><i data-lucide="map" class="lci"></i> 道路交通センサス CSV</div></div>
+    <div class="alrt ai" style="margin-bottom:12px">
+      センサス区間番号から<strong>交通量（台/24h）を自動入力</strong>するために、国交省の道路交通センサスCSVを読み込みます。<br>
+      一度読み込むとブラウザに保存され、次回以降も引き継がれます。<br>
+      <span style="font-size:11px">対応列：<code>交通調査基本区間番号</code>・<code>２４時間自動車類交通量（上下合計）／合計（台）</code></span>
+    </div>
+    <div id="census-status" style="margin-bottom:10px;font-size:13px">
+      <span id="census-count" style="color:var(--tx2)">未読み込み</span>
+    </div>
+    <button class="btn" onclick="document.getElementById('census-fi').click()">
+      <i data-lucide="file-spreadsheet" class="lci"></i> センサスCSVを選択
+    </button>
+    <input type="file" id="census-fi" style="display:none" accept=".csv,.CSV" onchange="loadCensusCSV(event)">
   </div>
 </div>
 
@@ -1261,6 +1277,8 @@ body{font-family:'Hiragino Sans','Meiryo',sans-serif;font-size:14px;color:var(--
 <script>
 // ==================== STATE ====================
 let S = { biz:[], fac:[], ins:[], curBiz:null, curFac:null, editBiz:null, _imp:null };
+// センサスCSV lookup map: 交通調査基本区間番号 → 24h交通量
+let _censusMap = (()=>{ try{ const c=localStorage.getItem('fd2_census'); return c?JSON.parse(c):{}; }catch(e){ return {}; } })();
 
 // 点検結果テーブル定義（過年度調書の行構成に完全対応）
 // ============================================================
@@ -1627,7 +1645,7 @@ function showPage(p){
     generateLocImgAll().catch(()=>{});
   }
   if(p==='exp'){ fillSelects(); updExpList(); }
-  if(p==='imp') fillSelects();
+  if(p==='imp'){ fillSelects(); updCensusCount(); }
   if(p==='insp'){ fillSelects(); if(S.curBiz) onBizChg(); }
   if(p==='dash'){
     if(!S.curBiz && S.biz.length===1) S.curBiz=S.biz[0].id;
@@ -2501,7 +2519,7 @@ function loadInsp(fid){
   sv('f-safety', _c(_SAFETY,i.safety||''));
   sv('f-spcevt', _c(_12b,  i.spcevt||''));
   sv('f-measyn', _c(_12b,  i.measyn||''));
-  sv('f-cens',i.cens||f.cens||''); sv('f-censno',i.censno||f.censno||''); sv('f-trf',i.trf||f.trf||'');
+  sv('f-cens',i.cens||f.cens||'R3'); sv('f-censno',i.censno||f.censno||''); sv('f-trf',i.trf||f.trf||'');
   // 診断（未入力の場合は過年度診断をデフォルト）
   const _defDiag = i.diag || f.prevDiag || '';
   document.querySelectorAll('input[name="diag"]').forEach(r=>{ r.checked=r.value===_defDiag; });
@@ -5640,6 +5658,90 @@ function resetAllData(){
 function v(id){ const el=document.getElementById(id); return el?el.value:''; }
 function sv(id,val){ const el=document.getElementById(id); if(el) el.value=val??''; }
 function closeMod(id){ document.getElementById(id).classList.add('hid'); }
+
+// ============================================================
+// センサスCSV lookup
+// ============================================================
+function updCensusCount(){
+  const el=document.getElementById('census-count');
+  if(!el) return;
+  const n=Object.keys(_censusMap).length;
+  el.textContent=n>0?`✓ ${n.toLocaleString()}区間読み込み済み`:'未読み込み';
+  el.style.color=n>0?'var(--grn)':'var(--tx2)';
+}
+// センサス区間番号 → 交通量自動補完
+function lookupCensus(val){
+  const no=(val||'').trim();
+  const trfEl=document.getElementById('f-trf');
+  if(!trfEl) return;
+  if(no && _censusMap[no]) trfEl.value=_censusMap[no];
+}
+// センサスCSV読み込み（Shift-JIS/UTF-8 両対応）
+function loadCensusCSV(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const tryParse=(text)=>{
+    const lines=text.split(/\r?\n/);
+    // ヘッダー行を探す（"交通調査基本区間番号"を含む行）
+    let hdrIdx=-1, hdr=[];
+    for(let i=0;i<Math.min(lines.length,20);i++){
+      if(lines[i].includes('交通調査基本区間番号')){
+        hdrIdx=i;
+        // CSVヘッダーをパース
+        hdr=parseCsvRow(lines[i]);
+        break;
+      }
+    }
+    if(hdrIdx<0) return null;
+    const noIdx=hdr.findIndex(h=>h.includes('交通調査基本区間番号'));
+    const trfIdx=hdr.findIndex(h=>h.includes('２４時間')&&h.includes('合計')&&h.includes('台'));
+    if(noIdx<0||trfIdx<0) return {err:`列が見つかりません（区間番号列:${noIdx} / 交通量列:${trfIdx}）`};
+    const map={};
+    for(let i=hdrIdx+1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      const cols=parseCsvRow(lines[i]);
+      const no=cols[noIdx]?.trim();
+      const trf=cols[trfIdx]?.trim().replace(/,/g,'');
+      if(no && trf && /^\d+$/.test(trf)) map[no]=trf;
+    }
+    return {map,noIdx,trfIdx};
+  };
+  const applyResult=(result)=>{
+    if(!result){ alert('センサスCSVの読み込みに失敗しました。\n「交通調査基本区間番号」列が見つかりません。'); return; }
+    if(result.err){ alert('センサスCSVエラー: '+result.err); return; }
+    _censusMap=result.map;
+    const count=Object.keys(_censusMap).length;
+    try{ localStorage.setItem('fd2_census',JSON.stringify(_censusMap)); }catch(ex){}
+    updCensusCount();
+    showSaveToast(`✅ センサスCSV読み込み完了 — ${count.toLocaleString()}区間`);
+    e.target.value='';
+  };
+  // まずShift-JISで読む（政府系CSVの標準）
+  const rSjis=new FileReader();
+  rSjis.onload=ev=>{
+    const result=tryParse(ev.target.result);
+    if(result){ applyResult(result); }
+    else{
+      // Shift-JISで失敗したらUTF-8で再試行
+      const rUtf=new FileReader();
+      rUtf.onload=ev2=>applyResult(tryParse(ev2.target.result));
+      rUtf.readAsText(file,'UTF-8');
+    }
+  };
+  rSjis.readAsText(file,'Shift-JIS');
+}
+// CSVの1行をパース（ダブルクォート囲み対応）
+function parseCsvRow(line){
+  const result=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(inQ&&line[i+1]==='"'){ cur+='"'; i++; } else inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur.trim()); cur=''; }
+    else cur+=c;
+  }
+  result.push(cur.trim());
+  return result;
+}
 </script>
 
 <!-- 診断区分 自動判定ロジック モーダル（body直下に置くことでどのページからも表示可） -->
